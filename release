@@ -1,0 +1,45 @@
+#!/usr/bin/env php
+<?php
+
+$composer = json_decode(file_get_contents('composer.json'));
+
+echo "\nTag and submit a new release of:\n\n*\n* {$composer->name}\n* {$composer->description}\n*\n";
+
+$currentVersion = file_get_contents('VERSION');
+echo "\nCurrent version: {$currentVersion}\n";
+
+$input = fopen("php://stdin", "r");
+
+if( isset($argv[1]) ) {
+    $version = $argv[1];
+	echo "New version: {$version}\n\n";
+
+} else {
+	echo "New version: ";
+	$version = trim(fgets($input));
+	echo "\n";
+}
+
+if( empty($version) ){
+    echo "Invalid version number.\nAborting.\n\n";
+    exit;
+}
+
+echo "Are you sure you want to do this?  Type 'yes' to continue: ";
+if( strtolower(trim(fgets($input))) !== 'yes' ){
+	echo "Aborting.\n\n";
+	exit;
+}
+
+// Update composer.json file with latest version number
+$composer->version = (string) $version;
+file_put_contents('composer.json', json_encode($composer, JSON_PRETTY_PRINT));
+
+// Write version number to disk
+file_put_contents('VERSION', $version);
+
+// Commit & push changes, tag commit and push again
+exec("git commit -am \"Tagging version {$version}\"");
+exec("git push");
+exec("git tag {$version}");
+exec("git push --tags");
