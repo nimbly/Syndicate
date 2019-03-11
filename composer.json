@@ -1,0 +1,37 @@
+{
+    "name": "limber/syndicate",
+    "description": "Framework agnostic queue and pubsub library.",
+    "version": "0.0",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Brent Scheffler",
+            "email": "brent@nimbly.io"
+        }
+    ],
+    "suggest": {
+        "pda/pheanstalk": "To add support for Beanstalkd queue.",
+        "predis/predis": "To add support for Redis based queue and pub/sub functionality.",
+        "aws/aws-sdk-php": "To add support for AWS Simple Queue Service (SQS).",
+        "google/cloud-pubsub": "To add support for Google Cloud Pubsub."
+    },
+    "require": {
+        "php": ">=7.0"
+    },
+    "require-dev": {
+        "vimeo/psalm": "^3.1",
+        "phpunit/phpunit": "^8.0",
+        "pda/pheanstalk": "~3.0",
+        "aws/aws-sdk-php": "~3.0",
+        "predis/predis": "~1.0",
+        "google/cloud-pubsub": "^1.7",
+        "symfony/var-dumper": "^4.2",
+        "php-coveralls/php-coveralls": "^2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Syndicate\\": "src\/"
+        }
+    }
+}
