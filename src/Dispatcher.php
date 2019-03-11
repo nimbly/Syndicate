@@ -59,7 +59,7 @@ class Dispatcher
      */
     public function listen(Queue $queue): void
     {
-        $queue->listen(function(Message $message) use ($queue) {
+        $queue->listen(function(Message $message) {
 
             $this->dispatch($message);
             
