@@ -1,67 +1,157 @@
-## Syndicate
+# Syndicate
 
-### Installation
+See the syndicate-framework repo for framework documentation.
 
-```bash
-composer require nimbly/syndicate
+
+## Using without a Router and Dispatcher
+
+### Create Queue instance
+```php
+$queue = new Syndicate\Queue\Sqs(
+    getenv("SQS_QUEUE_URL"),
+    new SqsClient([
+        'version' => 'latest',
+        'region' => 'us-west-2'
+    ])
+);
 ```
 
-## Jobs
-Jobs are a self-contained unit of work that should be processed out-of-band from the current Request/Response cycle.
+### Set a serializer and deserializer callback
 
-Prime examples of running background jobs are sending of phone verification SMS text messages, sending trigger-based emails, etc.
-
-### Creating jobs
-Your job should extend ```Syndicate\Job``` and implement the abstract ```run``` method.
-
-The entire Job instance itself is serialized and placed in the queue.
+The serializer callback is applied to each outgoing queue message.
 
 ```php
-class SendSms extends Syndicate\Job
-{
-    protected $user;
-    protected $message;
+$queue->setSerializer("\json_encode");
+```
 
-    public function __construct(User $user, $message)
-    {
-        $this->user = $user;
-        $this->message = $message;
+The deserializer callback is applied to each incoming queue message.
+
+```php
+$queue->setDeserializer("\json_decode");
+```
+
+### Set message payload transformer (optional)
+
+The message payload transformer, if set, is applied to each incoming queue message payload.
+This gives you greater control in parsing the message payload.
+
+For example, if you have an SQS queue that is subscribed to an SNS topic, SNS will add
+a wrapper around the message payload that requires extracting the actual message payload.
+
+```php
+$queue->setTransformer(function(object $payload): object {
+    
+    // Was this message forwarded by SNS?
+    if( property_exists($payload, "Type") &&
+        $payload->Type === "Notification" ){
+        return \json_decode($payload->Message);
     }
 
-    public function run(Syndicate\Queue $queue)
-    {
-        Sms::send($this->user->phone, $this->message);
-        $queue->delete($this);
-    }
-}
+    return $payload;
+});
 ```
 
-### Queueing
+### Listen on queue
 
-Now place the entire job instance on the queue.
-
-```php
-$jobQueue->put(new SendSms($user, "Welcome to Syndicate!"));
-```
-
-### Processing jobs
+Listening is a blocking call and your callback will be triggered when a new Message has arrived.
 
 ```php
-$jobQueue->listen(function(Syndicate\Message $message) use ($jobQueue) {
+$queue->listen(function(Message $message){
 
-    $job->run($jobQueue, $message);
+    echo "Message received!\n";
+    $message->delete();
 
 });
 ```
-### Deleting jobs
+
+## Using a Router and Dispatcher
+
+### Router
+Create a new ```Router``` by passing in the ```\callable``` route resolver and an ```array``` of key and value pairs as the route definitions.
 
 ```php
-$this->delete();
+$router = new Router(function(Message $message, string $route){
+
+    return $message->getPayload()->eventName == $route;
+
+}, [
+
+    'UserRegistered' => ["\App\Handlers\UserHandler", "userRegistered"],
+    'UserClosedAccount' => ["\App\Handlers\UserHandler", "userAccountClosed"]
+
+]);
 ```
 
-### Releasing jobs
+### Dispatcher
+Create a new ```Dispatcher``` by passing the ```Router``` instance.
 
 ```php
-$this->release();
-````
+$dispatcher = new Dispatcher($router);
+```
 
+### Add a default handler
+If the ```Router``` cannot resolve a route for the ```Message```, the ```Dispatcher``` will attempt to pass the message off to the default handler.
+
+```php
+$dispatcher->setDefaultHandler(function(Message $message){
+
+    Log::critical("No route defined for {$message->getPayload()->eventName}!");
+    $message->release();
+
+});
+```
+
+### Starting the listener
+```php
+
+$dispatcher->listen($queue);
+
+```
+
+## Putting it all together
+```php
+// Create Queue instance
+$queue = new Syndicate\Queue\Sqs(
+    getenv("SQS_QUEUE_URL"),
+    new SqsClient([
+        'version' => 'latest',
+        'region' => 'us-west-2'
+    ])
+);
+
+$queue->setSerializer("\json_encode");
+$queue->setDeserializer("\json_encode");
+$queue->setTransformer(function(object $payload): object {
+    
+    // Was this message forwarded by SNS?
+    if( property_exists($payload, "Type") &&
+        $payload->Type === "Notification" ){
+        return \json_decode($payload->Message);
+    }
+
+    return $payload;
+});
+
+// Create Router instance
+$router = new Router(function(Message $message, string $route){
+
+    return $message->getPayload()->eventName == $route;
+
+}, [
+
+    'UserRegistered' => ["\App\Handlers\UserHandler", "userRegistered"],
+    'UserClosedAccount' => ["\App\Handlers\UserHandler", "userAccountClosed"]
+
+]);
+
+// Create Dispatcher instance
+$dispatcher = new Dispatcher($router);
+$dispatcher->setDefaultHandler(function(Message $message){
+
+    Log::critical("No route defined for {$message->getPayload()->eventName}!");
+    $message->release();
+
+});
+
+$dispatcher->listen();
+```
