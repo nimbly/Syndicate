@@ -8,6 +8,7 @@ use Syndicate\Queue\MockQueue;
 
 /**
  * @covers \Syndicate\Message
+ * @covers \Syndicate\Queue\MockQueue
  */
 class MessageTest extends TestCase
 {

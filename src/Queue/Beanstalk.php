@@ -4,7 +4,7 @@ namespace Syndicate\Queue;
 
 use Pheanstalk\Job;
 use Pheanstalk\Pheanstalk;
-use Syndicate\Queue;
+use Syndicate\Queue\Queue;
 use Syndicate\Message;
 
 /**
