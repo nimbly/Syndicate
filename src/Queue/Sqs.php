@@ -55,11 +55,8 @@ class Sqs extends Queue
      */
     public function get(array $options = []): ?Message
     {
-        if( ($sqsMessages = $this->many(1, $options)) ){
-            return $sqsMessages[0];
-        }
-        
-        return null;
+        $sqsMessages = $this->many(1, $options);
+        return $sqsMessages[0] ?? null;
     }
 
     /**
@@ -88,9 +85,9 @@ class Sqs extends Queue
 
             foreach( $sqsMessages as $sqsMessage ){
 
-                // Serialize and transform message body.
-                $payload = $this->transform(
-                    $this->deserialize($sqsMessage['Body'])
+                // Deserialize message body
+                $payload = $this->deserialize(
+                    $sqsMessage['Body']
                 );
 
                 // Add message to set.

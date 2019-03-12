@@ -40,10 +40,7 @@ class Redis extends Queue
     {
         if( ($data = $this->client->lpop($this->name)) ){
 
-            $payload = $this->transform(
-                $this->deserialize($data)
-            );
-
+            $payload = $this->deserialize($data);
             return new Message($this, $data, $payload);
         }
 
@@ -61,10 +58,7 @@ class Redis extends Queue
             
             if( ($data = $this->client->lpop($this->name)) ){
                 
-                $payload = $this->transform(
-                    $this->deserialize($data)
-                );
-    
+                $payload = $this->deserialize($data);
                 $messages[] =  new Message($this, $data, $payload);
             }
         }

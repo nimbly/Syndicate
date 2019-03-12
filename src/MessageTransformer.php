@@ -18,13 +18,6 @@ abstract class MessageTransformer
      */
     protected $deserializer;
 
-    /**
-     * Message transformer.
-     *
-     * @var ?callable
-     */
-    protected $transformer;
-
 
     /**
      * Set the serializer.
@@ -49,17 +42,6 @@ abstract class MessageTransformer
     }
 
     /**
-     * Set the message transformer.
-     *
-     * @param callable $callback
-     * @return void
-     */
-    public function setTransformer(callable $callback): void
-    {
-        $this->transformer = $callback;
-    }
-
-    /**
      * Serialize data if a serializer has been assigned.
      *
      * @param mixed $data
@@ -71,7 +53,7 @@ abstract class MessageTransformer
             return call_user_func($this->serializer, $data);
         }
 
-        return serialize($data);
+        return json_encode($data);
     }
 
     /**
@@ -86,21 +68,6 @@ abstract class MessageTransformer
             return call_user_func($this->deserializer, $data);
         }
 
-        return unserialize($data);
-    }
-
-    /**
-     * Apply custom transformer to message payload.
-     *
-     * @param mixed $data
-     * @return mixed
-     */
-    public function transform($data)
-    {
-        if( $this->transformer ){
-            return call_user_func($this->transformer, $data);
-        }
-
-        return $data;
+        return json_decode($data);
     }
 }

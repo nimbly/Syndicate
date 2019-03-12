@@ -18,7 +18,6 @@ class Google extends Queue
     /**
      * Google Cloud PubSub adapter.
      *
-     * @param string $topic
      * @param string $subscription
      * @param PubSubClient $client
      */
@@ -59,20 +58,8 @@ class Google extends Queue
      */
     public function get(array $options = []): ?Message
     {
-        $messages = $this->getSubscription()->pull([
-            'maxMessages' => 1
-        ]);
-
-        if( $messages ){
-
-            $payload = $this->transform(
-                $this->deserialize($messages[0]->data())
-            );
-
-            return new Message($this, $messages[0], $payload);
-        }
-
-        return null;
+        $messages = $this->many(1, $options);
+        return $messages[0] ?? null;
     }
 
     /**
@@ -89,8 +76,8 @@ class Google extends Queue
         if( $subscriptionMessages ){
 
             foreach( $subscriptionMessages as $message ){
-                $payload = $this->transform(
-                    $this->deserialize($message->data())
+                $payload = $this->deserialize(
+                    $message->data()
                 );
     
                 $messages[] = new Message($this, $message, $payload);

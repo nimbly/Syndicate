@@ -80,7 +80,6 @@ abstract class Queue extends MessageTransformer
             $message = $this->get(['timeout' => $pollingTimeout]);
 
             if( $message ){
-
                 $callback($message);
             }
         }
@@ -102,13 +101,13 @@ abstract class Queue extends MessageTransformer
      *
      * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
     /**
-     * Call a method on the client itself.
+     * Call a method on the Queue client itself.
      *
      * @param string $method
      * @param array $params

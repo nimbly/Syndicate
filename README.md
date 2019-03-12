@@ -16,38 +16,28 @@ $queue = new Syndicate\Queue\Sqs(
 );
 ```
 
-### Set a serializer and deserializer callback
+### Set a serializer and deserializer callback (optional)
 
-The serializer callback is applied to each outgoing queue message.
+The serializer callback is applied to each outgoing queue message payload. It defaults to ```\json_encode```.
 
 ```php
-$queue->setSerializer("\json_encode");
+$queue->setSerializer("\serialize");
 ```
 
-The deserializer callback is applied to each incoming queue message.
+The deserializer callback is applied to each incoming queue message payload. It defaults to ```\json_decode```.
 
 ```php
-$queue->setDeserializer("\json_decode");
-```
+$queue->setDeserializer(function($payload){
 
-### Set message payload transformer (optional)
+    $payload = \json_decode($payload);
 
-The message payload transformer, if set, is applied to each incoming queue message payload.
-This gives you greater control in parsing the message payload.
-
-For example, if you have an SQS queue that is subscribed to an SNS topic, SNS will add
-a wrapper around the message payload that requires extracting the actual message payload.
-
-```php
-$queue->setTransformer(function(object $payload): object {
-    
-    // Was this message forwarded by SNS?
     if( property_exists($payload, "Type") &&
         $payload->Type === "Notification" ){
         return \json_decode($payload->Message);
     }
 
     return $payload;
+
 });
 ```
 
@@ -118,19 +108,6 @@ $queue = new Syndicate\Queue\Sqs(
         'region' => 'us-west-2'
     ])
 );
-
-$queue->setSerializer("\json_encode");
-$queue->setDeserializer("\json_encode");
-$queue->setTransformer(function(object $payload): object {
-    
-    // Was this message forwarded by SNS?
-    if( property_exists($payload, "Type") &&
-        $payload->Type === "Notification" ){
-        return \json_decode($payload->Message);
-    }
-
-    return $payload;
-});
 
 // Create Router instance
 $router = new Router(function(Message $message, string $route){

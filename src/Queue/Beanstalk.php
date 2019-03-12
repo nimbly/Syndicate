@@ -49,10 +49,8 @@ class Beanstalk extends Queue
             $options['timeout'] ?? null
         );
 
-        $payload = $this->transform(
-            $this->deserialize(
-                $job->getData()
-            )
+        $payload = $this->deserialize(
+            $job->getData()
         );
 
         return new Message($this, $job, $payload);

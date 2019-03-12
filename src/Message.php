@@ -52,7 +52,7 @@ class Message
     }
 
     /**
-     * Get the payload from the 
+     * Get the payload from the message.
      *
      * @return mixed
      */
@@ -62,7 +62,7 @@ class Message
     }
 
     /**
-     * Acknolwedge the message.
+     * Delete the message.
      *
      * @return void
      */

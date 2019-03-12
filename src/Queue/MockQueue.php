@@ -46,9 +46,7 @@ class MockQueue extends Queue
         $message = array_shift($this->messages);
 
         return new Message($this, $message,
-            $this->transform(
-                $this->deserialize($message)
-            )
+            $this->deserialize($message)
         );
     }
 
@@ -60,9 +58,7 @@ class MockQueue extends Queue
         $messages = array_slice($this->messages, 0, $max);
 
         foreach( $messages as &$message ){
-            $message = new Message($this, $message, $this->transform(
-                $this->deserialize($message)
-            ));
+            $message = new Message($this, $message, $this->deserialize($message));
         }
 
         return $messages;
