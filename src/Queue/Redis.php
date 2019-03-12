@@ -38,13 +38,8 @@ class Redis extends Queue
      */
     public function get(array $options = []): ?Message
     {
-        if( ($data = $this->client->lpop($this->name)) ){
-
-            $payload = $this->deserialize($data);
-            return new Message($this, $data, $payload);
-        }
-
-        return null;
+        $messages = $this->many(1, $options);
+        return $messages[0] ?? null;
     }
     
     /**
@@ -56,10 +51,8 @@ class Redis extends Queue
 
         for( $i = 0; $i < $max; $i++ ){
             
-            if( ($data = $this->client->lpop($this->name)) ){
-                
-                $payload = $this->deserialize($data);
-                $messages[] =  new Message($this, $data, $payload);
+            if( ($message = $this->client->lpop($this->name)) ){
+                $messages[] =  new Message($this, $message, $this->deserialize($message));
             }
         }
 
