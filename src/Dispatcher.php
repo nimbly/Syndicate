@@ -19,7 +19,7 @@ class Dispatcher
     /**
      * The default handler in case message does not match any routes.
      *
-     * @var callable
+     * @var ?callable
      */
     protected $defaultHandler;
 
@@ -59,7 +59,7 @@ class Dispatcher
      */
     public function listen(Queue $queue): void
     {
-        $queue->listen(function(Message $message) {
+        $queue->listen(function(Message $message): void {
 
             $this->dispatch($message);
             
@@ -79,7 +79,7 @@ class Dispatcher
     {
         if( ($handler = $this->router->resolve($message)) === null ){
             
-            if( !$this->defaultHandler ){
+            if( !is_callable($this->defaultHandler) ){
                 throw new \Exception("Cannot resolve a route for message and no defaultHandler defined.");
             }
 
