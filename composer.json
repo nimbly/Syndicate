@@ -1,7 +1,7 @@
 {
     "name": "nimbly\/syndicate",
     "description": "Framework agnostic queue and pubsub library.",
-    "version": "0.3",
+    "version": "0.3.1",
     "type": "library",
     "license": "MIT",
     "authors": [
