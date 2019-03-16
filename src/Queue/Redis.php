@@ -56,6 +56,10 @@ class Redis extends Queue
             }
         }
 
+        if( empty($messages) ){
+            usleep(500000);
+        }
+
         return $messages;
     }
 
