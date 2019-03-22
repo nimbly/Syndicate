@@ -77,19 +77,15 @@ class Dispatcher
      */
     public function dispatch(Message $message)
     {
+        // No handler could be resolved, fallback to defaultHandler.
         if( ($handler = $this->router->resolve($message)) === null ){
-            
-            if( !is_callable($this->defaultHandler) ){
-                throw new \Exception("Cannot resolve a route for message and no defaultHandler defined.");
-            }
-
             $handler = $this->defaultHandler;
         }
 
         $handler = $this->resolveHandler($handler);
 
         if( empty($handler) ){
-            throw new \Exception("Invalid handler.");
+            throw new \Exception("Cannot resolve a route for message and no defaultHandler defined.");
         }
 
         return call_user_func($handler, $message);
@@ -98,7 +94,7 @@ class Dispatcher
     /**
      * Try and resolve the handler type into a callable.
      *
-     * @param mixed $handler
+     * @param string|callable $handler
      * @return callable|null
      */
     private function resolveHandler($handler): ?callable
@@ -107,24 +103,10 @@ class Dispatcher
             return $handler;
         }
 
-        if( is_array($handler) &&
-            count($handler) == 2 &&
-            is_string($handler[0]) &&
-            is_string($handler[1]) ){
-
-            // Look in cache for an instance before creating a new one.
-            if( ($instance = $this->getFromHandlerCache($handler[0])) == false ){
-                $instance = new $handler[0];
-                $this->putInHandlerCache($handler[0], $instance);
-            }
-
-            return [$instance, $handler[1]];
-        }
-
         // Could be of the format ClassName@MethodName or ClassName::MethodName
-        elseif( is_string($handler) ){
+        if( is_string($handler) ){
 
-            if( preg_match("/^(.+)(?:(\@|\:\:))(.+)$/", $handler, $match) ){
+            if( preg_match("/^(.+)\@(.+)$/", $handler, $match) ){
 
                 if( ($instance = $this->getFromHandlerCache($match[1])) == false ){
                     $instance = new $match[1];

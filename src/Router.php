@@ -33,14 +33,14 @@ class Router
     }
 
     /**
-     * Match the Message to a route callable.
+     * Match the Message to a route handler.
      * 
-     * Returns a callable handler on successful route match.
+     * Returns a handler on successful route match.
      *
      * @param Message $message
-     * @return callable|null
+     * @return mixed|null
      */
-    public function resolve(Message $message): ?callable
+    public function resolve(Message $message)
     {
         foreach( $this->routes as $route => $handler ){
 
