@@ -33,7 +33,7 @@ class Sns extends PubSubAbstract
      */
     public function listen(string $topic, callable $handler, array $options = []): void
     {
-
+        return;
     }
 
     /**
@@ -41,6 +41,6 @@ class Sns extends PubSubAbstract
      */
     public function subscribe(array $subscriptions, callable $defaultHandler = null): void
     {
-        
+        return;
     }
 }
