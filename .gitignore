@@ -1,4 +1,3 @@
 vendor/
 build/
-test.php
-queue.php
+.phpunit.result.cache
