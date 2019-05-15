@@ -28,7 +28,7 @@ class DispatcherTest extends TestCase
         $router = new Router(
             function(Message $message, $route): bool
             {
-                return $message->name === $route;
+                return $message->getPayload()->name === $route;
             },
             [
                 "FooEvent" => function(Message $message) use (&$value): void {
