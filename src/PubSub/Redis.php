@@ -34,7 +34,7 @@ class Redis extends PubSubAbstract
     {
         $self = $this;
 
-        $this->client->pubSubLoop(['subscribe' => $topic], function(Consumer $consumer, object $message) use ($handler, $self): void {
+        $this->client->pubSubLoop(['subscribe' => $topic], function(Consumer $consumer, object $message) use ($self, $handler): void {
 
             if( $message->kind === "message" ){
                 

@@ -44,7 +44,7 @@ class Router
     {
         foreach( $this->routes as $route => $handler ){
 
-            if( call_user_func_array($this->resolver, [$message, $route]) ){
+            if( \call_user_func_array($this->resolver, [$message, $route]) ){
 
                 return $handler;
 

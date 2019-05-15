@@ -53,6 +53,8 @@ class Dispatcher
 
     /**
      * Listen on a Queue for new messages to be dispatched.
+     * 
+     * This is a blocking call.
      *
      * @param Queue $queue
      * @return void
@@ -88,7 +90,7 @@ class Dispatcher
             throw new \Exception("Cannot resolve a route for message and no defaultHandler defined.");
         }
 
-        return call_user_func($handler, $message);
+        return \call_user_func($handler, $message);
     }
 
     /**
@@ -99,14 +101,14 @@ class Dispatcher
      */
     private function resolveHandler($handler): ?callable
     {
-        if( is_callable($handler) ){
+        if( \is_callable($handler) ){
             return $handler;
         }
 
         // Could be of the format ClassName@MethodName or ClassName::MethodName
-        if( is_string($handler) ){
+        if( \is_string($handler) ){
 
-            if( preg_match("/^(.+)\@(.+)$/", $handler, $match) ){
+            if( \preg_match("/^(.+)\@(.+)$/", $handler, $match) ){
 
                 if( ($instance = $this->getFromHandlerCache($match[1])) == false ){
                     $instance = new $match[1];
