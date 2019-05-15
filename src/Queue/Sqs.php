@@ -35,15 +35,15 @@ class Sqs extends Queue
             'MessageBody' => $this->serialize($data),
         ];
 
-        if( array_key_exists('delay', $options) ){
+        if( \array_key_exists('delay', $options) ){
             $message['DelaySeconds'] = $options['delay'];
         }
 
-        if( array_key_exists('messageId', $options) ){
+        if( \array_key_exists('messageId', $options) ){
             $message['MessageDeduplicationId'] = $options['messageId'];
         }
 
-        if( array_key_exists('groupId', $options) ){
+        if( \array_key_exists('groupId', $options) ){
             $message['MessageGroupId'] = $options['groupId'];
         }
 
@@ -69,7 +69,7 @@ class Sqs extends Queue
             'MaxNumberOfMessages' => (int) $max
         ];
 
-        if( array_key_exists('timeout', $options) ){
+        if( \array_key_exists('timeout', $options) ){
             $request['WaitTimeSeconds'] = $options['timeout'];
         }
 

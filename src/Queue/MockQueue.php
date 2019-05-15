@@ -53,7 +53,7 @@ class MockQueue extends Queue
      */
     public function many(int $max, array $options = []): array
     {
-        $messages = array_slice($this->messages, 0, $max);
+        $messages = \array_slice($this->messages, 0, $max);
 
         foreach( $messages as &$message ){
             $message = new Message($this, $message, $this->deserialize($message));

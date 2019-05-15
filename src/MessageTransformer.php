@@ -50,10 +50,10 @@ abstract class MessageTransformer
     public function serialize($data): string
     {
         if( $this->serializer ){
-            return call_user_func($this->serializer, $data);
+            return \call_user_func($this->serializer, $data);
         }
 
-        return json_encode($data);
+        return \json_encode($data);
     }
 
     /**
@@ -65,9 +65,9 @@ abstract class MessageTransformer
     public function deserialize(string $data)
     {
         if( $this->deserializer ){
-            return call_user_func($this->deserializer, $data);
+            return \call_user_func($this->deserializer, $data);
         }
 
-        return json_decode($data);
+        return \json_decode($data);
     }
 }

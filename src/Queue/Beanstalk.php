@@ -17,6 +17,7 @@ class Beanstalk extends Queue
     /**
      * Beanstalkd adapter constructor.
      *
+     * @param string $name
      * @param Pheanstalk $pheanstalk
      */
     public function __construct(string $name, Pheanstalk $pheanstalk)

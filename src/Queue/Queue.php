@@ -82,6 +82,7 @@ abstract class Queue extends MessageTransformer
             if( $message ){
                 $callback($message);
             }
+
         }
         while(true);
     }

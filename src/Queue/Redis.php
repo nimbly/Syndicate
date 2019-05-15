@@ -14,15 +14,29 @@ use Syndicate\Message;
 class Redis extends Queue
 {
     /**
+     * Time to wait in seconds before checking Redis again.
+     * 
+     * This timeout is necessary because without a breather, the application
+     * will consume all CPU resources.
+     * 
+     * Defaults to 0.5 seconds.
+     *
+     * @var float
+     */
+    protected $backoff;
+
+    /**
      * Redis adapter constructor
      *
      * @param string $name
      * @param Client $redis
+     * @param float $backoff
      */
-    public function __construct(string $name, Client $redis)
+    public function __construct(string $name, Client $redis, float $backoff = 0.5)
     {
         $this->name = $name;
         $this->client = $redis;
+        $this->backoff = $backoff;
     }
 
     /**
@@ -57,7 +71,7 @@ class Redis extends Queue
         }
 
         if( empty($messages) ){
-            usleep(500000);
+            \usleep((int) ($this->backoff * 1000000));
         }
 
         return $messages;
