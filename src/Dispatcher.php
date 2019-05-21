@@ -75,51 +75,67 @@ class Dispatcher
      *
      * @param Message $message
      * @throws \Exception
-     * @return mixed
+     * @return void
      */
-    public function dispatch(Message $message)
+    public function dispatch(Message $message): void
     {
         // No handler could be resolved, fallback to defaultHandler.
         if( ($handler = $this->router->resolve($message)) === null ){
             $handler = $this->defaultHandler;
         }
 
-        $handler = $this->resolveHandler($handler);
+        $handlers = $this->resolveHandlers($handler);
 
-        if( empty($handler) ){
-            throw new \Exception("Cannot resolve a route for message and no defaultHandler defined.");
+        if( empty($handlers) ){
+            throw new \Exception("Cannot resolve handler.");
         }
 
-        return \call_user_func($handler, $message);
+        foreach( $handlers as $handler ){
+            \call_user_func($handler, $message);
+        }
     }
 
     /**
      * Try and resolve the handler type into a callable.
      *
-     * @param string|callable $handler
-     * @return callable|null
+     * @param string|array|callable $handlers
+     * @return array<callable>
      */
-    private function resolveHandler($handler): ?callable
+    private function resolveHandlers($handlers): array
     {
-        if( \is_callable($handler) ){
-            return $handler;
+        if( !\is_array($handlers) ){
+            $handlers = [$handlers];
         }
 
-        // Could be of the format ClassName@MethodName or ClassName::MethodName
-        if( \is_string($handler) ){
+        $callables = [];
 
-            if( \preg_match("/^(.+)\@(.+)$/", $handler, $match) ){
+        foreach( $handlers as $handler ){
 
-                if( ($instance = $this->getFromHandlerCache($match[1])) == false ){
-                    $instance = new $match[1];
-                    $this->putInHandlerCache($match[1], $instance);
-                }
-
-                return [$instance, $match[2]];
+            if( \is_callable($handler) ){
+                $callables[] = $handler;
             }
+    
+            // Could be of the format ClassName@MethodName or ClassName::MethodName
+            if( \is_string($handler) ){
+    
+                if( \preg_match("/^(.+)\@(.+)$/", $handler, $match) ){
+    
+                    if( ($instance = $this->getFromHandlerCache($match[1])) == false ){
+
+                        /**
+                         * @psalm-suppress InvalidStringClass
+                         */
+                        $instance = new $match[1];
+                        $this->putInHandlerCache($match[1], $instance);
+                    }
+    
+                    $callables[] = [$instance, $match[2]];
+                }
+            }
+
         }
 
-        return null;
+        return $callables;
     }
 
     /**
