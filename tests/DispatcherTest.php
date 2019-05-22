@@ -93,6 +93,34 @@ class DispatcherTest extends TestCase
         );
 
         $dispatcher = new Dispatcher($router);
+        $defaultHandlerValue = null;
+        $dispatcher->setDefaultHandler(function(Message $message) use (&$defaultHandlerValue){
+            $defaultHandlerValue = 'ok';
+        });
+
+        $dispatcher->dispatch($queue->get());
+
+        $this->assertEquals("ok", $defaultHandlerValue);
+    }
+
+    public function test_no_default_handler_throws()
+    {
+        $queue = new MockQueue("mockqueue", [
+            \json_encode(["name" => "FooEvent"])
+        ]);
+
+        $router = new Router(
+            function(Message $message, $route): bool
+            {
+                return $message->getPayload()->name === $route;
+            },
+            [
+            ]
+        );
+
+        $dispatcher = new Dispatcher($router);
+
+        $this->expectException(\Exception::class);
         $dispatcher->dispatch($queue->get());
     }
 }
