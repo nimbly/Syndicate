@@ -76,4 +76,23 @@ class DispatcherTest extends TestCase
         $this->assertEquals("ok", $closure1);
         $this->assertEquals("ok", $closure2);
     }
+
+    public function test_default_handler()
+    {
+        $queue = new MockQueue("mockqueue", [
+            \json_encode(["name" => "FooEvent"])
+        ]);
+
+        $router = new Router(
+            function(Message $message, $route): bool
+            {
+                return $message->getPayload()->name === $route;
+            },
+            [
+            ]
+        );
+
+        $dispatcher = new Dispatcher($router);
+        $dispatcher->dispatch($queue->get());
+    }
 }
