@@ -43,7 +43,7 @@ class MockQueue extends Queue
      */
     public function get(array $options = []): ?Message
     {
-        $message = array_shift($this->messages);
+        $message = \array_shift($this->messages);
 
         return new Message($this, $message, $this->deserialize($message));
     }

@@ -114,8 +114,8 @@ abstract class Queue extends MessageTransformer
      * @param array $params
      * @return mixed
      */
-    public function __call(string $method, array $params)
+    public function __call(string $method, array $params = [])
     {
-        return call_user_func_array([$this->client, $method], $params);
+        return \call_user_func_array([$this->client, $method], $params);
     }
 }

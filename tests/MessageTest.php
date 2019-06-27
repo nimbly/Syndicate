@@ -19,7 +19,7 @@ class MessageTest extends TestCase
             "body" => '{"event": "SomeEvent", "data": {"name": "Joe Example", "email": "joe@example.com"}}'
         ];
 
-        $message = new Message(new MockQueue('TestQueue'), $sourceMessage, json_decode($sourceMessage["body"]));
+        $message = new Message(new MockQueue('TestQueue'), $sourceMessage, \json_decode($sourceMessage["body"]));
 
         $this->assertEquals($sourceMessage, $message->getSourceMessage());
     }
@@ -31,7 +31,7 @@ class MessageTest extends TestCase
             "body" => '{"event": "SomeEvent", "data": {"name": "Joe Example", "email": "joe@example.com"}}'
         ];
 
-        $message = new Message(new MockQueue('TestQueue'), $sourceMessage, json_decode($sourceMessage["body"]));
+        $message = new Message(new MockQueue('TestQueue'), $sourceMessage, \json_decode($sourceMessage["body"]));
 
         $this->assertEquals(json_decode($sourceMessage['body']), $message->getPayload());
     }

@@ -7,6 +7,11 @@ use Predis\PubSub\Consumer;
 use Predis\PubSub\DispatcherLoop;
 use Syndicate\Message;
 
+/**
+ * 
+ * @property Client $client
+ * 
+ */
 class Redis extends PubSubAbstract
 {
     /**
