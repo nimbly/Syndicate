@@ -3,9 +3,7 @@
 namespace Syndicate;
 
 use Syndicate\Message;
-use Syndicate\Queue\Queue;
 use Syndicate\Router;
-
 
 class Dispatcher
 {
@@ -52,74 +50,69 @@ class Dispatcher
     }
 
     /**
-     * Listen on a Queue for new messages to be dispatched.
-     * 
-     * This is a blocking call.
-     *
-     * @param Queue $queue
-     * @return void
-     */
-    public function listen(Queue $queue): void
-    {
-        $queue->listen(function(Message $message): void {
-
-            $this->dispatch($message);
-            
-        });
-    }
-
-    /**
      * Dispatch the given Message.
-     * 
-     * Throws an exception if no route can be found and no defaultHandler was given.
+     *
+     * Throws a DispatchException if no route can be found and no defaultHandler was given.
      *
      * @param Message $message
-     * @throws \Exception
+     * @throws DispatchException
      * @return void
      */
     public function dispatch(Message $message): void
     {
-        // No handler could be resolved, fallback to defaultHandler.
-        if( ($handler = $this->router->resolve($message)) === null ){
-            $handler = $this->defaultHandler;
+        /** @var string|array|null $handler */
+        $handler = $this->router->resolve($message);
+
+        if( empty($handler) ){
+			$handler = $this->defaultHandler;
+
+			if( empty($handler) ){
+				$dispatchException = new DispatchException("Cannot resolve handler and no default handler defined.");
+				$dispatchException->setQueueMessage($message);
+				throw $dispatchException;
+			}
         }
 
-        $handlers = $this->resolveHandlers($handler);
+        $callableHandlers = $this->makeHandlersCallable($handler);
 
-        if( empty($handlers) ){
-            throw new \Exception("Cannot resolve handler.");
+        if( empty($callableHandlers) ){
+			$dispatchException = new DispatchException("Cannot resolve handlers into callables.");
+			$dispatchException->setQueueMessage($message);
+			throw $dispatchException;
         }
 
-        foreach( $handlers as $handler ){
-            \call_user_func($handler, $message);
+        foreach( $callableHandlers as $callableHandler ){
+            \call_user_func($callableHandler, $message);
         }
     }
 
     /**
-     * Try and resolve the handler type into a callable.
+     * Try and resolve the handler(s) into an array of callables.
      *
      * @param string|array|callable $handlers
      * @return array<callable>
      */
-    private function resolveHandlers($handlers): array
+    private function makeHandlersCallable($handlers): array
     {
         if( !\is_array($handlers) ){
             $handlers = [$handlers];
         }
 
-        $callables = [];
-
-        foreach( $handlers as $handler ){
+        /**
+		 * @var array $callables
+		 * @psalm-suppress MissingClosureParamType
+		 */
+        $callables = \array_reduce($handlers, function(array $callables, $handler): array {
 
             if( \is_callable($handler) ){
                 $callables[] = $handler;
             }
-    
-            // Could be of the format ClassName@MethodName or ClassName::MethodName
-            if( \is_string($handler) ){
-    
+
+            elseif( \is_string($handler) ){
+
+                // Could be of the format ClassName@MethodName or ClassName::MethodName
                 if( \preg_match("/^(.+)\@(.+)$/", $handler, $match) ){
-    
+
                     if( ($instance = $this->getFromHandlerCache($match[1])) == false ){
 
                         /**
@@ -128,12 +121,14 @@ class Dispatcher
                         $instance = new $match[1];
                         $this->putInHandlerCache($match[1], $instance);
                     }
-    
+
                     $callables[] = [$instance, $match[2]];
                 }
             }
 
-        }
+            return $callables;
+
+        }, []);
 
         return $callables;
     }

@@ -2,15 +2,15 @@
 
 namespace Syndicate\Queue;
 
-use Pheanstalk\Job;
 use Pheanstalk\Pheanstalk;
-use Syndicate\Queue\Queue;
+use Pheanstalk\PheanstalkInterface;
 use Syndicate\Message;
+use Syndicate\Queue\Queue;
 
 /**
- * 
+ *
  * @property Pheanstalk $client
- * 
+ *
  */
 class Beanstalk extends Queue
 {
@@ -34,9 +34,9 @@ class Beanstalk extends Queue
         $this->client->putInTube(
             $this->name,
             $this->serialize($data),
-            $options['priority'] ?? null,
-            $options['delay'] ?? null,
-            $options['ttr'] ??  null
+            $options['priority'] ?? PheanstalkInterface::DEFAULT_PRIORITY,
+            $options['delay'] ?? PheanstalkInterface::DEFAULT_DELAY,
+            $options['ttr'] ??  PheanstalkInterface::DEFAULT_TTR
         );
     }
 
@@ -45,16 +45,13 @@ class Beanstalk extends Queue
      */
     public function get(array $options = []): ?Message
     {
-        $job = $this->client->reserveFromTube(
-            $this->name,
-            $options['timeout'] ?? null
-        );
+        $message = $this->many(1, $options);
 
-        $payload = $this->deserialize(
-            $job->getData()
-        );
+        if( empty($message) ){
+            return null;
+        }
 
-        return new Message($this, $job, $payload);
+        return $message[0];
     }
 
     /**
@@ -62,7 +59,23 @@ class Beanstalk extends Queue
      */
     public function many(int $max, array $options = []): array
     {
-        return [];
+        $job = $this->client->reserveFromTube(
+            $this->name,
+            $options['timeout'] ?? null
+        );
+
+		/** @psalm-suppress DocblockTypeContradiction */
+        if( empty($job) ){
+            return [];
+        }
+
+        $payload = $this->deserialize(
+            $job->getData()
+        );
+
+        return [
+            new Message($this, $job, $payload)
+        ];
     }
 
     /**
@@ -72,8 +85,8 @@ class Beanstalk extends Queue
     {
         $this->client->release(
             $message->getSourceMessage(),
-            $options['priority'] ?? null,
-            $options['delay'] ?? null
+            $options['priority'] ?? PheanstalkInterface::DEFAULT_PRIORITY,
+            $options['delay'] ?? PheanstalkInterface::DEFAULT_DELAY
         );
     }
 

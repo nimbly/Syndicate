@@ -5,11 +5,10 @@ namespace Syndicate\Queue;
 use Predis\Client;
 use Syndicate\Message;
 
-
 /**
- * 
+ *
  * @property Client $client
- * 
+ *
  */
 class Redis extends Queue
 {
@@ -41,7 +40,7 @@ class Redis extends Queue
         $messages = $this->many(1, $options);
         return $messages[0] ?? null;
     }
-    
+
     /**
      * @inheritDoc
      */
@@ -50,9 +49,9 @@ class Redis extends Queue
         $messages = [];
 
         for( $i = 0; $i < $max; $i++ ){
-            
-            if( ($message = $this->client->blpop($this->name, 0)) ){
-                $messages[] =  new Message($this, $message[1], $this->deserialize($message[1]));
+
+            if( ($message = $this->client->blpop($this->name, (int) ($options['timeout'] ?? 0))) ){
+                $messages[] = new Message($this, $message[1], $this->deserialize($message[1]));
             }
         }
 

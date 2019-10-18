@@ -8,9 +8,9 @@ use Predis\PubSub\DispatcherLoop;
 use Syndicate\Message;
 
 /**
- * 
+ *
  * @property Client $client
- * 
+ *
  */
 class RedisPubSub extends Queue
 {
@@ -87,10 +87,11 @@ class RedisPubSub extends Queue
     {
         $self = $this;
 
+		/** @psalm-suppress TooManyArguments */
         $this->client->pubSubLoop(['subscribe' => $this->name], function(Consumer $consumer, object $message) use ($callback, $self): void {
 
             if( $message->kind === "message" ){
-                
+
                 $callback(
                     new Message($self, $message, $self->deserialize($message->payload))
                 );

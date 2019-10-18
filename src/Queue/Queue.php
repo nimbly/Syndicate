@@ -2,10 +2,8 @@
 
 namespace Syndicate\Queue;
 
-use Psr\Log\LoggerInterface;
 use Syndicate\Message;
 use Syndicate\MessageTransformer;
-
 
 abstract class Queue extends MessageTransformer
 {
@@ -22,6 +20,13 @@ abstract class Queue extends MessageTransformer
      * @var mixed
      */
     protected $client;
+
+    /**
+     * Flag signaling the queue should continue to run.
+     *
+     * @var boolean
+     */
+    protected $shouldRun = true;
 
     /**
      * Put data on the queue
@@ -67,6 +72,16 @@ abstract class Queue extends MessageTransformer
     abstract public function release(Message $message, array $options = []): void;
 
     /**
+     * Cease processing messages.
+     *
+     * @return void
+     */
+    public function shutdown(): void
+    {
+        $this->shouldRun = false;
+    }
+
+    /**
      * Block listen for new messages on queue. Executes callback on new Message arrival.
      *
      * @param callable $callback
@@ -83,8 +98,10 @@ abstract class Queue extends MessageTransformer
                 $callback($message);
             }
 
+            \pcntl_signal_dispatch();
+
         }
-        while(true);
+        while($this->shouldRun);
     }
 
     /**

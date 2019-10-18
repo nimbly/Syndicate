@@ -14,14 +14,14 @@ class Message
     protected $queue;
 
     /**
-     * Source message object/data.
+     * Source message data.
      *
      * @var mixed
      */
     protected $sourceMessage;
 
     /**
-     * The payload of the message.
+     * The parsed/decoded payload of the source message.
      *
      * @var mixed
      */

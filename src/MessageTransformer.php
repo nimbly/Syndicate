@@ -18,7 +18,6 @@ abstract class MessageTransformer
      */
     protected $deserializer;
 
-
     /**
      * Set the serializer.
      *

@@ -1,9 +1,10 @@
 <?php
 
-namespace Shuttle\Tests;
+namespace Syndicate\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Syndicate\Dispatcher;
+use Syndicate\DispatchException;
 use Syndicate\Message;
 use Syndicate\Queue\MockQueue;
 use Syndicate\Router;
@@ -14,6 +15,7 @@ use Syndicate\Router;
  * @covers Syndicate\Queue\MockQueue
  * @covers Syndicate\Message
  * @covers Syndicate\MessageTransformer
+ * @covers Syndicate\DispatchException
  */
 class DispatcherTest extends TestCase
 {
@@ -120,7 +122,7 @@ class DispatcherTest extends TestCase
 
         $dispatcher = new Dispatcher($router);
 
-        $this->expectException(\Exception::class);
+        $this->expectException(DispatchException::class);
         $dispatcher->dispatch($queue->get());
     }
 }

@@ -9,9 +9,9 @@ use Syndicate\Message;
 use Syndicate\Queue\Queue;
 
 /**
- * 
+ *
  * @property PubSubClient $client
- * 
+ *
  */
 class Google extends Queue
 {
@@ -79,7 +79,7 @@ class Google extends Queue
                 $payload = $this->deserialize(
                     $message->data()
                 );
-    
+
                 $messages[] = new Message($this, $message, $payload);
             }
 

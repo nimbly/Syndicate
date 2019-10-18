@@ -34,7 +34,7 @@ class Router
 
     /**
      * Match the Message to a route handler.
-     * 
+     *
      * Returns a handler on successful route match.
      *
      * @param Message $message

@@ -7,9 +7,9 @@ use Aws\Sqs\SqsClient;
 use Syndicate\Message;
 
 /**
- * 
+ *
  * @property SqsClient $client
- * 
+ *
  */
 class Sqs extends Queue
 {
