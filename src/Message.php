@@ -42,7 +42,7 @@ class Message
     }
 
     /**
-     * Get the raw message instance.
+     * Get the source message instance.
      *
      * @return mixed
      */
@@ -74,10 +74,11 @@ class Message
     /**
      * Release the message back onto the queue.
      *
+	 * @param array<string, mixed> $options
      * @return void
      */
-    public function release(): void
+    public function release(array $options = []): void
     {
-        $this->queue->release($this);
+        $this->queue->release($this, $options);
     }
 }
