@@ -4,7 +4,6 @@ namespace Syndicate\Queue;
 
 use Predis\Client;
 use Predis\PubSub\Consumer;
-use Predis\PubSub\DispatcherLoop;
 use Syndicate\Message;
 
 /**
