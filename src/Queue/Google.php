@@ -69,23 +69,14 @@ class Google extends Queue
     {
         $subscriptionMessages = $this->getSubscription()->pull([
             'maxMessages' => (int) $max
-        ]);
+		]);
 
-        $messages = [];
-
-        if( $subscriptionMessages ){
-
-            foreach( $subscriptionMessages as $message ){
-                $payload = $this->deserialize(
-                    $message->data()
-                );
-
-                $messages[] = new Message($this, $message, $payload);
-            }
-
-        }
-
-        return $messages;
+		return \array_map(
+			function($message): Message {
+				return new Message($this, $message, $this->deserialize($message->data()));
+			},
+			$subscriptionMessages ?: []
+		);
     }
 
     /**

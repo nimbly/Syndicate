@@ -15,7 +15,7 @@ use Syndicate\Message;
 class Azure extends Queue
 {
 	/**
-	 * Azure constructor.
+	 * Azure Storage Queue constructor.
 	 *
 	 * @param string $name
 	 * @param QueueRestProxy $queueRestProxy
@@ -24,7 +24,6 @@ class Azure extends Queue
 	{
 		$this->name = $name;
 		$this->client = $queueRestProxy;
-
 	}
 
 	/**
@@ -70,13 +69,13 @@ class Azure extends Queue
 			$listMessageOptions
 		);
 
-		return \array_reduce(
-			$listMessageResult->getQueueMessages(),
-			function(array $messages, QueueMessage $queueMessage): array {
-				$messages[] = new Message($this, $queueMessage, $this->deserialize($queueMessage->getMessageText()));
-				return $messages;
+		return \array_map(
+			function(QueueMessage $queueMessage): Message {
+
+				return new Message($this, $queueMessage, $this->deserialize($queueMessage->getMessageText()));
+
 			},
-			[]
+			$listMessageResult->getQueueMessages()
 		);
 	}
 

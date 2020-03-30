@@ -50,7 +50,9 @@ class Redis extends Queue
 
         for( $i = 0; $i < $max; $i++ ){
 
-            if( ($message = $this->client->blpop($this->name, (int) ($options['timeout'] ?? 0))) ){
+			$message = $this->client->blpop($this->name, (int) ($options['timeout'] ?? 0));
+
+            if( $message ){
                 $messages[] = new Message($this, $message[1], $this->deserialize($message[1]));
             }
         }
@@ -71,6 +73,6 @@ class Redis extends Queue
      */
     public function release(Message $message, array $options = []): void
     {
-        $this->put($message->getPayload());
+        $this->put($message->getSourceMessage());
     }
 }

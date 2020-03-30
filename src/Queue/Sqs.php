@@ -78,24 +78,12 @@ class Sqs extends Queue
          */
         $response = $this->client->receiveMessage($request);
 
-        $sqsMessages = $response->get('Messages');
-        $messages = [];
-
-        if( $sqsMessages ){
-
-            foreach( $sqsMessages as $sqsMessage ){
-
-                // Deserialize message body
-                $payload = $this->deserialize(
-                    $sqsMessage['Body']
-                );
-
-                // Add message to set.
-                $messages[] = new Message($this, $sqsMessage, $payload);
-            }
-        }
-
-        return $messages;
+		return \array_map(
+			function(array $sqsMessage): Message {
+                return new Message($this, $sqsMessage, $this->deserialize($sqsMessage['Body']));
+			},
+			$response->get('Messages') ?: []
+		);
     }
 
     /**
