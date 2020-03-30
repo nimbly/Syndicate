@@ -29,7 +29,10 @@ class Redis extends Queue
      */
     public function put($data, array $options = []): void
     {
-        $this->client->rpush($this->name, $this->serialize($data));
+        $this->client->rpush(
+			$this->name,
+			$this->serialize($data)
+		);
     }
 
     /**
@@ -73,6 +76,9 @@ class Redis extends Queue
      */
     public function release(Message $message, array $options = []): void
     {
-        $this->put($message->getSourceMessage());
+		$this->client->rpush(
+			$this->name,
+			$message->getSourceMessage()
+		);
     }
 }
