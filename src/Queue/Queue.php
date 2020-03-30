@@ -19,7 +19,14 @@ abstract class Queue extends MessageTransformer
      *
      * @var mixed
      */
-    protected $client;
+	protected $client;
+
+	/**
+	 * Installed signal handlers.
+	 *
+	 * @var array<int, callable>
+	 */
+	protected $signalHandlers = [];
 
     /**
      * Flag signaling the queue should continue to run.
@@ -69,7 +76,35 @@ abstract class Queue extends MessageTransformer
      * @param array $options
      * @return void
      */
-    abstract public function release(Message $message, array $options = []): void;
+	abstract public function release(Message $message, array $options = []): void;
+
+	/**
+	 * Add a signal handler.
+	 *
+	 * @param integer $signal
+	 * @param callable $handler
+	 * @return void
+	 */
+	public function addHandler(int $signal, callable $handler): void
+	{
+		$this->signalHandlers[$signal] = $handler;
+		\pcntl_signal($signal, [$this, 'interrupt']);
+	}
+
+	/**
+	 * Interrupt with a given PCNTL signal.
+	 *
+	 * @param int $signal
+	 * @return void
+	 */
+	public function interrupt(int $signal): void
+	{
+		$callable = $this->signalHandlers[$signal] ?? null;
+
+		if( $callable ){
+			\call_user_func($callable, $signal);
+		}
+	}
 
     /**
      * Cease processing messages.
