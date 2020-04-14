@@ -13,103 +13,103 @@ use Syndicate\Message;
  */
 class Sqs extends Queue
 {
-    /**
-     * SQS adapter constructor
-     *
-     * @param string $name
-     * @param SqsClient $sqsClient
-     */
-    public function __construct(string $name, SqsClient $sqsClient)
-    {
-        $this->name = $name;
-        $this->client = $sqsClient;
-    }
+	/**
+	 * SQS adapter constructor
+	 *
+	 * @param string $name
+	 * @param SqsClient $sqsClient
+	 */
+	public function __construct(string $name, SqsClient $sqsClient)
+	{
+		$this->name = $name;
+		$this->client = $sqsClient;
+	}
 
-    /**
-     * @inheritDoc
-     */
-    public function put($data, array $options = []): void
-    {
-        $message = [
-            'QueueUrl' => $this->name,
-            'MessageBody' => $this->serialize($data),
-        ];
+	/**
+	 * @inheritDoc
+	 */
+	public function put($data, array $options = []): void
+	{
+		$message = [
+			'QueueUrl' => $this->name,
+			'MessageBody' => $this->serialize($data),
+		];
 
-        if( \array_key_exists('delay', $options) ){
-            $message['DelaySeconds'] = $options['delay'];
-        }
+		if( \array_key_exists('delay', $options) ){
+			$message['DelaySeconds'] = $options['delay'];
+		}
 
-        if( \array_key_exists('messageId', $options) ){
-            $message['MessageDeduplicationId'] = $options['messageId'];
-        }
+		if( \array_key_exists('messageId', $options) ){
+			$message['MessageDeduplicationId'] = $options['messageId'];
+		}
 
-        if( \array_key_exists('groupId', $options) ){
-            $message['MessageGroupId'] = $options['groupId'];
-        }
+		if( \array_key_exists('groupId', $options) ){
+			$message['MessageGroupId'] = $options['groupId'];
+		}
 
-        $this->client->sendMessage($message);
-    }
+		$this->client->sendMessage($message);
+	}
 
-    /**
-     * @inheritDoc
-     */
-    public function get(array $options = []): ?Message
-    {
-        $sqsMessages = $this->many(1, $options);
-        return $sqsMessages[0] ?? null;
-    }
+	/**
+	 * @inheritDoc
+	 */
+	public function get(array $options = []): ?Message
+	{
+		$sqsMessages = $this->many(1, $options);
+		return $sqsMessages[0] ?? null;
+	}
 
-    /**
-     * @inheritDoc
-     */
-    public function many(int $max, array $options = []): array
-    {
-        $request = [
-            'QueueUrl' => $this->name,
-            'MaxNumberOfMessages' => (int) $max
-        ];
+	/**
+	 * @inheritDoc
+	 */
+	public function many(int $max, array $options = []): array
+	{
+		$request = [
+			'QueueUrl' => $this->name,
+			'MaxNumberOfMessages' => (int) $max
+		];
 
-        if( \array_key_exists('timeout', $options) ){
-            $request['WaitTimeSeconds'] = $options['timeout'];
-        }
+		if( \array_key_exists('timeout', $options) ){
+			$request['WaitTimeSeconds'] = $options['timeout'];
+		}
 
-        /**
-         * @var Result $response
-         */
-        $response = $this->client->receiveMessage($request);
+		/**
+		 * @var Result $response
+		 */
+		$response = $this->client->receiveMessage($request);
 
 		return \array_map(
 			function(array $sqsMessage): Message {
-                return new Message($this, $sqsMessage, $this->deserialize($sqsMessage['Body']));
+				return new Message($this, $sqsMessage, $this->deserialize($sqsMessage['Body']));
 			},
 			$response->get('Messages') ?: []
 		);
-    }
+	}
 
-    /**
-     * @inheritDoc
-     */
-    public function delete(Message $message): void
-    {
-        $request = [
-            'QueueUrl' => $this->name,
-            'ReceiptHandle' => $message->getSourceMessage()['ReceiptHandle'],
-        ];
+	/**
+	 * @inheritDoc
+	 */
+	public function delete(Message $message): void
+	{
+		$request = [
+			'QueueUrl' => $this->name,
+			'ReceiptHandle' => $message->getSourceMessage()['ReceiptHandle'],
+		];
 
-        $this->client->deleteMessage($request);
-    }
+		$this->client->deleteMessage($request);
+	}
 
-    /**
-     * @inheritDoc
-     */
-    public function release(Message $message, array $options = []): void
-    {
-        $request = [
-            'QueueUrl' => $this->name,
-            'ReceiptHandle' => $message->getSourceMessage()['ReceiptHandle'],
-            'VisibilityTimeout' => (int) ($options['delay'] ?? 0),
-        ];
+	/**
+	 * @inheritDoc
+	 */
+	public function release(Message $message, array $options = []): void
+	{
+		$request = [
+			'QueueUrl' => $this->name,
+			'ReceiptHandle' => $message->getSourceMessage()['ReceiptHandle'],
+			'VisibilityTimeout' => (int) ($options['delay'] ?? 0),
+		];
 
-        $this->client->changeMessageVisibility($request);
-    }
+		$this->client->changeMessageVisibility($request);
+	}
 }

@@ -7,14 +7,14 @@ abstract class MessageTransformer
     /**
      * The serializer to apply to message payload.
      *
-     * @var ?callable
+     * @var callable|null
      */
     protected $serializer;
 
     /**
      * The deserializer to apply to message payload.
      *
-     * @var ?callable
+     * @var callable|null
      */
     protected $deserializer;
 

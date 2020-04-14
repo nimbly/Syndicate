@@ -7,18 +7,18 @@ use Syndicate\MessageTransformer;
 
 abstract class Queue extends MessageTransformer
 {
-    /**
-     * Queue name.
-     *
-     * @var string
-     */
-    protected $name;
+	/**
+	 * Queue name.
+	 *
+	 * @var string
+	 */
+	protected $name;
 
-    /**
-     * Client driver instance
-     *
-     * @var mixed
-     */
+	/**
+	 * Client driver instance
+	 *
+	 * @var mixed
+	 */
 	protected $client;
 
 	/**
@@ -28,54 +28,54 @@ abstract class Queue extends MessageTransformer
 	 */
 	protected $signalHandlers = [];
 
-    /**
-     * Flag signaling the queue should continue to run.
-     *
-     * @var boolean
-     */
-    protected $shouldRun = true;
+	/**
+	 * Flag signaling the queue should continue to run.
+	 *
+	 * @var boolean
+	 */
+	protected $shouldRun = true;
 
-    /**
-     * Put data on the queue
-     *
-     * @param mixed $data
-     * @param array $options
-     * @return void
-     */
-    abstract public function put($data, array $options = []): void;
+	/**
+	 * Put data on the queue
+	 *
+	 * @param mixed $data
+	 * @param array $options
+	 * @return void
+	 */
+	abstract public function put($data, array $options = []): void;
 
-    /**
-     * Get a single message off the queue.
-     *
-     * @param array $options
-     * @return Message|null
-     */
-    abstract public function get(array $options = []): ?Message;
+	/**
+	 * Get a single message off the queue.
+	 *
+	 * @param array $options
+	 * @return Message|null
+	 */
+	abstract public function get(array $options = []): ?Message;
 
-    /**
-     * Get many messages off the queue.
-     *
-     * @param integer $max
-     * @param array $options
-     * @return array<Message>
-     */
-    abstract public function many(int $max, array $options = []): array;
+	/**
+	 * Get many messages off the queue.
+	 *
+	 * @param integer $max
+	 * @param array $options
+	 * @return array<Message>
+	 */
+	abstract public function many(int $max, array $options = []): array;
 
-    /**
-     * Delete a message off the queue
-     *
-     * @param Message $message
-     * @return void
-     */
-    abstract public function delete(Message $message): void;
+	/**
+	 * Delete a message off the queue
+	 *
+	 * @param Message $message
+	 * @return void
+	 */
+	abstract public function delete(Message $message): void;
 
-    /**
-     * Release a message back on to the queue
-     *
-     * @param Message $message
-     * @param array $options
-     * @return void
-     */
+	/**
+	 * Release a message back on to the queue
+	 *
+	 * @param Message $message
+	 * @param array $options
+	 * @return void
+	 */
 	abstract public function release(Message $message, array $options = []): void;
 
 	/**
@@ -106,68 +106,68 @@ abstract class Queue extends MessageTransformer
 		}
 	}
 
-    /**
-     * Cease processing messages.
-     *
-     * @return void
-     */
-    public function shutdown(): void
-    {
-        $this->shouldRun = false;
-    }
+	/**
+	 * Cease processing messages.
+	 *
+	 * @return void
+	 */
+	public function shutdown(): void
+	{
+		$this->shouldRun = false;
+	}
 
-    /**
-     * Block listen for new messages on queue. Executes callback on new Message arrival.
-     *
-     * @param callable $callback
-     * @param int $pollingTimeout
-     * @return void
-     */
-    public function listen(callable $callback, int $pollingTimeout = 20): void
-    {
-        do
-        {
-            $message = $this->get(['timeout' => $pollingTimeout]);
+	/**
+	 * Block listen for new messages on queue. Executes callback on new Message arrival.
+	 *
+	 * @param callable $callback
+	 * @param int $pollingTimeout
+	 * @return void
+	 */
+	public function listen(callable $callback, int $pollingTimeout = 20): void
+	{
+		do
+		{
+			$message = $this->get(['timeout' => $pollingTimeout]);
 
-            if( $message ){
-                $callback($message);
-            }
+			if( $message ){
+				$callback($message);
+			}
 
-            \pcntl_signal_dispatch();
+			\pcntl_signal_dispatch();
 
-        }
-        while($this->shouldRun);
-    }
+		}
+		while( $this->shouldRun );
+	}
 
-    /**
-     * Get the queue client
-     *
-     * @return mixed
-     */
-    public function getClient()
-    {
-        return $this->client;
-    }
+	/**
+	 * Get the queue client
+	 *
+	 * @return mixed
+	 */
+	public function getClient()
+	{
+		return $this->client;
+	}
 
-    /**
-     * Get the queue name.
-     *
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name;
-    }
+	/**
+	 * Get the queue name.
+	 *
+	 * @return string
+	 */
+	public function getName(): string
+	{
+		return $this->name;
+	}
 
-    /**
-     * Call a method on the Queue client itself.
-     *
-     * @param string $method
-     * @param array $params
-     * @return mixed
-     */
-    public function __call(string $method, array $params = [])
-    {
-        return \call_user_func_array([$this->client, $method], $params);
-    }
+	/**
+	 * Call a method on the Queue client itself.
+	 *
+	 * @param string $method
+	 * @param array $params
+	 * @return mixed
+	 */
+	public function __call(string $method, array $params = [])
+	{
+		return \call_user_func_array([$this->client, $method], $params);
+	}
 }
