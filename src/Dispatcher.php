@@ -111,7 +111,7 @@ class Dispatcher
 	/**
 	 * Try and resolve the handler(s) into an array of callables.
 	 *
-	 * @param string|array|callable $handlers
+	 * @param string|callable|array<string>|array<callable> $handlers
 	 * @return array<callable>
 	 */
 	private function getCallableHandlers($handlers): array
@@ -206,7 +206,7 @@ class Dispatcher
 	 *
 	 * @param array<ReflectionParameter> $reflectionParameters
 	 * @param array<string,mixed> $parameters
-	 * @return array
+	 * @return array<mixed>
 	 */
 	private function resolveDependencies(array $reflectionParameters, array $parameters = []): array
 	{
@@ -237,10 +237,10 @@ class Dispatcher
 					}
 				}
 
-				// Message instance provided by Dispatcher.
-				elseif( isset($parameters[Message::class]) &&
-					\is_a($parameters[Message::class], $parameterType->getName()) ){
-					return $parameters[Message::class];
+				// Parameters passed in
+				elseif( \array_key_exists($parameterType->getName(), $parameters) &&
+						\is_a($parameters[$parameterType->getName()], $parameterType->getName()) ){
+					return $parameters[$parameterType->getName()];
 				}
 
 				// Check container for instance.
