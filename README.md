@@ -34,7 +34,7 @@ $queue->listen(function(Message $message): void {
 	 */
 
 	// Delete the message from Queue.
-    $message->delete();
+	$message->delete();
 
 });
 ```
@@ -48,7 +48,7 @@ However, if your messages are in some other format, you may supply your own seri
 The serializer is applied to all outgoing message payloads.
 
 ```php
-$queue->setSerializer(function($message){
+$queue->setSerializer(function($message): string {
 
     return \json_encode($message);
 
@@ -76,7 +76,7 @@ $queue->setDeserializer(function($payload) {
 
 ### Shutting down the Queue
 
-You may shutdown the queue by using the ```shutdown()``` method.
+You may shutdown the queue by using the `shutdown()` method.
 
 The Queue instance will respond to PCNTL signals in a safe manner that will not interrupt in the middle of Message processing.
 You can install signal handlers in your code to cleanly and safely shutdown the service.
@@ -86,7 +86,7 @@ You can install signal handlers in your code to cleanly and safely shutdown the 
 	SIGINT,
 	function() use ($queue): void {
 
-		echo "Got SIGINT. Shutting queue down.";
+		Log::info("[SIGNAL] Shutting down queue.");
 		$queue->shutdown();
 
 	}
@@ -140,17 +140,36 @@ $router = new Router(function(Message $message, string $routeKey): bool {
 
 ### Dispatcher
 
-Create a new ```Dispatcher``` instance by passing the ```Router``` instance.
+Create a new `Dispatcher` instance by passing the `Router` instance.
 
 ```php
 $dispatcher = new Dispatcher($router);
 ```
 
+### PSR-11 Container support
+
+The `Dispatcher` can accept a PSR-11 compliant `ContainerInterface` instance to be used during dependency resolution when dispatching a matched message to a handler.
+
+```php
+$dispatcher = new Dispatcher(
+	$router,
+	$container
+);
+```
+
+Or you can call the `setContainer` method directly.
+
+```php
+$dispatcher->setContainer($container);
+```
+
+The `Dispatcher` will attempt to resolve any dependencies your handler requires including the `Syndicate\Message` instance.
+
 ### Add a default handler
 
-If the ```Router``` cannot resolve a route for the ```Message```, the ```Dispatcher``` will attempt to pass the message off to its default handler.
+If the `Router` cannot resolve a route for the `Message`, the `Dispatcher` will attempt to pass the message off to its default handler.
 
-The default handler can be set as a ```callable``` and accepts the ```Message``` instance.
+The default handler can be set as a `callable` and accepts the `Message` instance.
 
 ```php
 $dispatcher->setDefaultHandler(function(Message $message): void {
