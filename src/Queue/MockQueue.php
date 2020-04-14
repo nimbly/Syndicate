@@ -75,6 +75,6 @@ class MockQueue extends Queue
 	 */
 	public function release(Message $message, array $options = []): void
 	{
-		$this->put($message);
+		$this->put($message->getSourceMessage());
 	}
 }
