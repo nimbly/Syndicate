@@ -1,84 +1,73 @@
 <?php
 
-namespace Syndicate;
-
-use Syndicate\Queue\Queue;
+namespace Nimbly\Syndicate;
 
 class Message
 {
-    /**
-     * A refererence to the Queue that generated this message.
-     *
-     * @var Queue
-     */
-    protected $queue;
+	/**
+	 * @param string $topic
+	 * @param string $payload
+	 * @param array<string,mixed> $attributes
+	 * @param array<string,mixed> $headers
+	 * @param mixed $reference
+	 */
+	public function __construct(
+		protected string $topic,
+		protected string $payload,
+		protected array $attributes = [],
+		protected array $headers = [],
+		protected mixed $reference = null,
+	)
+	{
+	}
 
-    /**
-     * Source message data.
-     *
-     * @var mixed
-     */
-    protected $sourceMessage;
+	/**
+	 * The topic this Message is intended for.
+	 *
+	 * @return string
+	 */
+	public function getTopic(): ?string
+	{
+		return $this->topic;
+	}
 
-    /**
-     * The parsed/decoded payload of the source message.
-     *
-     * @var mixed
-     */
-    protected $payload;
+	/**
+	 * The raw payload from the event.
+	 *
+	 * @return string
+	 */
+	public function getPayload(): string
+	{
+		return $this->payload;
+	}
 
-    /**
-     * Message constructor.
-     *
-     * @param Queue $queue
-     * @param mixed $sourceMessage
-     * @param mixed $payload
-     */
-    public function __construct(Queue $queue, $sourceMessage, $payload)
-    {
-        $this->queue = $queue;
-        $this->sourceMessage = $sourceMessage;
-        $this->payload = $payload;
-    }
+	/**
+	 * Message attributes that can be passed on.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function getAttributes(): array
+	{
+		return $this->attributes;
+	}
 
-    /**
-     * Get the source message instance.
-     *
-     * @return mixed
-     */
-    public function getSourceMessage()
-    {
-        return $this->sourceMessage;
-    }
+	/**
+	 * Message headers
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function getHeaders(): array
+	{
+		return $this->headers;
+	}
 
-    /**
-     * Get the payload from the message.
-     *
-     * @return mixed
-     */
-    public function getPayload()
-    {
-        return $this->payload;
-    }
-
-    /**
-     * Delete the message.
-     *
-     * @return void
-     */
-    public function delete(): void
-    {
-        $this->queue->delete($this);
-    }
-
-    /**
-     * Release the message back onto the queue.
-     *
-	 * @param array<string, mixed> $options
-     * @return void
-     */
-    public function release(array $options = []): void
-    {
-        $this->queue->release($this, $options);
-    }
+	/**
+	 * Get the reference to the original message.
+	 *
+	 * @return mixed Depending on the implementation, this could be a string, an array of values, or the full original message object.
+	 */
+	public function getReference(): mixed
+	{
+		return $this->reference;
+	}
 }

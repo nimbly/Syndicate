@@ -1,193 +1,265 @@
 # Syndicate
 
-## Install
+[![Latest Stable Version](https://img.shields.io/packagist/v/nimbly/Syndicate.svg?style=flat-square)](https://packagist.org/packages/nimbly/Syndicate)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/nimbly/syndicate/php.yml?style=flat-square)](https://github.com/nimbly/Syndicate/actions/workflows/php.yml)
+[![Codecov branch](https://img.shields.io/codecov/c/github/nimbly/syndicate/master?style=flat-square)](https://app.codecov.io/github/nimbly/Syndicate)
+[![License](https://img.shields.io/github/license/nimbly/Syndicate.svg?style=flat-square)](https://packagist.org/packages/nimbly/Syndicate)
+
+Syndicate is a powerful tool able to both publish messages and consume them - ideal for your event driven application or as a job processor. It supports common queues and PubSub integrations and an `Application` layer that can be used to route incoming messages to any handler of your choosing with full dependency injection using a PSR-11 Container instance.
+
+What can you use Syndicate for?
+
+* Publishing messages (queue or PubSub)
+* Job worker - pull messages off of a queue to process
+* Event driven
+
+## Requirements
+
+* PHP 8.2+
+* php-pcntl (process control)
+
+## Suggested
+
+* PSR-11 Container implementation
+
+## Features
+
+### Queue
+* Redis
+* Azure
+* SQS
+* Beanstalk
+* IronMQ
+* RabbitMQ
+
+### PubSub
+* Redis
+* SNS
+* Mosquito
+* Google
+
+## Installation
 
 ```bash
 composer require nimbly/syndicate
 ```
 
-## Basic usage
+## Quick start, publisher
 
-### Create Queue instance
+A publisher sends (aka publishes) messages to a known location like a queue or to a PubSub topic.
+
+Select an integration you would like to publish messages to. In this example, we will be publishing messags to an SNS topic.
 
 ```php
-$queue = new Syndicate\Queue\Sqs(
-    "https://queue.url",
-    new SqsClient([
-        'version' => 'latest',
-        'region' => 'us-west-2'
-    ])
+$publisher = new Sns(
+	new SnsClient(["region" => "us-east-2", "version" => "latest"])
+);
+
+$message = new Message(
+	topic: "arn:aws:sns:us-east-2:010683102219:orders",
+	payload: \json_encode($order)
+);
+
+$publisher->publish($message);
+```
+
+## Quick start, consumer
+
+A consumer pulls messages from a known location like a queue or from a PubSub topic and returns those messages.
+
+Select an integration to begin consuming from. In this example, we will be consuming messages from an SQS queue.
+
+```php
+$consumer = new Sqs(
+	new SqsClient(["region" => "us-east-2", "version" => "latest"])
+);
+
+$messages = $consumer->consume($sqs_queue_url, 10);
+
+foreach( $messages as $message ){
+	// do your logic...
+}
+```
+
+## Application
+
+Typically, you need an application that continuously pulls messages from a known location, and distinctly handles those messages accoridingly.
+
+Syndicate ships with an `Application` instance that can do this for you with full dependency injection support.
+
+```php
+$application = new Application(
+	consumer: $consumer,
+	router: $router,
+	deadletter: $deadletter,
+	container: $container,
+	signals: [SIGINT, SIGTERM, SIGHUP]
+)
+```
+
+### Consumer
+
+The consumer parameter is any instance of `ConsumerInterface` - the source where messages should be pulled from.
+
+Example:
+
+```php
+$consumer = new Sqs(
+	new SqsClient(["region" => "us-east-2", "version" => "latest"])
 );
 ```
-
-### Listen on queue
-
-Listening is a **blocking** call and runs in an infinite loop. Your callback will be triggered when a new Message has arrived.
-
-```php
-$queue->listen(function(Message $message): void {
-
-	/**
-	 *
-	 *  Process the message...
-	 *
-	 */
-
-	// Delete the message from Queue.
-	$message->delete();
-
-});
-```
-
-### Setting a custom serializer and deserializer
-
-By default, Syndicate assumes your messages are JSON and will attempt to auto serialize/deserialize accordingly.
-
-However, if your messages are in some other format, you may supply your own serializer and deserializer callbacks.
-
-The serializer is applied to all outgoing message payloads.
-
-```php
-$queue->setSerializer(function($message): string {
-
-    return \json_encode($message);
-
-});
-```
-
-The deserializer callback is applied to all incoming message payloads.
-
-For example, to handle deserializing a message payload from SQS that was forwarded by SNS, you could pass in the following deserializer callback.
-
-```php
-$queue->setDeserializer(function($payload) {
-
-    $payload = \json_decode($payload);
-
-    if( \property_exists($payload, "Type") &&
-        $payload->Type === "Notification" ){
-        return \json_decode($payload->Message);
-    }
-
-    return $payload;
-
-});
-```
-
-### Shutting down the Queue
-
-You may shutdown the queue by using the `shutdown()` method.
-
-The Queue instance will respond to PCNTL signals in a safe manner that will not interrupt in the middle of Message processing.
-You can install signal handlers in your code to cleanly and safely shutdown the service.
-
-```php
-\pcntl_signal(
-	SIGINT,
-	function() use ($queue): void {
-
-		Log::info("[SIGNAL] Shutting down queue.");
-		$queue->shutdown();
-
-	}
-);
-```
-
-## Routing and Dispatching
-
-Using the `Dispatcher` and `Router` you can have your messages passed off to specific Handlers. How you route is up to you and the message format.
-
-Commonly, a message will contain a message type or event name - these are prime candidates for keys to routing.
 
 ### Router
 
-Create a new `Router` instance by passing in a `\callable` route resolver and an `array` of key and value pairs as route definitions.
+In order to route incoming messages to a particular handler, you must define an implementation for `RouterInterface`.
 
-### Route resolver
+Because event messages are unique per implementor and no standard exists, you must provide a way for Syndicate to know how to route each message. This could be based on the message topic, it could be based on a particular value in the message payload, or any myriad other ways.
 
-The route resolver is responsible for taking the incoming Message instance and finding a matching route to dispatch the Message to.
+This interface provides a single `resolve` method that accepts a message and returns a handler on match. The handler can be any callable or a string in the format `Fully\Qualified\ClassName@method`. Syndicate will automatically build and call this handler for you using dependency injection. If no matching handler could be found, return `null`. In this case, a `RoutingException` will be thrown.
 
-The dispatcher will loop through all configured routes and call the resolver with the Message and a route.
+#### Example
 
-The resolver must simple return a `bool` value indicating whether the message matches the given route.
+Suppose our event messages follow a company-wide standard. The message contains a unique ID, an origin from where the event was published, a timestamp of when the event was published, and a `name` property representing the name of the event.
 
+The message also contains a body that is unique to each kind of event. In this example, user account details for the `UserRegistered` event.
 
-### Route definitions
-
-The route definitions are an array of key/value pairs mapping any key you want to either a `callable`, `string` in the format of `Full\Namespace\ClassName@methodName`, or an array of the above.
-
-
-```php
-$router = new Router(function(Message $message, string $routeKey): bool {
-
-    return $message->getPayload()->eventName == $routeKey;
-
-}, [
-
-	'UserLoggedOff' => function(Message $message): void {
-		// Do some session cleanup stuff...
-	},
-
-	'UserRegistered' => '\App\Handlers\UserHandler@userRegistered',
-
-    'UserClosedAccount' => [
-		'\App\Handlers\UserHandler@userAccountClosed',
-		'\App\Handlers\NotificationHandler@userAccountClosed'
-	]
-
-]);
+```json
+{
+ 	"id": "305d3112-b5ac-4643-921d-22c671b2b5b1",
+ 	"name": "UserRegistered",
+ 	"origin": "user_service.prod.company.com",
+ 	"published_at": "2024-05-12T13:38:02Z",
+ 	"body": {
+ 		"id": "598f38b6-39e1-42ee-a085-e3591a77d6b4",
+ 		"name": "John Doe",
+ 		"email": "john@example.com"
+ 	}
+}
 ```
 
-### Dispatcher
+We would like to route messages to specific handlers based on the `name` field: the name of the event.
 
-Create a new `Dispatcher` instance by passing the `Router` instance.
+We might create a router that looks like this:
 
 ```php
-$dispatcher = new Dispatcher($router);
+class Router implements RouterInterface
+{
+	public function __construct(
+		protected array $routes,
+		protected callable $default
+	)
+	{
+	}
+
+	public function resolve(Message $message): string|callable|null
+	{
+		$payload = \json_decode($message->getPayload());
+
+		foreach( $this->routes as $key => $handler ){
+			if( $payload->name === $key ){
+				return $handler;
+			}
+		}
+
+		return $this->default;
+	}
+}
 ```
 
-### PSR-11 Container support
-
-The `Dispatcher` can accept a PSR-11 compliant `ContainerInterface` instance to be used during dependency resolution when dispatching a matched message to a handler.
+When we instantiate our new router class, it might look something like this:
 
 ```php
-$dispatcher = new Dispatcher(
-	$router,
-	$container
+$router = new Router(
+	[
+		"UserRegistered" => "App\\Handlers\\UsersHandler@onUserRegistered"
+	],
+	function(): Response {
+		\error_log("No handler could be matched for this message, sending to deadletter queue.");
+		return Response::deadletter;
+	}
+)
+```
+
+### Deadletter
+
+Syndicate can push messages to a deadletter queue if you would like.
+
+A deadletter is simply a `PublisherInterface` instance. However, a helper is provided with the `DeadletterPublisher` class.
+
+```php
+$deadletter = new DeadletterPublisher(
+	$redis,
+	"foo_service_deadletter"
 );
 ```
 
-Or you can call the `setContainer` method directly.
+### Container
+
+As mentioned earlier, Syndicate is capable of full dependency resolution and injection when calling your handlers.
+
+To take full advantage of that, you may also provide a PSR-11 Container instance so that your domain dependencies can be resolved.
 
 ```php
-$dispatcher->setContainer($container);
+class UsersHandler
+{
+	public function onUserRegistered(Message $message, EmailService $email): Response
+	{
+		$body = \json_decode($message->getPayload());
+
+		$result = $email->send(
+			$body->payload->email,
+			$body->payload->name,
+			"templates/user_registered"
+		);
+
+		if( $result === false ){
+			return Response::nack;
+		}
+
+		return Response::ack;
+	}
+}
 ```
 
-The `Dispatcher` will attempt to resolve any dependencies your handler requires including the `Syndicate\Message` instance.
+In this example, both the `Message` and the `EmailService` dependecies are injected - assuming the container has the `EmailService` in it.
 
-### Add a default handler
+### Signals
 
-If the `Router` cannot resolve a route for the `Message`, the `Dispatcher` will attempt to pass the message off to its default handler.
+The signals option is an array of PHP interrupt signal constants (eg, `SIGINT`, `SIGTERM`, etc) that you would like your application to respond to and gracefully shutdown the application. I.e. once all messages in the batch have been processed by your handlers, the application will terminate.
 
-The default handler can be set as a `callable` and accepts the `Message` instance.
+If no signals are caught, any interrupt signal received will force an immediate shutdown, even if in the middle of processing a message which could lead to unintended outcomes.
+
+## Response
+
+After processing a message, you may return a `Response` enum to explicity declare what should be done with the message. If no response value is returned, it is assumed the message should be `ack`ed.
+
+Possible response enum values:
+
+* `Response::ack` - Acknowledge the message
+* `Response::nack` - Do not acknowledge the message (the message will be made availble again for processing after a short time)
+* `Response::deadletter` - Move the message to a separate deadletter location, provided in the `Application` constructor
+
+Example:
 
 ```php
-$dispatcher->setDefaultHandler(function(Message $message): void {
+public function onUserRegistered(Message $message, EmailService $email): Response
+{
+	$payload = \json_decode($message->getBody());
 
-    Log::critical("No route defined for {$message->getPayload()->eventName}!");
-    $message->release();
+	if( \json_last_error() !== JSON_ERROR_NONE ){
+		return Response::deadletter;
+	}
 
-});
-```
+	$receipt_id = $email->send(
+		$payload->user_name,
+		$payload->user_email,
+		"templates/registration.tpl"
+	);
 
-If the Message cannot be dispatched and no default handler was given, a `DispatchException` will be thrown.
+	if( $receipt_id === null ){
+		return Response::nack;
+	}
 
-### Using the Dispatcher with the Queue
-
-```php
-$queue->listen(function(Message $message) use ($dispatcher): void {
-
-	$dispatcher->dispatch($message);
-
-});
+	return Response::ack;
+}
 ```

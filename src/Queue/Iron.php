@@ -1,67 +1,80 @@
 <?php
 
-namespace Syndicate\Queue;
+namespace Nimbly\Syndicate\Queue;
 
 use IronMQ\IronMQ;
-use Syndicate\Message;
+use Nimbly\Syndicate\ConsumerException;
+use Nimbly\Syndicate\ConsumerInterface;
+use Nimbly\Syndicate\Message;
+use Nimbly\Syndicate\PublisherException;
+use Nimbly\Syndicate\PublisherInterface;
+use Throwable;
 
-/**
- *
- * @property IronMQ $client
- *
- */
-class Iron extends Queue
+class Iron implements PublisherInterface, ConsumerInterface
 {
 	/**
-	 * Iron Message Queue constructor.
-	 *
-	 * @param string $name
 	 * @param IronMQ $client
 	 */
-	public function __construct(string $name, IronMQ $client)
+	public function __construct(
+		protected IronMQ $client)
 	{
-		$this->name = $name;
-		$this->client = $client;
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public function put($data, array $options = []): void
+	public function publish(Message $message, array $options = []): ?string
 	{
-		$this->client->postMessage(
-			$this->name,
-			$this->serialize($data),
-			$options
-		);
+		try {
+
+			$result = $this->client->postMessage(
+				$message->getTopic(),
+				$message->getPayload(),
+				$options
+			);
+		}
+		catch( Throwable $exception ){
+			throw new PublisherException(
+				message: "Failed to publish message.",
+				previous: $exception
+			);
+		}
+
+		return $result;
 	}
 
 	/**
 	 * @inheritDoc
+	 *
+	 * Options:
+	 * 	`timeout` (integer)
+	 *  `wait` (integer)
 	 */
-	public function get(array $options = []): ?Message
+	public function consume(string $topic, int $max_messages = 1, array $options = []): array
 	{
-		$messages = $this->many(1, $options);
-		return $messages[0] ?? null;
-	}
+		try {
 
-	/**
-	 * @inheritDoc
-	 */
-	public function many(int $max, array $options = []): array
-	{
-		$reservedMessages = $this->client->reserveMessages(
-			$this->name,
-			$max,
-			$options['timeout'] ?? IronMQ::GET_MESSAGE_TIMEOUT,
-			$options['wait'] ?? IronMQ::GET_MESSAGE_WAIT
-		);
+			$reservedMessages = $this->client->reserveMessages(
+				queue_name: $topic,
+				count: $max_messages,
+				timeout: $options["timeout"] ?? IronMQ::GET_MESSAGE_TIMEOUT,
+				wait: $options["wait"] ?? IronMQ::GET_MESSAGE_WAIT
+			);
+		}
+		catch( Throwable $exception ){
+			throw new ConsumerException(
+				message: "Failed to consume message.",
+				previous: $exception
+			);
+		}
 
 		return \array_map(
-			function(object $reservedMessage): Message {
-
-				return new Message($this, $reservedMessage, $this->deserialize($reservedMessage->body));
-
+			function(object $reservedMessage) use ($topic): Message {
+				return new Message(
+					topic: $topic,
+					payload: $reservedMessage->body,
+					reference: [$reservedMessage->id, $reservedMessage->reservation_id]
+				);
 			},
 			$reservedMessages ?? []
 		);
@@ -70,29 +83,47 @@ class Iron extends Queue
 	/**
 	 * @inheritDoc
 	 */
-	public function release(Message $message, array $options = []): void
+	public function ack(Message $message): void
 	{
-		$reservedMessage = $message->getSourceMessage();
+		[$message_id, $reservation_id] = $message->getReference();
 
-		$this->client->releaseMessage(
-			$this->name,
-			$reservedMessage->id,
-			$reservedMessage->reservation_id,
-			$options['delay'] ?? 0
-		);
+		try {
+
+			$this->client->deleteMessage(
+				$message->getTopic(),
+				$message_id,
+				$reservation_id,
+			);
+		}
+		catch( Throwable $exception ){
+			throw new ConsumerException(
+				message: "Failed to ack message.",
+				previous: $exception
+			);
+		}
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public function delete(Message $message): void
+	public function nack(Message $message, int $timeout = 0): void
 	{
-		$reservedMessage = $message->getSourceMessage();
+		[$message_id, $reservation_id] = $message->getReference();
 
-		$this->client->deleteMessage(
-			$this->name,
-			$reservedMessage->id,
-			$reservedMessage->reservation_id
-		);
+		try {
+
+			$this->client->releaseMessage(
+				$message->getTopic(),
+				$message_id,
+				$reservation_id,
+				$timeout
+			);
+		}
+		catch( Throwable $exception ){
+			throw new ConsumerException(
+				message: "Failed to nack message.",
+				previous: $exception
+			);
+		}
 	}
 }

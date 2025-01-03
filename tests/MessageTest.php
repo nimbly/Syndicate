@@ -1,38 +1,60 @@
 <?php
 
-namespace Syndicate\Tests;
-
+use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
-use Syndicate\Message;
-use Syndicate\Queue\MockQueue;
 
 /**
- * @covers \Syndicate\Message
- * @covers \Syndicate\Queue\MockQueue
+ * @covers Nimbly\Syndicate\Message
  */
 class MessageTest extends TestCase
 {
-    public function test_get_source_message()
-    {
-        $sourceMessage = [
-            "id" => "c9dfe490-12d9-43ea-a85d-2beaa8520d0d",
-            "body" => '{"event": "SomeEvent", "data": {"name": "Joe Example", "email": "joe@example.com"}}'
-        ];
+	public function test_get_topic(): void
+	{
+		$message = new Message("test", "payload");
 
-        $message = new Message(new MockQueue('TestQueue'), $sourceMessage, \json_decode($sourceMessage["body"]));
+		$this->assertEquals(
+			"test",
+			$message->getTopic()
+		);
+	}
 
-        $this->assertEquals($sourceMessage, $message->getSourceMessage());
-    }
+	public function test_get_payload(): void
+	{
+		$message = new Message("test", "payload");
 
-    public function test_get_payload()
-    {
-        $sourceMessage = [
-            "id" => "c9dfe490-12d9-43ea-a85d-2beaa8520d0d",
-            "body" => '{"event": "SomeEvent", "data": {"name": "Joe Example", "email": "joe@example.com"}}'
-        ];
+		$this->assertEquals(
+			"payload",
+			$message->getPayload()
+		);
+	}
 
-        $message = new Message(new MockQueue('TestQueue'), $sourceMessage, \json_decode($sourceMessage["body"]));
+	public function test_get_attributes(): void
+	{
+		$message = new Message("test", "payload", ["attr1" => "val1", "attr2" => "val2"]);
 
-        $this->assertEquals(json_decode($sourceMessage['body']), $message->getPayload());
-    }
+		$this->assertEquals(
+			["attr1" => "val1", "attr2" => "val2"],
+			$message->getAttributes()
+		);
+	}
+
+	public function test_get_headers(): void
+	{
+		$message = new Message("test", "payload", [], ["hdr1" => "val1", "hdr2" => "val2"]);
+
+		$this->assertEquals(
+			["hdr1" => "val1", "hdr2" => "val2"],
+			$message->getHeaders()
+		);
+	}
+
+	public function test_get_reference(): void
+	{
+		$message = new Message("test", "payload", [], [], "reference");
+
+		$this->assertEquals(
+			"reference",
+			$message->getReference()
+		);
+	}
 }

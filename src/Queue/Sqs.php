@@ -1,115 +1,125 @@
 <?php
 
-namespace Syndicate\Queue;
+namespace Nimbly\Syndicate\Queue;
 
-use Aws\Result;
 use Aws\Sqs\SqsClient;
-use Syndicate\Message;
+use Nimbly\Syndicate\ConsumerException;
+use Nimbly\Syndicate\ConsumerInterface;
+use Nimbly\Syndicate\Message;
+use Nimbly\Syndicate\PublisherException;
+use Nimbly\Syndicate\PublisherInterface;
+use Throwable;
 
-/**
- *
- * @property SqsClient $client
- *
- */
-class Sqs extends Queue
+class Sqs implements PublisherInterface, ConsumerInterface
 {
-	/**
-	 * SQS adapter constructor
-	 *
-	 * @param string $name
-	 * @param SqsClient $sqsClient
-	 */
-	public function __construct(string $name, SqsClient $sqsClient)
+	public function __construct(
+		protected SqsClient $client
+	)
 	{
-		$this->name = $name;
-		$this->client = $sqsClient;
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public function put($data, array $options = []): void
+	public function publish(Message $message, array $options = []): ?string
 	{
 		$message = [
-			'QueueUrl' => $this->name,
-			'MessageBody' => $this->serialize($data),
+			"QueueUrl" => $message->getTopic(),
+			"MessageBody" => $message->getPayload(),
+			"MessageAttributes" => $message->getAttributes(),
+			...$options
 		];
 
-		if( \array_key_exists('delay', $options) ){
-			$message['DelaySeconds'] = $options['delay'];
+		try {
+
+			$result = $this->client->sendMessage($message);
+		}
+		catch( Throwable $exception ){
+			throw new PublisherException(
+				message: "Failed to publish message.",
+				previous: $exception
+			);
 		}
 
-		if( \array_key_exists('messageId', $options) ){
-			$message['MessageDeduplicationId'] = $options['messageId'];
-		}
-
-		if( \array_key_exists('groupId', $options) ){
-			$message['MessageGroupId'] = $options['groupId'];
-		}
-
-		$this->client->sendMessage($message);
+		return $result->get("MessageId");
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public function get(array $options = []): ?Message
+	public function consume(string $topic, int $max_messages = 1, array $options = []): array
 	{
-		$sqsMessages = $this->many(1, $options);
-		return $sqsMessages[0] ?? null;
-	}
+		try {
 
-	/**
-	 * @inheritDoc
-	 */
-	public function many(int $max, array $options = []): array
-	{
-		$request = [
-			'QueueUrl' => $this->name,
-			'MaxNumberOfMessages' => (int) $max
-		];
-
-		if( \array_key_exists('timeout', $options) ){
-			$request['WaitTimeSeconds'] = $options['timeout'];
+			$result = $this->client->receiveMessage([
+				"QueueUrl" => $topic,
+				"MaxNumberOfMessages" => $max_messages,
+			]);
+		}
+		catch( Throwable $exception ){
+			throw new ConsumerException(
+				message: "Failed to consume message.",
+				previous: $exception
+			);
 		}
 
-		/**
-		 * @var Result $response
-		 */
-		$response = $this->client->receiveMessage($request);
-
-		return \array_map(
-			function(array $sqsMessage): Message {
-				return new Message($this, $sqsMessage, $this->deserialize($sqsMessage['Body']));
+		$messages = \array_map(
+			function(array $message) use ($topic): Message {
+				return new Message(
+					topic: $topic,
+					payload: $message["Body"],
+					attributes: $message["Attributes"],
+					reference: $message["ReceiptHandle"]
+				);
 			},
-			$response->get('Messages') ?: []
+			$result->get("Messages") ?? []
 		);
+
+		return $messages;
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public function delete(Message $message): void
+	public function ack(Message $message): void
 	{
 		$request = [
-			'QueueUrl' => $this->name,
-			'ReceiptHandle' => $message->getSourceMessage()['ReceiptHandle'],
+			"QueueUrl" => $message->getTopic(),
+			"ReceiptHandle" => $message->getReference(),
 		];
 
-		$this->client->deleteMessage($request);
+		try {
+
+			$this->client->deleteMessage($request);
+		}
+		catch( Throwable $exception ){
+			throw new ConsumerException(
+				message: "Failed to ack message.",
+				previous: $exception
+			);
+		}
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public function release(Message $message, array $options = []): void
+	public function nack(Message $message, int $timeout = 0): void
 	{
 		$request = [
-			'QueueUrl' => $this->name,
-			'ReceiptHandle' => $message->getSourceMessage()['ReceiptHandle'],
-			'VisibilityTimeout' => (int) ($options['delay'] ?? 0),
+			"QueueUrl" => $message->getTopic(),
+			"ReceiptHandle" => $message->getReference(),
+			"VisibilityTimeout" => $timeout,
 		];
 
-		$this->client->changeMessageVisibility($request);
+		try {
+
+			$this->client->changeMessageVisibility($request);
+		}
+		catch( Throwable $exception ){
+			throw new ConsumerException(
+				message: "Failed to nack message.",
+				previous: $exception
+			);
+		}
 	}
 }

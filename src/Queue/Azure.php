@@ -1,113 +1,142 @@
 <?php
 
-namespace Syndicate\Queue;
+namespace Nimbly\Syndicate\Queue;
 
 use MicrosoftAzure\Storage\Queue\Models\ListMessagesOptions;
 use MicrosoftAzure\Storage\Queue\Models\QueueMessage;
 use MicrosoftAzure\Storage\Queue\QueueRestProxy;
-use Syndicate\Message;
+use Nimbly\Syndicate\ConsumerException;
+use Nimbly\Syndicate\ConsumerInterface;
+use Nimbly\Syndicate\Message;
+use Nimbly\Syndicate\PublisherException;
+use Nimbly\Syndicate\PublisherInterface;
+use Throwable;
 
-/**
- *
- * @property QueueRestProxy $client
- *
- */
-class Azure extends Queue
+class Azure implements PublisherInterface, ConsumerInterface
 {
 	/**
-	 * Azure Storage Queue constructor.
-	 *
-	 * @param string $name
-	 * @param QueueRestProxy $queueRestProxy
+	 * @param QueueRestProxy $client
 	 */
-	public function __construct(string $name, QueueRestProxy $queueRestProxy)
+	public function __construct(
+		protected QueueRestProxy $client)
 	{
-		$this->name = $name;
-		$this->client = $queueRestProxy;
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public function put($data, array $options = []): void
+	public function publish(Message $message, array $options = []): ?string
 	{
-		$this->client->createMessage(
-			$this->name,
-			$this->serialize($data)
-		);
-	}
+		try {
 
-	/**
-	 * @inheritDoc
-	 */
-	public function get(array $options = []): ?Message
-	{
-		$messages = $this->many(1, $options);
-		return $messages[0] ?? null;
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public function many(int $max, array $options = []): array
-	{
-		$listMessageOptions = new ListMessagesOptions;
-		$listMessageOptions->setNumberOfMessages($max);
-
-		if( !empty($options) ){
-			if( isset($options['delay']) ){
-				$listMessageOptions->setVisibilityTimeoutInSeconds((int) $options['delay']);
-			}
-
-			if( isset($options['timeout']) ){
-				$listMessageOptions->setTimeout($options['timeout']);
-			}
+			$result = $this->client->createMessage(
+				$message->getTopic(),
+				$message->getPayload(),
+			);
+		}
+		catch( Throwable $exception ){
+			throw new PublisherException(
+				message: "Failed to publish message.",
+				previous: $exception
+			);
 		}
 
-		$listMessageResult = $this->client->listMessages(
-			$this->name,
-			$listMessageOptions
-		);
+		return $result->getQueueMessage()->getMessageId();
+	}
 
-		return \array_map(
-			function(QueueMessage $queueMessage): Message {
+	/**
+	 * @inheritDoc
+	 *
+	 * Options:
+	 * 	* `delay` (integer) Visibility timeout in seconds.
+	 * 	* `timeout` (integer) Polling timeout in seconds.
+	 */
+	public function consume(string $topic, int $max_messages = 1, array $options = []): array
+	{
+		$listMessageOptions = new ListMessagesOptions;
+		$listMessageOptions->setNumberOfMessages($max_messages);
 
-				return new Message($this, $queueMessage, $this->deserialize($queueMessage->getMessageText()));
+		if( isset($options["delay"]) ){
+			$listMessageOptions->setVisibilityTimeoutInSeconds((int) $options["delay"]);
+		}
 
+		if( isset($options["timeout"]) ){
+			$listMessageOptions->setTimeout($options["timeout"]);
+		}
+
+		try {
+
+			$listMessageResult = $this->client->listMessages(
+				$topic,
+				$listMessageOptions
+			);
+		}
+		catch( Throwable $exception ){
+			throw new ConsumerException(
+				message: "Failed to consume message.",
+				previous: $exception
+			);
+		}
+
+		$messages = \array_map(
+			function(QueueMessage $queueMessage) use ($topic): Message {
+				return new Message(
+					topic: $topic,
+					payload: $queueMessage->getMessageText(),
+					reference: [$queueMessage->getMessageId(), $queueMessage->getPopReceipt()],
+				);
 			},
 			$listMessageResult->getQueueMessages()
 		);
+
+		return $messages;
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public function delete(Message $message): void
+	public function ack(Message $message): void
 	{
-		/** @var QueueMessage $queueMessage */
-		$queueMessage = $message->getSourceMessage();
+		[$message_id, $pop_receipt] = $message->getReference();
 
-		$this->client->deleteMessage(
-			$this->name,
-			$queueMessage->getMessageId(),
-			$queueMessage->getPopReceipt()
-		);
+		try {
+
+			$this->client->deleteMessage(
+				$message->getTopic(),
+				$message_id,
+				$pop_receipt
+			);
+		}
+		catch( Throwable $exception ){
+			throw new ConsumerException(
+				message: "Failed to ack message.",
+				previous: $exception
+			);
+		}
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public function release(Message $message, array $options = []): void
+	public function nack(Message $message, int $timeout = 0): void
 	{
-		/** @var QueueMessage $queueMessage */
-		$queueMessage = $message->getSourceMessage();
+		[$message_id, $pop_receipt] = $message->getReference();
 
-		$this->client->updateMessage(
-			$this->name,
-			$queueMessage->getMessageId(),
-			$queueMessage->getPopReceipt(),
-			$queueMessage->getMessageText(),
-			(int) ($options['delay'] ?? 0)
-		);
+		try {
+
+			$this->client->updateMessage(
+				$message->getTopic(),
+				$message_id,
+				$pop_receipt,
+				$message->getPayload(),
+				$timeout
+			);
+		}
+		catch( Throwable $exception ){
+			throw new ConsumerException(
+				message: "Failed to nack message.",
+				previous: $exception
+			);
+		}
 	}
 }

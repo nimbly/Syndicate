@@ -1,72 +1,88 @@
 <?php
 
-namespace Syndicate\Queue;
+namespace Nimbly\Syndicate\Queue;
 
+use Nimbly\Syndicate\ConsumerException;
+use Nimbly\Syndicate\ConsumerInterface;
+use Nimbly\Syndicate\Message;
+use Nimbly\Syndicate\PublisherException;
+use Nimbly\Syndicate\PublisherInterface;
 use Predis\Client;
-use Syndicate\Message;
+use Throwable;
 
-/**
- *
- * @property Client $client
- *
- */
-class Redis extends Queue
+class Redis implements PublisherInterface, ConsumerInterface
 {
 	/**
-	 * Redis adapter constructor
-	 *
-	 * @param string $name
-	 * @param Client $redis
+	 * @param Client $client
 	 */
-	public function __construct(string $name, Client $redis)
+	public function __construct(
+		protected Client $client)
 	{
-		$this->name = $name;
-		$this->client = $redis;
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public function put($data, array $options = []): void
+	public function publish(Message $message, array $options = []): ?string
 	{
-		$this->client->rpush(
-			$this->name,
-			$this->serialize($data)
+		try {
+
+			$result = $this->client->rpush(
+				$message->getTopic(),
+				$message->getPayload()
+			);
+		}
+		catch( Throwable $exception ){
+			throw new PublisherException(
+				message: "Failed to publish message.",
+				previous: $exception
+			);
+		}
+
+		return (string) $result;
+	}
+
+	/**
+	 * @inheritDoc
+	 *
+	 * Options:
+	 * 	None
+	 */
+	public function consume(string $topic, int $max_messages = 1, array $options = []): array
+	{
+		try {
+
+			/**
+			 * @var array<string> $messages
+			 */
+			$messages = $this->client->lpop($topic, $max_messages);
+		}
+		catch( Throwable $exception ){
+			throw new ConsumerException(
+				message: "Failed to consume message.",
+				previous: $exception
+			);
+		}
+
+		if( empty($messages) ){
+			return [];
+		}
+
+		return \array_map(
+			function(string $message) use ($topic): Message {
+				return new Message(
+					topic: $topic,
+					payload: $message
+				);
+			},
+			$messages
 		);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public function get(array $options = []): ?Message
-	{
-		$messages = $this->many(1, $options);
-		return $messages[0] ?? null;
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public function many(int $max, array $options = []): array
-	{
-		$messages = [];
-
-		for( $i = 0; $i < $max; $i++ ){
-
-			$message = $this->client->blpop($this->name, (int) ($options['timeout'] ?? 0));
-
-			if( $message ){
-				$messages[] = new Message($this, $message[1], $this->deserialize($message[1]));
-			}
-		}
-
-		return $messages;
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public function delete(Message $message): void
+	public function ack(Message $message): void
 	{
 		return;
 	}
@@ -74,11 +90,8 @@ class Redis extends Queue
 	/**
 	 * @inheritDoc
 	 */
-	public function release(Message $message, array $options = []): void
+	public function nack(Message $message, int $timeout = 0): void
 	{
-		$this->client->rpush(
-			$this->name,
-			$message->getSourceMessage()
-		);
+		$this->publish($message);
 	}
 }

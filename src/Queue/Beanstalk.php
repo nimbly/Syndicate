@@ -1,100 +1,132 @@
 <?php
 
-namespace Syndicate\Queue;
+namespace Nimbly\Syndicate\Queue;
 
+use Nimbly\Syndicate\ConsumerException;
+use Pheanstalk\Job;
 use Pheanstalk\Pheanstalk;
+use Nimbly\Syndicate\Message;
 use Pheanstalk\PheanstalkInterface;
-use Syndicate\Message;
-use Syndicate\Queue\Queue;
+use Nimbly\Syndicate\ConsumerInterface;
+use Nimbly\Syndicate\PublisherException;
+use Nimbly\Syndicate\PublisherInterface;
+use Throwable;
 
-/**
- *
- * @property Pheanstalk $client
- *
- */
-class Beanstalk extends Queue
+class Beanstalk implements PublisherInterface, ConsumerInterface
 {
 	/**
-	 * Beanstalkd adapter constructor.
+	 * @param Pheanstalk $client
+	 */
+	public function __construct(
+		protected Pheanstalk $client)
+	{
+	}
+
+	/**
+	 * @inheritDoc
 	 *
-	 * @param string $name
-	 * @param Pheanstalk $pheanstalk
+	 * Options:
+	 * 	* `priority` (integer) Priority level, defaults to `PheanstalkInterface::DEFAULT_DELAY` (1024).
+	 * 	* `delay` (integer) Delay in seconds before message becomes available.
+	 * 	* `ttr` (integer) Time to run, in seconds. Amount of time message may be resevered for.
 	 */
-	public function __construct(string $name, Pheanstalk $pheanstalk)
+	public function publish(Message $message, array $options = []): ?string
 	{
-		$this->name = $name;
-		$this->client = $pheanstalk;
-	}
+		try {
 
-	/**
-	 * @inheritDoc
-	 */
-	public function put($data, array $options = []): void
-	{
-		$this->client->putInTube(
-			$this->name,
-			$this->serialize($data),
-			$options['priority'] ?? PheanstalkInterface::DEFAULT_PRIORITY,
-			$options['delay'] ?? PheanstalkInterface::DEFAULT_DELAY,
-			$options['ttr'] ??  PheanstalkInterface::DEFAULT_TTR
-		);
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public function get(array $options = []): ?Message
-	{
-		$message = $this->many(1, $options);
-
-		if( empty($message) ){
-			return null;
+			$job_id = $this->client->putInTube(
+				$message->getTopic(),
+				$message->getPayload(),
+				$options["priority"] ?? PheanstalkInterface::DEFAULT_PRIORITY,
+				$options["delay"] ?? PheanstalkInterface::DEFAULT_DELAY,
+				$options["ttr"] ??  PheanstalkInterface::DEFAULT_TTR
+			);
+		}
+		catch( Throwable $exception ){
+			throw new PublisherException(
+				message: "Failed to publish message.",
+				previous: $exception
+			);
 		}
 
-		return $message[0];
+		return (string) $job_id;
 	}
 
 	/**
 	 * @inheritDoc
+	 *
+	 * Options:
+	 * 	* `timeout` (integer) Polling timeout in seconds.
 	 */
-	public function many(int $max, array $options = []): array
+	public function consume(string $topic, int $max_messages = 1, array $options = []): array
 	{
-		$job = $this->client->reserveFromTube(
-			$this->name,
-			$options['timeout'] ?? null
-		);
+		$result = [];
 
-		/** @psalm-suppress DocblockTypeContradiction */
-		if( empty($job) ){
-			return [];
+		for( $i = 0; $i < $max_messages; $i++){
+
+			try {
+				/**
+				 * @var Job|null $job
+				 */
+				$job = $this->client->reserveFromTube(
+					$topic,
+					$options["timeout"] ?? null
+				);
+			}
+			catch( Throwable $exception ){
+				throw new ConsumerException(
+					message: "Failed to consume message.",
+					previous: $exception
+				);
+			}
+
+			if( !empty($job) ){
+				$result[] = new Message(
+					topic: $topic,
+					payload: $job->getData(),
+					reference: $job
+				);
+			}
 		}
 
-		$payload = $this->deserialize(
-			$job->getData()
-		);
-
-		return [
-			new Message($this, $job, $payload)
-		];
+		return $result;
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public function release(Message $message, array $options = []): void
+	public function ack(Message $message): void
 	{
-		$this->client->release(
-			$message->getSourceMessage(),
-			$options['priority'] ?? PheanstalkInterface::DEFAULT_PRIORITY,
-			$options['delay'] ?? PheanstalkInterface::DEFAULT_DELAY
-		);
+		try {
+
+			$this->client->delete($message->getReference());
+		}
+		catch( Throwable $exception ){
+			throw new ConsumerException(
+				message: "Failed to ack message.",
+				previous: $exception
+			);
+		}
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public function delete(Message $message): void
+	public function nack(Message $message, int $timeout = 0): void
 	{
-		$this->client->delete($message->getSourceMessage());
+		try {
+
+			$this->client->release(
+				$message->getReference(),
+				PheanstalkInterface::DEFAULT_PRIORITY,
+				$timeout
+			);
+		}
+		catch( Throwable $exception ){
+			throw new ConsumerException(
+				message: "Failed to nack message.",
+				previous: $exception
+			);
+		}
 	}
 }
