@@ -22,21 +22,27 @@ What can you use Syndicate for?
 
 * PSR-11 Container implementation
 
-## Features
+## Supported implementations
 
-### Queue
-* Redis
-* Azure
-* SQS
-* Beanstalk
-* IronMQ
-* RabbitMQ
+### Queues
 
-### PubSub
-* Redis
-* SNS
-* Mosquito
-* Google
+| Implementation | Library |
+| -------------- | ------- |
+| Redis          | `predis/predis:^2.0` |
+| Azure          | `microsoft/azure-storage-queue:^1.3` |
+| SQS            | `aws/aws-sdk-php:^3.336` |
+| Beanstalk      | `pda/pheanstalk:^5.0` |
+| IronMQ         | `iron-io/iron_mq:^4.0` |
+| RabbitMQ       | `php-amqplib/php-amqplib:^3.7` |
+
+### PubSubs
+
+| Implementation | Library |
+| -------------- | ------- |
+| Redis          | `predis/predis:^2.0` |
+| SNS (publishing only) | `aws/aws-sdk-php:^3.336` |
+| Mosquito       | `php-mqtt/client:^1.1` |
+| Google         | `google/cloud-pubsub:^2.0` |
 
 ## Installation
 

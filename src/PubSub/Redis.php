@@ -84,6 +84,9 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 				}
 			}
 
+			/**
+			 * @psalm-suppress TypeDoesNotContainType
+			 */
 			if( !$this->listening ){
 				$this->getLoop()->stop(true);
 			}

@@ -131,6 +131,14 @@ class RabbitMQ implements PublisherInterface, ConsumerInterface, LoopConsumerInt
 
 	/**
 	 * @inheritDoc
+	 *
+	 * Options:
+	 *  * `consumer_tag` (string) Defaults to empty string ""
+	 *  * `no_local` (boolean) Defaults to false
+	 *  * `no_ack` (boolean) Defaults to false
+	 *  * `exclusive` (boolean) Defaults to false
+	 *  * `nowait` (boolean) Defaults to false
+	 *  * `ticket` (?integer) Defaults to null
 	 */
 	public function subscribe(string|array $topic, callable $callback, array $options = []): void
 	{
@@ -157,12 +165,15 @@ class RabbitMQ implements PublisherInterface, ConsumerInterface, LoopConsumerInt
 
 	/**
 	 * @inheritDoc
+	 *
+	 * Options:
+	 *  * `timeout` (float) Blocking time to spend waiting for new messages
 	 */
 	public function loop(array $options = []): void
 	{
 		try {
 
-			$this->channel->consume($options["timeout"] ?? 10);
+			$this->channel->consume((float) ($options["timeout"] ?? 10));
 		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(

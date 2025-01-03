@@ -29,7 +29,7 @@ class Redis implements PublisherInterface, ConsumerInterface
 
 			$result = $this->client->rpush(
 				$message->getTopic(),
-				$message->getPayload()
+				[$message->getPayload()]
 			);
 		}
 		catch( Throwable $exception ){

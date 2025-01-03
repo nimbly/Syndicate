@@ -41,7 +41,7 @@ class Sqs implements PublisherInterface, ConsumerInterface
 			);
 		}
 
-		return $result->get("MessageId");
+		return (string) $result->get("MessageId");
 	}
 
 	/**
@@ -68,7 +68,7 @@ class Sqs implements PublisherInterface, ConsumerInterface
 				return new Message(
 					topic: $topic,
 					payload: $message["Body"],
-					attributes: $message["Attributes"],
+					//attributes: $message["Attributes"],
 					reference: $message["ReceiptHandle"]
 				);
 			},

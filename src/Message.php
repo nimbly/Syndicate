@@ -26,7 +26,7 @@ class Message
 	 *
 	 * @return string
 	 */
-	public function getTopic(): ?string
+	public function getTopic(): string
 	{
 		return $this->topic;
 	}

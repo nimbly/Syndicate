@@ -19,7 +19,15 @@
         "vimeo/psalm": "^4.0",
         "phpunit/phpunit": "^9.0",
         "symfony/var-dumper": "^6.0",
-        "nimbly/carton": "^2.0"
+        "nimbly/carton": "^2.0",
+		"pda/pheanstalk": "^5.0",
+		"predis/predis": "^2.3",
+		"google/cloud-pubsub": "^2.0",
+		"microsoft/azure-storage-queue": "^1.3",
+		"iron-io/iron_mq": "^4.0",
+        "php-mqtt/client": "^1.1",
+        "php-amqplib/php-amqplib": "^3.7",
+		"aws/aws-sdk-php": "^3.336"
     },
     "autoload": {
         "psr-4": {
@@ -34,7 +42,7 @@
 	},
     "suggest": {
         "pda/pheanstalk": "To add support for Beanstalkd queue.",
-        "predis/predis": "To add support for Redis based queue and pubsub functionality.",
+        "predis/predis": "To add support for Redis based queue and pub/sub functionality.",
         "php-amqplib/php-amqplib": "To add support for RabbitMQ.",
         "aws/aws-sdk-php": "To add support for AWS Simple Queue Service (SQS) and AWS Simple Notification Service (SNS).",
 		"google/cloud-pubsub": "To add support for Google Cloud Pubsub.",

@@ -3,17 +3,18 @@
 namespace Nimbly\Syndicate\Queue;
 
 use Nimbly\Syndicate\ConsumerException;
-use Pheanstalk\Job;
 use Pheanstalk\Pheanstalk;
 use Nimbly\Syndicate\Message;
-use Pheanstalk\PheanstalkInterface;
 use Nimbly\Syndicate\ConsumerInterface;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
+use Pheanstalk\Values\TubeName;
 use Throwable;
 
 class Beanstalk implements PublisherInterface, ConsumerInterface
 {
+	protected ?TubeName $consumer_tube = null;
+
 	/**
 	 * @param Pheanstalk $client
 	 */
@@ -26,20 +27,21 @@ class Beanstalk implements PublisherInterface, ConsumerInterface
 	 * @inheritDoc
 	 *
 	 * Options:
-	 * 	* `priority` (integer) Priority level, defaults to `PheanstalkInterface::DEFAULT_DELAY` (1024).
+	 * 	* `priority` (integer) Priority level, defaults to `Pheanstalk::DEFAULT_DELAY` (1024).
 	 * 	* `delay` (integer) Delay in seconds before message becomes available.
-	 * 	* `ttr` (integer) Time to run, in seconds. Amount of time message may be resevered for.
+	 * 	* `time_to_release` (integer) Time to run, in seconds. Amount of time message may be resevered for.
 	 */
 	public function publish(Message $message, array $options = []): ?string
 	{
 		try {
 
-			$job_id = $this->client->putInTube(
-				$message->getTopic(),
-				$message->getPayload(),
-				$options["priority"] ?? PheanstalkInterface::DEFAULT_PRIORITY,
-				$options["delay"] ?? PheanstalkInterface::DEFAULT_DELAY,
-				$options["ttr"] ??  PheanstalkInterface::DEFAULT_TTR
+			$this->client->useTube(new TubeName($message->getTopic()));
+
+			$job = $this->client->put(
+				data: $message->getPayload(),
+				priority: $options["priority"] ?? Pheanstalk::DEFAULT_PRIORITY,
+				delay: $options["delay"] ?? Pheanstalk::DEFAULT_DELAY,
+				timeToRelease: $options["time_to_release"] ??  Pheanstalk::DEFAULT_TTR
 			);
 		}
 		catch( Throwable $exception ){
@@ -49,47 +51,48 @@ class Beanstalk implements PublisherInterface, ConsumerInterface
 			);
 		}
 
-		return (string) $job_id;
+		return $job->getId();
 	}
 
 	/**
 	 * @inheritDoc
 	 *
+	 * Beanstalk does not allow any more than a single message to be reserved at a time. Setting
+	 * the `max_messages` argument will always result in a maximum of one message to be reserved.
+	 *
 	 * Options:
-	 * 	* `timeout` (integer) Polling timeout in seconds.
+	 * 	* `timeout` (integer) Polling timeout in seconds. Defaults to 10.
 	 */
 	public function consume(string $topic, int $max_messages = 1, array $options = []): array
 	{
-		$result = [];
-
-		for( $i = 0; $i < $max_messages; $i++){
-
-			try {
-				/**
-				 * @var Job|null $job
-				 */
-				$job = $this->client->reserveFromTube(
-					$topic,
-					$options["timeout"] ?? null
-				);
-			}
-			catch( Throwable $exception ){
-				throw new ConsumerException(
-					message: "Failed to consume message.",
-					previous: $exception
-				);
-			}
-
-			if( !empty($job) ){
-				$result[] = new Message(
-					topic: $topic,
-					payload: $job->getData(),
-					reference: $job
-				);
-			}
+		if( empty($this->consumer_tube) ){
+			$this->client->watch(new TubeName($topic));
 		}
 
-		return $result;
+		try {
+
+			$job = $this->client->reserveWithTimeout(
+				timeout: $options["timeout"] ?? 10
+			);
+		}
+		catch( Throwable $exception ){
+			throw new ConsumerException(
+				message: "Failed to consume message.",
+				previous: $exception
+			);
+		}
+
+		if( empty($job) ){
+			return [];
+		}
+
+		return [
+			new Message(
+				topic: $topic,
+				payload: $job->getData(),
+				reference: $job
+			)
+		];
 	}
 
 	/**
@@ -99,7 +102,9 @@ class Beanstalk implements PublisherInterface, ConsumerInterface
 	{
 		try {
 
-			$this->client->delete($message->getReference());
+			$this->client->delete(
+				job: $message->getReference()
+			);
 		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(
@@ -117,9 +122,9 @@ class Beanstalk implements PublisherInterface, ConsumerInterface
 		try {
 
 			$this->client->release(
-				$message->getReference(),
-				PheanstalkInterface::DEFAULT_PRIORITY,
-				$timeout
+				job: $message->getReference(),
+				priority: Pheanstalk::DEFAULT_PRIORITY,
+				delay: $timeout
 			);
 		}
 		catch( Throwable $exception ){
