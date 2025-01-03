@@ -1,6 +1,6 @@
 <?php
 
-use Carton\Container;
+use Nimbly\Carton\Container;
 use Nimbly\Syndicate\Application;
 use Nimbly\Syndicate\DeadletterPublisher;
 use Nimbly\Syndicate\Message;
