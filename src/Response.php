@@ -6,5 +6,5 @@ enum Response
 {
 	case ack;
 	case nack;
-	case deadleter;
+	case deadletter;
 }

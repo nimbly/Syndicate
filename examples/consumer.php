@@ -22,7 +22,7 @@ $application = new Application(
 		],
 		default: function(): Response {
 			echo "[ERROR] Could not resolve message into a routable handler.\n";
-			return Response::deadleter;
+			return Response::deadletter;
 		}
 	),
 	deadletter: new DeadletterPublisher($client, "deadletter"),

@@ -51,7 +51,7 @@ class Application
 	 *
 	 * @param string $location The location to pull messages from the consumer: topic name, queue name, queue URL, etc
 	 * @param integer $max_messages Maximum number of messages to pull at once.
-	 * @param integer $nack_timeout If nacking a message and how much timeout/delay before message is able to be reserved again. Also known as "visibility delay".
+	 * @param integer $nack_timeout If nacking a message, how much timeout/delay before message is able to be reserved again. Also known as "visibility delay".
 	 * @param integer $polling_timeout Amount of time in seconds to poll before trying again.
 	 * @return void
 	 */
@@ -82,9 +82,9 @@ class Application
 							$this->consumer->nack($message, $nack_timeout);
 							break;
 
-						case Response::deadleter:
+						case Response::deadletter:
 							if( empty($this->deadletter) ){
-								throw new PublisherException("Cannot publish message to deadletter as no deadletter implementation was given.");
+								throw new RoutingException("Cannot route message to deadletter as no deadletter implementation was given.");
 							}
 
 							$this->deadletter->publish($message);

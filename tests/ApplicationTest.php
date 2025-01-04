@@ -4,10 +4,10 @@ use Nimbly\Carton\Container;
 use Nimbly\Syndicate\Application;
 use Nimbly\Syndicate\DeadletterPublisher;
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PubSub\Mock;
 use Nimbly\Syndicate\Response;
 use Nimbly\Syndicate\RouterInterface;
+use Nimbly\Syndicate\RoutingException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -35,6 +35,25 @@ class ApplicationTest extends TestCase
 
 		$application->listen("test_topic");
 		$this->assertCount(0, $mock->getMessages("test_topic"));
+	}
+
+	public function test_no_handler_throws_exception(): void
+	{
+		$mock = new Mock;
+		$mock->publish(new Message("test_topic", "Ok"));
+
+		$application = new Application(
+			$mock,
+			new class implements RouterInterface {
+				public function resolve(Message $message): callable|string|null
+				{
+					return null;
+				}
+			}
+		);
+
+		$this->expectException(RoutingException::class);
+		$application->listen("test_topic");
 	}
 
 	public function test_interrupt_signals(): void
@@ -115,7 +134,7 @@ class ApplicationTest extends TestCase
 				{
 					return function(): Response {
 						\posix_kill(\posix_getpid(), SIGINT);
-						return Response::deadleter;
+						return Response::deadletter;
 					};
 				}
 			},
@@ -140,13 +159,13 @@ class ApplicationTest extends TestCase
 				{
 					return function(): Response {
 						\posix_kill(\posix_getpid(), SIGINT);
-						return Response::deadleter;
+						return Response::deadletter;
 					};
 				}
 			}
 		);
 
-		$this->expectException(PublisherException::class);
+		$this->expectException(RoutingException::class);
 		$application->listen("test_topic");
 	}
 
