@@ -92,6 +92,15 @@ class Redis implements PublisherInterface, ConsumerInterface
 	 */
 	public function nack(Message $message, int $timeout = 0): void
 	{
-		$this->publish($message);
+		try {
+
+			$this->publish($message);
+		}
+		catch( PublisherException $exception ){
+			throw new ConsumerException(
+				message: "Failed to nack message.",
+				previous: $exception
+			);
+		}
 	}
 }
