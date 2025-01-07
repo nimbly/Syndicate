@@ -1,10 +1,16 @@
 <?php
 
-namespace Nimbly\Syndicate;
+namespace Nimbly\Syndicate\Queue;
 
+use Throwable;
+use Nimbly\Syndicate\Message;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Message\AMQPMessage;
-use Throwable;
+use Nimbly\Syndicate\ConsumerException;
+use Nimbly\Syndicate\ConsumerInterface;
+use Nimbly\Syndicate\PublisherException;
+use Nimbly\Syndicate\PublisherInterface;
+use Nimbly\Syndicate\LoopConsumerInterface;
 
 class RabbitMQ implements PublisherInterface, ConsumerInterface, LoopConsumerInterface
 {
@@ -54,35 +60,32 @@ class RabbitMQ implements PublisherInterface, ConsumerInterface, LoopConsumerInt
 	 */
 	public function consume(string $topic, int $max_messages = 1, array $options = []): array
 	{
-		$messages = [];
+		try {
 
-		for( $i = 0; $i < $max_messages; $i++ ){
-
-			try {
-
-				$message = $this->channel->basic_get(
-					queue: $topic,
-					no_ack: $options["no_ack"] ?? true,
-					ticket: $options["ticket"] ?? null,
-				);
-			}
-			catch( Throwable $exception ){
-				throw new ConsumerException(
-					message: "Failed to consume message.",
-					previous: $exception
-				);
-			}
-
-			if( $message ){
-				$messages[] = new Message(
-					topic: $topic,
-					payload: $message->getBody(),
-					reference: $message
-				);
-			}
+			$message = $this->channel->basic_get(
+				queue: $topic,
+				no_ack: $options["no_ack"] ?? true,
+				ticket: $options["ticket"] ?? null,
+			);
+		}
+		catch( Throwable $exception ){
+			throw new ConsumerException(
+				message: "Failed to consume message.",
+				previous: $exception
+			);
 		}
 
-		return $messages;
+		if( empty($message) ){
+			return [];
+		}
+
+		return [
+			new Message(
+				topic: $topic,
+				payload: $message->getBody(),
+				reference: $message
+			)
+		];
 	}
 
 	/**
@@ -119,7 +122,7 @@ class RabbitMQ implements PublisherInterface, ConsumerInterface, LoopConsumerInt
 
 		try {
 
-			$rabbitMessage->reject();
+			$rabbitMessage->reject(true);
 		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(
@@ -146,12 +149,12 @@ class RabbitMQ implements PublisherInterface, ConsumerInterface, LoopConsumerInt
 
 			$this->channel->basic_consume(
 				queue: \is_array($topic) ? $topic[0] : $topic,
-				callback: $callback,
 				consumer_tag: $options["consumer_tag"] ?? "",
 				no_local: $options["no_local"] ?? false,
 				no_ack: $options["no_ack"] ?? false,
 				exclusive: $options["exclusive"] ?? false,
 				nowait: $options["nowait"] ?? false,
+				callback: $callback,
 				ticket: $options["ticket"] ?? null,
 			);
 		}

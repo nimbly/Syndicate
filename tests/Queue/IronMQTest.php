@@ -11,7 +11,7 @@ use Nimbly\Syndicate\Queue\Iron;
 /**
  * @covers Nimbly\Syndicate\Queue\Iron
  */
-class IronTest extends TestCase
+class IronMQTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;
 
