@@ -27,7 +27,8 @@
 		"iron-io/iron_mq": "^4.0",
         "php-mqtt/client": "^1.1",
         "php-amqplib/php-amqplib": "^3.7",
-		"aws/aws-sdk-php": "^3.336"
+		"aws/aws-sdk-php": "^3.336",
+        "mockery/mockery": "^1.6"
     },
     "autoload": {
         "psr-4": {

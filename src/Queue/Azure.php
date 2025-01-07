@@ -53,22 +53,11 @@ class Azure implements PublisherInterface, ConsumerInterface
 	 */
 	public function consume(string $topic, int $max_messages = 1, array $options = []): array
 	{
-		$listMessageOptions = new ListMessagesOptions;
-		$listMessageOptions->setNumberOfMessages($max_messages);
-
-		if( isset($options["delay"]) ){
-			$listMessageOptions->setVisibilityTimeoutInSeconds((int) $options["delay"]);
-		}
-
-		if( isset($options["timeout"]) ){
-			$listMessageOptions->setTimeout($options["timeout"]);
-		}
-
 		try {
 
 			$listMessageResult = $this->client->listMessages(
 				$topic,
-				$listMessageOptions
+				$this->buildListMessageOptions($max_messages, $options)
 			);
 		}
 		catch( Throwable $exception ){
@@ -90,6 +79,29 @@ class Azure implements PublisherInterface, ConsumerInterface
 		);
 
 		return $messages;
+	}
+
+	/**
+	 * Build the Azure ListMessageOptions object for consuming messages.
+	 *
+	 * @param integer $max_messages
+	 * @param array $options
+	 * @return ListMessagesOptions
+	 */
+	protected function buildListMessageOptions(int $max_messages, array $options): ListMessagesOptions
+	{
+		$listMessageOptions = new ListMessagesOptions;
+		$listMessageOptions->setNumberOfMessages($max_messages);
+
+		if( \array_key_exists("delay", $options) ){
+			$listMessageOptions->setVisibilityTimeoutInSeconds((int) $options["delay"]);
+		}
+
+		if( \array_key_exists("timeout", $options) ){
+			$listMessageOptions->setTimeout($options["timeout"]);
+		}
+
+		return $listMessageOptions;
 	}
 
 	/**
