@@ -40,7 +40,7 @@ class Iron implements PublisherInterface, ConsumerInterface
 			);
 		}
 
-		return $result;
+		return (string) $result->id;
 	}
 
 	/**

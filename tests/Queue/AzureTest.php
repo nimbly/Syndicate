@@ -60,7 +60,7 @@ class AzureTest extends TestCase
 
 		$client->expects()
 			->createMessage($message->getTopic(), $message->getPayload())
-			->andThrows(new UnexpectedValueException("Could not connect to Azure"));
+			->andThrows(new Exception("Failure"));
 
 		/**
 		 * @var QueueRestProxy $client
@@ -150,7 +150,7 @@ class AzureTest extends TestCase
 
 		$client->expects()
 			->listMessages("azure", anyArgs())
-			->andThrows(new ConsumerException("Failed to connect to Azure."));
+			->andThrows(new Exception("Failure"));
 
 		/**
 		 * @var QueueRestProxy $client
@@ -235,7 +235,7 @@ class AzureTest extends TestCase
 			"afd1cbe8-6ee3-4de0-90f5-50c019a9a887",
 			"0be31d6e-0b46-43d4-854c-772e7d717ce5"
 		)
-		->andThrows(new ConsumerException("Failed to connect to Azure."));
+		->andThrows(new Exception("Failure"));
 
 		/**
 		 * @var QueueRestProxy $client
@@ -290,7 +290,7 @@ class AzureTest extends TestCase
 			$message->getPayload(),
 			0
 		)
-		->andThrows(new ConsumerException("Failed to connect to Azure."));
+		->andThrows(new Exception("Failure"));
 
 		/**
 		 * @var QueueRestProxy $client
