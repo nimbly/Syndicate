@@ -5,13 +5,7 @@
 [![Codecov branch](https://img.shields.io/codecov/c/github/nimbly/syndicate/master?style=flat-square)](https://app.codecov.io/github/nimbly/Syndicate)
 [![License](https://img.shields.io/github/license/nimbly/Syndicate.svg?style=flat-square)](https://packagist.org/packages/nimbly/Syndicate)
 
-Syndicate is a powerful tool able to both publish messages and consume them - ideal for your event driven application or as a job processor. It supports common queues and PubSub integrations and an `Application` layer that can be used to route incoming messages to any handler of your choosing with full dependency injection using a PSR-11 Container instance.
-
-What can you use Syndicate for?
-
-* Publishing messages (queue or PubSub)
-* Job worker - pull messages off of a queue to process
-* Event driven
+Syndicate is a powerful tool able to both publish and consume messages - ideal for your event driven application or as a job processor. It supports common queues and PubSub integrations with an `Application` layer that can be used to route incoming messages to any handler of your choosing with full dependency injection using a PSR-11 Container instance.
 
 ## Requirements
 
@@ -26,23 +20,28 @@ What can you use Syndicate for?
 
 ### Queues
 
-| Implementation | Library |
-| -------------- | ------- |
-| Redis          | `predis/predis:^2.0` |
-| Azure          | `microsoft/azure-storage-queue:^1.3` |
-| SQS            | `aws/aws-sdk-php:^3.336` |
-| Beanstalk      | `pda/pheanstalk:^5.0` |
-| IronMQ         | `iron-io/iron_mq:^4.0` |
-| RabbitMQ       | `php-amqplib/php-amqplib:^3.7` |
+| Implementation | Publisher | Consumer | Library |
+| -------------- | --------- | -------- | ------- |
+| Redis          | Y         | Y        | `predis/predis:^2.0` |
+| Azure          | Y         | Y        | `microsoft/azure-storage-queue:^1.3` |
+| SQS            | Y         | Y        | `aws/aws-sdk-php:^3.336` |
+| Beanstalk      | Y         | Y        | `pda/pheanstalk:^5.0` |
+| IronMQ         | Y         | Y        | `iron-io/iron_mq:^4.0` |
+| RabbitMQ       | Y         | Y        | `php-amqplib/php-amqplib:^3.7` |
 
 ### PubSubs
 
-| Implementation | Library |
-| -------------- | ------- |
-| Redis          | `predis/predis:^2.0` |
-| SNS (publishing only) | `aws/aws-sdk-php:^3.336` |
-| Mosquito       | `php-mqtt/client:^1.1` |
-| Google         | `google/cloud-pubsub:^2.0` |
+| Implementation | Publisher | Consumer | Library |
+| -------------- | --------- | -------- | ------- |
+| Redis          | Y         | Loop     | `predis/predis:^2.0` |
+| SNS            | Y         | N        | `aws/aws-sdk-php:^3.336` |
+| MQTT           | Y         | Loop     | `php-mqtt/client:^1.1` |
+| Google         | Y         | Y        | `google/cloud-pubsub:^2.0` |
+
+
+Is there an implementation you would like to see supported? Let me know in [Github Discussions](https://github.com/nimbly/Syndicate/discussions) or open a Pull Request!
+
+Alternatively, you can implement your own consumers and publishers by adhering to the `ConsumerInterface` and/or `PublisherInterface` interfaces.
 
 ## Installation
 
@@ -62,7 +61,7 @@ $publisher = new Sns(
 );
 
 $message = new Message(
-	topic: "arn:aws:sns:us-east-2:010683102219:orders",
+	topic: "arn:aws:sns:us-east-2:010393102219:orders",
 	payload: \json_encode($order)
 );
 
@@ -88,6 +87,8 @@ foreach( $messages as $message ){
 ```
 
 ## Application
+
+The quickstart examples above are sufficient for small singular needs however lacks any real robustness in routing messages of different types to custom handlers.
 
 Typically, you need an application that continuously pulls messages from a known location, and distinctly handles those messages accoridingly.
 
@@ -119,9 +120,9 @@ $consumer = new Sqs(
 
 In order to route incoming messages to a particular handler, you must define an implementation for `RouterInterface`.
 
-Because event messages are unique per implementor and no standard exists, you must provide a way for Syndicate to know how to route each message. This could be based on the message topic, it could be based on a particular value in the message payload, or any myriad other ways.
+Because event messages are unique per implementor and no standards exist, you must provide a way for `Syndicate` to know how to route each message. This could be based on the message topic, it could be based on a particular value in the message payload, or any myriad other ways.
 
-This interface provides a single `resolve` method that accepts a message and returns a handler on match. The handler can be any callable or a string in the format `Fully\Qualified\ClassName@method`. Syndicate will automatically build and call this handler for you using dependency injection. If no matching handler could be found, return `null`. In this case, a `RoutingException` will be thrown.
+This interface provides a single `resolve` method that accepts a `Nimbly\Syndicate\Message` instance and returns a handler on match. The handler can be any `callable` or a string in the format `Fully\Qualified\ClassName@method` (eg, `App\Consumer\Handlers\UsersHandler@onUserRegistered`). `Syndicate` will automatically build and call this handler for you using dependency injection. If no matching handler could be found, you should return `null`.
 
 #### Example
 
@@ -143,7 +144,7 @@ The message also contains a body that is unique to each kind of event. In this e
 }
 ```
 
-We would like to route messages to specific handlers based on the `name` field: the name of the event.
+We would like to route messages to specific handlers based on the `name` field in the message: the name of the event.
 
 We might create a router that looks like this:
 
@@ -176,10 +177,10 @@ When we instantiate our new router class, it might look something like this:
 
 ```php
 $router = new Router(
-	[
-		"UserRegistered" => "App\\Handlers\\UsersHandler@onUserRegistered"
+	routes: [
+		"UserRegistered" => "App\\Consumer\\Handlers\\UsersHandler@onUserRegistered"
 	],
-	function(): Response {
+	default: function(): Response {
 		\error_log("No handler could be matched for this message, sending to deadletter queue.");
 		return Response::deadletter;
 	}
@@ -193,15 +194,19 @@ Syndicate can push messages to a deadletter queue if you would like.
 A deadletter is simply a `PublisherInterface` instance. However, a helper is provided with the `DeadletterPublisher` class.
 
 ```php
+$redis = new Nimbly\Syndicate\Queue\Redis(new Client);
+
 $deadletter = new DeadletterPublisher(
 	$redis,
 	"foo_service_deadletter"
 );
 ```
 
+In this example, we would like to use a Redis queue for our deadletters and to push them into the `foo_service_deadletter` queue.
+
 ### Container
 
-As mentioned earlier, Syndicate is capable of full dependency resolution and injection when calling your handlers.
+As mentioned earlier, `Syndicate` is capable of full dependency resolution and injection when calling your handlers.
 
 To take full advantage of that, you may also provide a PSR-11 Container instance so that your domain dependencies can be resolved.
 
@@ -227,7 +232,7 @@ class UsersHandler
 }
 ```
 
-In this example, both the `Message` and the `EmailService` dependecies are injected - assuming the container has the `EmailService` in it.
+In this example, both the `Message` and the `EmailService` dependecies are injected - assuming the container has the `EmailService` in it. The `Nimbly\Syndicate\Message` instance can always be resolve without the need of a conatiner.
 
 ### Signals
 
@@ -235,9 +240,17 @@ The signals option is an array of PHP interrupt signal constants (eg, `SIGINT`, 
 
 If no signals are caught, any interrupt signal received will force an immediate shutdown, even if in the middle of processing a message which could lead to unintended outcomes.
 
+## Handlers
+
+A handler is your code that will receive the event message and process it. The handler can be any `callable` type (closure, function, etc) or a string in the format `Fully\Qualified\NameSpace@methodName` (eg, `App\Consumer\Handlers\UsersHandler@onUserRegistered`).
+
+`Syndicate` will call your handlers with full dependency resolution and injection. This means with a PSR-11 Container instance, your application dependencies can be automatically injected into your handlers.
+
 ## Response
 
-After processing a message, you may return a `Response` enum to explicity declare what should be done with the message. If no response value is returned, it is assumed the message should be `ack`ed.
+After processing a message in your handler, you may return a `Nimbly\Syndicate\Response` enum to explicity declare what should be done with the message.
+
+**NOTE:** If no response value is returned, it is assumed the message should be `ack`ed.
 
 Possible response enum values:
 
@@ -252,6 +265,8 @@ public function onUserRegistered(Message $message, EmailService $email): Respons
 {
 	$payload = \json_decode($message->getBody());
 
+	// There is something fundamentally wrong with this message.
+	// Let's push to the deadletter and investigate later.
 	if( \json_last_error() !== JSON_ERROR_NONE ){
 		return Response::deadletter;
 	}
@@ -262,10 +277,12 @@ public function onUserRegistered(Message $message, EmailService $email): Respons
 		"templates/registration.tpl"
 	);
 
+	// Email send failed, let's try again later...
 	if( $receipt_id === null ){
 		return Response::nack;
 	}
 
+	// All good!
 	return Response::ack;
 }
 ```

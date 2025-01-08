@@ -61,6 +61,16 @@ class MockTest extends TestCase
 		$mock->consume("test", 10, ["exception" => true]);
 	}
 
+	public function test_ack(): void
+	{
+		$message = new Message("test", "message1");
+
+		$mock = new Mock;
+		$response = $mock->ack($message);
+
+		$this->assertNull($response);
+	}
+
 	public function test_nack(): void
 	{
 		$message = new Message("test", "message1");
