@@ -11,7 +11,7 @@ use Predis\Client;
 /**
  * @covers Nimbly\Syndicate\Queue\Redis
  */
-class RedisTest extends TestCase
+class RedisQueueTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;
 

@@ -19,7 +19,6 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 	 * @var array<string,callable>
 	 */
 	protected array $subscriptions = [];
-	protected bool $listening = false;
 
 	public function __construct(
 		protected Client $client
@@ -58,9 +57,18 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 			$topic = [$topic];
 		}
 
-		foreach( $topic as $t ){
-			$this->subscriptions[$t] = $callback;
-			$this->getLoop()->subscribe($t);
+		try {
+
+			foreach( $topic as $t ){
+				$this->subscriptions[$t] = $callback;
+				$this->getLoop()->subscribe($t);
+			}
+		}
+		catch( Throwable $exception ){
+			throw new ConsumerException(
+				message: "Failed to subscribe to topic.",
+				previous: $exception
+			);
 		}
 	}
 
@@ -70,26 +78,28 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 	 */
 	public function loop(array $options = []): void
 	{
-		$this->listening = true;
+		try {
 
-		/**
-		 * @var object{kind:string,channel:string,payload:string} $msg
-		 */
-		foreach( $this->getLoop() as $msg ){
-			if( $msg->kind === "message" ){
-				$callback = $this->subscriptions[$msg->channel] ?? null;
+			/**
+			 * @var object{kind:string,channel:string,payload:string} $msg
+			 */
+			foreach( $this->getLoop() as $msg ){
+				if( $msg->kind === "message" ){
+					$callback = $this->subscriptions[$msg->channel] ?? null;
 
-				if( !empty($callback) ){
+					if( empty($callback) ){
+						throw new ConsumerException("Message received from channel, but no callback defined for it: " . $msg->channel . ".");
+					}
+
 					\call_user_func($callback, $msg);
 				}
 			}
-
-			/**
-			 * @psalm-suppress TypeDoesNotContainType
-			 */
-			if( !$this->listening ){
-				$this->getLoop()->stop(true);
-			}
+		}
+		catch( Throwable $exception ){
+			throw new ConsumerException(
+				message: "Failed to consume message.",
+				previous: $exception
+			);
 		}
 	}
 
@@ -98,7 +108,16 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 	 */
 	public function shutdown(): void
 	{
-		$this->listening = false;
+		try {
+
+			$this->getLoop()->stop(true);
+		}
+		catch( Throwable $exception ){
+			throw new ConsumerException(
+				message: "Failed to shutdown consumer loop.",
+				previous: $exception
+			);
+		}
 	}
 
 	/**
@@ -107,7 +126,7 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 	 * @return Consumer
 	 * @throws ConsumerException
 	 */
-	private function getLoop(): Consumer
+	protected function getLoop(): Consumer
 	{
 		if( empty($this->loop) ){
 			$this->loop = $this->client->pubSubLoop();

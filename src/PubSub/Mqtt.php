@@ -38,8 +38,8 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 			$this->client->publish(
 				topic: $message->getTopic(),
 				message: $message->getPayload(),
-				qualityOfService: $options["qos"] ?? 0,
-				retain: $options["retain"] ?? false
+				qualityOfService: (int) ($options["qos"] ?? 0),
+				retain: (bool) ($options["retain"] ?? false)
 			);
 		}
 		catch( Throwable $exception ) {
@@ -63,6 +63,8 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 		if( !\is_array($topic) ){
 			$topic = [$topic];
 		}
+
+		$this->connect();
 
 		foreach( $topic as $t ){
 			try {
