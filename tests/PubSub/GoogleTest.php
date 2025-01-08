@@ -250,4 +250,13 @@ class GoogleTest extends TestCase
 		$this->expectException(ConsumerException::class);
 		$google->ack(new Message(topic: "google", payload: "Ok"));
 	}
+
+	public function test_nack(): void
+	{
+		$mock = Mockery::mock(PubSubClient::class);
+
+		$google = new Google($mock);
+		$result = $google->nack(new Message(topic: "google", payload: "Ok"));
+		$this->assertNull($result);
+	}
 }

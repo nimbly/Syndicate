@@ -46,6 +46,13 @@ class MockTest extends TestCase
 		$this->assertCount(2, $messages);
 	}
 
+	public function test_consume_unknown_topic_returns_empty_array(): void
+	{
+		$mock = new Mock;
+		$messages = $mock->consume("test");
+		$this->assertCount(0, $messages);
+	}
+
 	public function test_consume_failure_throws_consumer_exception(): void
 	{
 		$mock = new Mock;
