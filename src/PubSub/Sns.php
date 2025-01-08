@@ -42,7 +42,7 @@ class Sns implements PublisherInterface
 	}
 
 	/**
-	 * Build the arguments array need to call SNS.
+	 * Build the arguments array needed to call SNS.
 	 *
 	 * @param Message $message
 	 * @param array<string,mixed> $options
@@ -53,6 +53,7 @@ class Sns implements PublisherInterface
 		$args = [
 			"TopicArn" => $message->getTopic(),
 			"Data" => $message->getPayload(),
+			...$options,
 		];
 
 		if( $message->getAttributes() ){
