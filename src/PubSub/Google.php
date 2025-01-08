@@ -6,7 +6,6 @@ use Google\Cloud\PubSub\Message as GoogleMessage;
 use Throwable;
 use Nimbly\Syndicate\Message;
 use Google\Cloud\PubSub\PubSubClient;
-use Google\Cloud\PubSub\Subscription;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\ConsumerInterface;
 use Nimbly\Syndicate\PublisherException;
@@ -14,8 +13,6 @@ use Nimbly\Syndicate\PublisherInterface;
 
 class Google implements PublisherInterface, ConsumerInterface
 {
-	private ?Subscription $subscription = null;
-
 	/**
 	 * @param PubSubClient $client
 	 */
@@ -59,12 +56,13 @@ class Google implements PublisherInterface, ConsumerInterface
 	 */
 	public function consume(string $topic, int $max_messages = 1, array $options = []): array
 	{
-		$subscription = $this->subscription ?? $this->client->subscription($topic);
+		$subscription = $this->client->subscription($topic);
 
 		try {
 
 			$response = $subscription->pull([
 				"maxMessages" => $max_messages,
+				...$options
 			]);
 		}
 		catch( Throwable $exception ) {
@@ -94,7 +92,7 @@ class Google implements PublisherInterface, ConsumerInterface
 	 */
 	public function ack(Message $message): void
 	{
-		$subscription = $this->subscription ?? $this->client->subscription($message->getTopic());
+		$subscription = $this->client->subscription($message->getTopic());
 
 		try {
 

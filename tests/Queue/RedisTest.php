@@ -153,6 +153,18 @@ class RedisTest extends TestCase
 		$redis->consume("redis");
 	}
 
+	public function test_ack(): void
+	{
+		$mock = Mockery::mock(Client::class);
+
+		$message = new Message("redis", "Message1");
+
+		$redis = new Redis($mock);
+		$result = $redis->ack($message);
+
+		$this->assertNull($result);
+	}
+
 	public function test_nack(): void
 	{
 		$mock = Mockery::mock(Client::class);

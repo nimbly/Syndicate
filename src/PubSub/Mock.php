@@ -2,8 +2,10 @@
 
 namespace Nimbly\Syndicate\PubSub;
 
+use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\ConsumerInterface;
+use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
 
 class Mock implements PublisherInterface, ConsumerInterface
@@ -21,6 +23,10 @@ class Mock implements PublisherInterface, ConsumerInterface
 	 */
 	public function publish(Message $message, array $options = []): ?string
 	{
+		if( isset($options["exception"]) ){
+			throw new PublisherException("Failed to publish message.");
+		}
+
 		$this->messages[$message->getTopic()][] = $message;
 		return \bin2hex(\random_bytes(12));
 	}
@@ -30,6 +36,10 @@ class Mock implements PublisherInterface, ConsumerInterface
 	 */
 	public function consume(string $topic, int $max_messages = 1, array $options = []): array
 	{
+		if( isset($options["exception"]) ){
+			throw new ConsumerException("Failed to consume messages.");
+		}
+
 		if( !\array_key_exists($topic, $this->messages) ){
 			return [];
 		}
@@ -59,7 +69,7 @@ class Mock implements PublisherInterface, ConsumerInterface
 	 * Get all the messages in a topic.
 	 *
 	 * @param string $topic
-	 * @return array
+	 * @return array<Message>
 	 */
 	public function getMessages(string $topic): array
 	{
