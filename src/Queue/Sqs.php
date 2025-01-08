@@ -54,6 +54,7 @@ class Sqs implements PublisherInterface, ConsumerInterface
 			$result = $this->client->receiveMessage([
 				"QueueUrl" => $topic,
 				"MaxNumberOfMessages" => $max_messages,
+				...$options
 			]);
 		}
 		catch( Throwable $exception ){
