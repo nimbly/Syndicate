@@ -12,7 +12,9 @@
     "require": {
 		"php": "^8.2",
         "psr/container": "^1.0|^2.0",
+        "nimbly/capsule": "^3.0",
         "nimbly/resolve": "^2.0",
+        "psr/http-client": "^1.0",
 		"pda/pheanstalk": "^5.0",
 		"predis/predis": "^2.3",
 		"google/cloud-pubsub": "^2.8",
@@ -27,6 +29,7 @@
         "phpunit/phpunit": "^9.0",
         "symfony/var-dumper": "^6.0",
         "nimbly/carton": "^2.0",
+        "nimbly/shuttle": "^1.1",
         "mockery/mockery": "^1.6"
     },
     "autoload": {

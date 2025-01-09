@@ -37,6 +37,7 @@ Syndicate is a powerful tool able to both publish and consume messages - ideal f
 | SNS            | Y         | N        | `aws/aws-sdk-php:^3.336` |
 | MQTT           | Y         | Loop     | `php-mqtt/client:^1.1` |
 | Google         | Y         | Y        | `google/cloud-pubsub:^2.0` |
+| Webhook        | Y         | N        | n/a |
 
 
 Is there an implementation you would like to see supported? Let me know in [Github Discussions](https://github.com/nimbly/Syndicate/discussions) or open a Pull Request!

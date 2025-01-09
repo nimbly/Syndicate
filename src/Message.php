@@ -5,11 +5,11 @@ namespace Nimbly\Syndicate;
 class Message
 {
 	/**
-	 * @param string $topic
-	 * @param string $payload
-	 * @param array<string,mixed> $attributes
-	 * @param array<string,mixed> $headers
-	 * @param mixed $reference
+	 * @param string $topic The topic or queue name/URL to publish this message to.
+	 * @param string $payload The payload (or body) of the message.
+	 * @param array<string,mixed> $attributes A key/value pair of attributes to be sent with message. Most implementations do not support attributes.
+	 * @param array<string,mixed> $headers A key/value pair of headers to be sent with message. Most implementations do not support headers.
+	 * @param mixed $reference A reference to the original source message. This is populated when pulling messages off source.
 	 */
 	public function __construct(
 		protected string $topic,
@@ -22,7 +22,7 @@ class Message
 	}
 
 	/**
-	 * The topic this Message is intended for.
+	 * The topic, queue name, or queue URL this Message is intended for or came from.
 	 *
 	 * @return string
 	 */
@@ -32,7 +32,7 @@ class Message
 	}
 
 	/**
-	 * The raw payload from the event.
+	 * The raw payload/body of the message.
 	 *
 	 * @return string
 	 */
@@ -42,7 +42,7 @@ class Message
 	}
 
 	/**
-	 * Message attributes that can be passed on.
+	 * Message attributes.
 	 *
 	 * @return array<string,mixed>
 	 */
@@ -52,7 +52,7 @@ class Message
 	}
 
 	/**
-	 * Message headers
+	 * Message headers.
 	 *
 	 * @return array<string,mixed>
 	 */

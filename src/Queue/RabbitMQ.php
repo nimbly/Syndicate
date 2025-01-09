@@ -20,6 +20,7 @@ class RabbitMQ implements PublisherInterface, ConsumerInterface
 
 	/**
 	 * @inheritDoc
+	 * @return null
 	 *
 	 * Options:
 	 * 	* `exchange` (string) Defaults to empty string "".

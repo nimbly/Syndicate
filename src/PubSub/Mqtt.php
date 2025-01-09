@@ -45,6 +45,7 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 
 	/**
 	 * @inheritDoc
+	 * @return null
 	 *
 	 * Options:
 	 * 	* `qos` integer, One of `MqttClient::QOS_AT_MOST_ONCE`, `MqttClient::QOS_AT_LEAST_ONCE`, or `MqttClient::QOS_EXACTLY_ONCE`. Defaults to `MqttClient::QOS_AT_MOST_ONCE`.
