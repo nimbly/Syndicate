@@ -3,8 +3,11 @@
 namespace Nimbly\Syndicate\PubSub;
 
 use Throwable;
+use Nimbly\Resolve\Resolve;
 use Nimbly\Syndicate\Message;
+use UnexpectedValueException;
 use PhpMqtt\Client\MqttClient;
+use Psr\Container\ContainerInterface;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
@@ -13,13 +16,31 @@ use Nimbly\Syndicate\LoopConsumerInterface;
 
 class Mqtt implements PublisherInterface, LoopConsumerInterface
 {
+	use Resolve;
+
 	/**
 	 * @param MqttClient $client
 	 */
 	public function __construct(
-		protected MqttClient $client
+		protected MqttClient $client,
+		protected ?ContainerInterface $container = null,
+		array $signals = [SIGINT, SIGHUP, SIGTERM]
 	)
 	{
+		if( \extension_loaded("pcntl") ){
+			\pcntl_async_signals(true);
+
+			foreach( $signals as $signal ){
+				$result = \pcntl_signal(
+					$signal,
+					[$this, "shutdown"]
+				);
+
+				if( $result === false ){
+					throw new UnexpectedValueException("Could not attach signal (" . $signal . ") handler.");
+				}
+			}
+		}
 	}
 
 	/**
@@ -38,7 +59,7 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 			$this->client->publish(
 				topic: $message->getTopic(),
 				message: $message->getPayload(),
-				qualityOfService: (int) ($options["qos"] ?? 0),
+				qualityOfService: (int) ($options["qos"] ?? MqttClient::QOS_AT_MOST_ONCE),
 				retain: (bool) ($options["retain"] ?? false)
 			);
 		}
@@ -58,7 +79,7 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 	 * Options:
 	 * 	* `qos` One of `MqttClient::QOS_AT_MOST_ONCE`, `MqttClient::QOS_AT_LEAST_ONCE`, or `MqttClient::QOS_EXACTLY_ONCE`. Defaults to `MqttClient::QOS_AT_MOST_ONCE`.
 	 */
-	public function subscribe(string|array $topic, callable $callback, array $options = []): void
+	public function subscribe(string|array $topic, string|callable $callback, array $options = []): void
 	{
 		if( !\is_array($topic) ){
 			$topic = [$topic];
@@ -71,7 +92,22 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 
 				$this->client->subscribe(
 					topicFilter: $t,
-					callback: $callback,
+					callback: function(string $topic, string $body, bool $retained, array $matched) use ($callback): void {
+						$message = new Message(
+							topic: $topic,
+							payload: $body,
+							attributes: [
+								"retained" => $retained,
+								"matched" => $matched,
+							]
+						);
+
+						$this->call(
+							$this->makeCallable($callback),
+							$this->container,
+							[Message::class => $message]
+						);
+					},
 					qualityOfService: $options["qos"] ?? MqttClient::QOS_AT_MOST_ONCE
 				);
 			}
@@ -99,8 +135,8 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 		try {
 
 			$this->client->loop(
-				allowSleep: $options["allow_sleep"] ?? true,
-				exitWhenQueuesEmpty: $options["exit_when_empty"] ?? false,
+				allowSleep: (bool) ($options["allow_sleep"] ?? true),
+				exitWhenQueuesEmpty: (bool) ($options["exit_when_empty"] ?? false),
 				queueWaitLimit: $options["timeout"] ?? null,
 			);
 		}
@@ -148,6 +184,16 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 					previous: $exception
 				);
 			}
+		}
+	}
+
+	/**
+	 * Disconnect when tearing down.
+	 */
+	public function __destruct()
+	{
+		if( $this->client->isConnected() ){
+			$this->client->disconnect();
 		}
 	}
 }

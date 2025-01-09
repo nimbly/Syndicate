@@ -88,9 +88,9 @@ class RedisPubSubTest extends TestCase
 
 		$subscriptions = $reflectionProperty->getValue($consumer);
 
-		$this->assertEquals(
-			["test" => "strtolower"],
-			$subscriptions
+		$this->assertInstanceOf(
+			Closure::class,
+			$subscriptions["test"]
 		);
 	}
 
@@ -110,12 +110,7 @@ class RedisPubSubTest extends TestCase
 
 		$mockConsumer->shouldHaveReceived(
 			"subscribe",
-			["test"]
-		);
-
-		$mockConsumer->shouldHaveReceived(
-			"subscribe",
-			["test2"]
+			["test", "test2"]
 		);
 
 		$reflectionClass = new ReflectionClass($consumer);
@@ -124,9 +119,14 @@ class RedisPubSubTest extends TestCase
 
 		$subscriptions = $reflectionProperty->getValue($consumer);
 
-		$this->assertEquals(
-			["test" => "strtolower", "test2" => "strtolower"],
-			$subscriptions
+		$this->assertInstanceOf(
+			Closure::class,
+			$subscriptions["test"]
+		);
+
+		$this->assertInstanceOf(
+			Closure::class,
+			$subscriptions["test2"]
 		);
 	}
 
@@ -174,6 +174,10 @@ class RedisPubSubTest extends TestCase
 		//$mockConsumer->shouldHaveReceived("getValue");
 	}
 
+	// There is no way to mock Predis's loop functionality as it employs
+	// an iterable on the Consumer instance that reads from the socket in
+	// a "foreach" loop.
+	//
 	// public function test_loop_failure_throws_exception(): void
 	// {
 	// 	$mock = Mockery::mock(Client::class);

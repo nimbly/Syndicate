@@ -9,8 +9,7 @@ use Nimbly\Syndicate\DeadletterPublisher;
 
 require_once __DIR__ . "/../vendor/autoload.php";
 
-$client = new Redis(new Client(options: ["read_write_timeout" => 0]));
-
+$client = new Redis(new Client(parameters: ["read_write_timeout" => 0]));
 $application = new Application(
 	consumer: $client,
 	router: new Router(

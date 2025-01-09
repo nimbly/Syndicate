@@ -2,6 +2,7 @@
 
 namespace Nimbly\Syndicate\PubSub;
 
+use Nimbly\Resolve\Resolve;
 use Nimbly\Syndicate\ConsumerException;
 use Throwable;
 use Predis\Client;
@@ -10,9 +11,12 @@ use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
 use Nimbly\Syndicate\LoopConsumerInterface;
+use Psr\Container\ContainerInterface;
 
 class Redis implements PublisherInterface, LoopConsumerInterface
 {
+	use Resolve;
+
 	protected ?Consumer $loop = null;
 
 	/**
@@ -21,7 +25,8 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 	protected array $subscriptions = [];
 
 	public function __construct(
-		protected Client $client
+		protected Client $client,
+		protected ?ContainerInterface $container = null
 	)
 	{
 	}
@@ -51,7 +56,7 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 	/**
 	 * @inheritDoc
 	 */
-	public function subscribe(string|array $topic, callable $callback, array $options = []): void
+	public function subscribe(string|array $topic, string|callable $callback, array $options = []): void
 	{
 		if( !\is_array($topic) ){
 			$topic = [$topic];
@@ -59,10 +64,19 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 
 		try {
 
-			foreach( $topic as $t ){
-				$this->subscriptions[$t] = $callback;
-				$this->getLoop()->subscribe($t);
+			foreach( $topic as $channel ){
+				$callback = $this->makeCallable($callback);
+
+				$this->subscriptions[$channel] = function(Message $message) use ($callback): void {
+					$this->call(
+						$callback,
+						$this->container,
+						[Message::class => $message]
+					);
+				};
 			}
+
+			$this->getLoop()->subscribe(...$topic);
 		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(
@@ -80,10 +94,12 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 	{
 		try {
 
+			$loop = $this->getLoop();
+
 			/**
 			 * @var object{kind:string,channel:string,payload:string} $msg
 			 */
-			foreach( $this->getLoop() as $msg ){
+			foreach( $loop as $msg ){
 				if( $msg->kind === "message" ){
 					$callback = $this->subscriptions[$msg->channel] ?? null;
 
@@ -91,7 +107,14 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 						throw new ConsumerException("Message received from channel, but no callback defined for it: " . $msg->channel . ".");
 					}
 
-					\call_user_func($callback, $msg);
+					\call_user_func(
+						$callback,
+						new Message(
+							topic: $msg->channel,
+							payload: $msg->payload,
+							reference: $msg
+						)
+					);
 				}
 			}
 		}

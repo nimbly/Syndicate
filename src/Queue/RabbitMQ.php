@@ -10,9 +10,8 @@ use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\ConsumerInterface;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
-use Nimbly\Syndicate\LoopConsumerInterface;
 
-class RabbitMQ implements PublisherInterface, ConsumerInterface, LoopConsumerInterface
+class RabbitMQ implements PublisherInterface, ConsumerInterface
 {
 	public function __construct(
 		protected AMQPChannel $channel)
@@ -127,77 +126,6 @@ class RabbitMQ implements PublisherInterface, ConsumerInterface, LoopConsumerInt
 		catch( Throwable $exception ){
 			throw new ConsumerException(
 				message: "Failed to nack message.",
-				previous: $exception
-			);
-		}
-	}
-
-	/**
-	 * @inheritDoc
-	 *
-	 * Options:
-	 *  * `consumer_tag` (string) Defaults to empty string ""
-	 *  * `no_local` (boolean) Defaults to false
-	 *  * `no_ack` (boolean) Defaults to false
-	 *  * `exclusive` (boolean) Defaults to false
-	 *  * `nowait` (boolean) Defaults to false
-	 *  * `ticket` (?integer) Defaults to null
-	 */
-	public function subscribe(string|array $topic, callable $callback, array $options = []): void
-	{
-		try {
-
-			$this->channel->basic_consume(
-				queue: \is_array($topic) ? $topic[0] : $topic,
-				consumer_tag: $options["consumer_tag"] ?? "",
-				no_local: $options["no_local"] ?? false,
-				no_ack: $options["no_ack"] ?? false,
-				exclusive: $options["exclusive"] ?? false,
-				nowait: $options["nowait"] ?? false,
-				callback: $callback,
-				ticket: $options["ticket"] ?? null,
-			);
-		}
-		catch( Throwable $exception ){
-			throw new ConsumerException(
-				message: "Failed to subscribe to topic.",
-				previous: $exception
-			);
-		}
-	}
-
-	/**
-	 * @inheritDoc
-	 *
-	 * Options:
-	 *  * `timeout` (float) Blocking time to spend waiting for new messages
-	 */
-	public function loop(array $options = []): void
-	{
-		try {
-
-			$this->channel->consume((float) ($options["timeout"] ?? 10));
-		}
-		catch( Throwable $exception ){
-			throw new ConsumerException(
-				message: "Failed to consume message.",
-				previous: $exception
-			);
-		}
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public function shutdown(): void
-	{
-		try {
-
-			$this->channel->stopConsume();
-		}
-		catch( Throwable $exception ){
-			throw new ConsumerException(
-				message: "Failed to shutdown consumer.",
 				previous: $exception
 			);
 		}

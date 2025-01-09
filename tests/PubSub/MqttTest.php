@@ -93,7 +93,7 @@ class MqttTest extends TestCase
 		$mock->shouldHaveReceived("connect");
 		$mock->shouldHaveReceived(
 			"subscribe",
-			["test", "strtolower", 12]
+			["test", Closure::class, 12]
 		);
 	}
 
@@ -115,12 +115,12 @@ class MqttTest extends TestCase
 
 		$mock->shouldHaveReceived(
 			"subscribe",
-			["test", "strtolower", MqttClient::QOS_AT_MOST_ONCE]
+			["test", Closure::class, MqttClient::QOS_AT_MOST_ONCE]
 		);
 
 		$mock->shouldHaveReceived(
 			"subscribe",
-			["test2", "strtolower", MqttClient::QOS_AT_MOST_ONCE]
+			["test2", Closure::class, MqttClient::QOS_AT_MOST_ONCE]
 		);
 	}
 
@@ -180,7 +180,11 @@ class MqttTest extends TestCase
 	{
 		$mock = Mockery::mock(MqttClient::class);
 
+		$mock->shouldReceive("isConnected")
+			->andReturn(true);
+
 		$mock->shouldReceive("interrupt");
+		$mock->shouldReceive("disconnect");
 
 		$consumer = new Mqtt($mock);
 		$consumer->shutdown();
@@ -191,6 +195,11 @@ class MqttTest extends TestCase
 	public function test_shutdown_failure_throws_consumer_exception(): void
 	{
 		$mock = Mockery::mock(MqttClient::class);
+
+		$mock->shouldReceive("isConnected")
+			->andReturn(true);
+
+		$mock->shouldReceive("disconnect");
 
 		$mock->shouldReceive("interrupt")
 			->andThrow(new Exception("Failure"));

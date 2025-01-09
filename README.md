@@ -104,6 +104,19 @@ $application = new Application(
 )
 ```
 
+To start consuming messages, call the `listen` method on the application instance.
+
+```php
+$application->listen(
+	location: "aws_queue_url",
+	max_messages: 10,
+	nack_timeout: 12,
+	polling_timeout: 5
+);
+```
+
+Syndicate will continue to poll for new messages and route them to your handlers. To shutdown the listener, you must send an interrupt signal: SIGINT (ctrl-c), SIGHUP, SIGTERM, etc.
+
 ### Consumer
 
 The consumer parameter is any instance of `ConsumerInterface` - the source where messages should be pulled from.

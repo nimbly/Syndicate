@@ -8,11 +8,11 @@ interface LoopConsumerInterface
 	 * Subscribe a topic(s) to a callback.
 	 *
 	 * @param string|array<string> $topic
-	 * @param callable $callback
+	 * @param string|callable $callback
 	 * @param array<string,mixed> $options
 	 * @return void
 	 */
-	public function subscribe(string|array $topic, callable $callback, array $options = []): void;
+	public function subscribe(string|array $topic, string|callable $callback, array $options = []): void;
 
 	/**
 	 * Begin consumer loop.

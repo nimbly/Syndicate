@@ -2,40 +2,42 @@
 
 use Predis\Client;
 use Nimbly\Syndicate\Message;
+use Nimbly\Syndicate\PubSub\Mqtt;
 use Nimbly\Syndicate\Queue\Redis;
+use Nimbly\Syndicate\PubSub\Redis as PubSubRedis;
+use PhpMqtt\Client\MqttClient;
 
 require __DIR__ . "/../vendor/autoload.php";
 
-$publisher = new Redis(new Client(options: ["read_write_timeout" => 0]));
+//$publisher = new PubSubRedis(new Client(options: ["read_write_timeout" => 0]));
+$publisher = new Mqtt(new MqttClient("localhost"));
 
 for( $i = 0; $i < ($argv[1] ?? 100); $i++ ){
 
-	if( \mt_rand(1, 100) <= 5 ){
-		$fruit = "apples"; // un-routable
+	$c = \mt_rand(1, 100);
+
+	if( $c <= 5 ){
+		$fruit = "apples";
+	}
+	elseif( $c <= 30 ){
+		$fruit = "bananas";
+	}
+	elseif( $c <= 55 ){
+		$fruit = "kiwis";
+	}
+	elseif( $c <= 80 ){
+		$fruit = "oranges";
 	}
 	else {
-		$c = \mt_rand(1, 100);
-
-		if( $c <= 25 ){
-			$fruit = "bananas";
-		}
-		elseif( $c <= 50 ){
-			$fruit = "kiwis";
-		}
-		elseif( $c <= 75 ){
-			$fruit = "oranges";
-		}
-		else {
-			$fruit = "mangoes";
-		}
+		$fruit = "mangoes";
 	}
 
 	$payload = [
-		"name" => $fruit,
+		"fruit" => $fruit,
 		"published_at" => \date("c"),
 	];
 
 	$publisher->publish(
-		new Message("fruits", \json_encode($payload))
+		new Message("fruits", \json_encode($payload)),
 	);
 }
