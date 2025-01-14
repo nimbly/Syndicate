@@ -12,8 +12,13 @@ use Nimbly\Syndicate\ConnectionException;
 
 class Sns implements PublisherInterface
 {
+	/**
+	 * @param SnsClient $client
+	 * @param string|null $base_arn An optional base ARN if you are publishing all messages to the same AWS account. With this option set, when you publish a message, its topic does not need to include the base ARN portion.
+	 */
 	public function __construct(
-		protected SnsClient $client
+		protected SnsClient $client,
+		protected ?string $base_arn = null
 	)
 	{
 	}
@@ -59,7 +64,7 @@ class Sns implements PublisherInterface
 	private function buildArguments(Message $message, array $options = []): array
 	{
 		$args = [
-			"TopicArn" => $message->getTopic(),
+			"TopicArn" => $this->base_arn ?? "" . $message->getTopic(),
 			"Data" => $message->getPayload(),
 			...$options,
 		];

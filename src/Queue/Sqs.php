@@ -14,8 +14,13 @@ use Nimbly\Syndicate\ConnectionException;
 
 class Sqs implements PublisherInterface, ConsumerInterface
 {
+	/**
+	 * @param SqsClient $client
+	 * @param string|null $base_url An optional base URL if you are publishing or consuming all messages to the same queue. With this option set, when you publish a message or consume, its topic does not need to include the base URL portion.
+	 */
 	public function __construct(
-		protected SqsClient $client
+		protected SqsClient $client,
+		protected ?string $base_url = null
 	)
 	{
 	}
@@ -26,7 +31,7 @@ class Sqs implements PublisherInterface, ConsumerInterface
 	public function publish(Message $message, array $options = []): ?string
 	{
 		$message = [
-			"QueueUrl" => $message->getTopic(),
+			"QueueUrl" => $this->base_url ?? "" . $message->getTopic(),
 			"MessageBody" => $message->getPayload(),
 			"MessageAttributes" => $message->getAttributes(),
 			...$options
@@ -60,7 +65,7 @@ class Sqs implements PublisherInterface, ConsumerInterface
 		try {
 
 			$result = $this->client->receiveMessage([
-				"QueueUrl" => $topic,
+				"QueueUrl" => $this->base_url ?? "" . $topic,
 				"MaxNumberOfMessages" => $max_messages,
 				...$options
 			]);
