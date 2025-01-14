@@ -2,13 +2,15 @@
 
 namespace Nimbly\Syndicate\Queue;
 
+use Throwable;
 use Aws\Sqs\SqsClient;
+use Nimbly\Syndicate\Message;
+use Aws\Exception\CredentialsException;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\ConsumerInterface;
-use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
-use Throwable;
+use Nimbly\Syndicate\ConnectionException;
 
 class Sqs implements PublisherInterface, ConsumerInterface
 {
@@ -34,6 +36,12 @@ class Sqs implements PublisherInterface, ConsumerInterface
 
 			$result = $this->client->sendMessage($message);
 		}
+		catch( CredentialsException $exception ){
+			throw new ConnectionException(
+				message: "Connection to SQS failed.",
+				previous: $exception
+			);
+		}
 		catch( Throwable $exception ){
 			throw new PublisherException(
 				message: "Failed to publish message.",
@@ -56,6 +64,12 @@ class Sqs implements PublisherInterface, ConsumerInterface
 				"MaxNumberOfMessages" => $max_messages,
 				...$options
 			]);
+		}
+		catch( CredentialsException $exception ){
+			throw new ConnectionException(
+				message: "Connection to SQS failed.",
+				previous: $exception
+			);
 		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(
@@ -93,6 +107,12 @@ class Sqs implements PublisherInterface, ConsumerInterface
 
 			$this->client->deleteMessage($request);
 		}
+		catch( CredentialsException $exception ){
+			throw new ConnectionException(
+				message: "Connection to SQS failed.",
+				previous: $exception
+			);
+		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(
 				message: "Failed to ack message.",
@@ -115,6 +135,12 @@ class Sqs implements PublisherInterface, ConsumerInterface
 		try {
 
 			$this->client->changeMessageVisibility($request);
+		}
+		catch( CredentialsException $exception ){
+			throw new ConnectionException(
+				message: "Connection to SQS failed.",
+				previous: $exception
+			);
 		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(

@@ -2,15 +2,15 @@
 
 namespace Nimbly\Syndicate\PubSub;
 
-use Exception;
-use Nimbly\Capsule\HttpMethod;
 use Nimbly\Capsule\Request;
-use Nimbly\Capsule\ResponseStatus;
-use Nimbly\Syndicate\ConnectionException;
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\PublisherException;
+use Nimbly\Capsule\HttpMethod;
+use Nimbly\Capsule\ResponseStatus;
 use Psr\Http\Client\ClientInterface;
+use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
+use Nimbly\Syndicate\ConnectionException;
+use Throwable;
 
 /**
  * A simple Webhook publisher.
@@ -48,9 +48,9 @@ class Webhook implements PublisherInterface
 
 			$response = $this->client->sendRequest($this->buildRequest($message, $options));
 		}
-		catch( Exception $exception ){
+		catch( Throwable $exception ){
 			throw new ConnectionException(
-				message: "Failed to connect to remote host.",
+				message: "Failed to connect to webhook remote host.",
 				previous: $exception
 			);
 		}

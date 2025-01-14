@@ -5,8 +5,10 @@ namespace Nimbly\Syndicate\PubSub;
 use Throwable;
 use Aws\Sns\SnsClient;
 use Nimbly\Syndicate\Message;
+use Aws\Exception\CredentialsException;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
+use Nimbly\Syndicate\ConnectionException;
 
 class Sns implements PublisherInterface
 {
@@ -30,6 +32,12 @@ class Sns implements PublisherInterface
 		try {
 
 			$result = $this->client->publish($args);
+		}
+		catch( CredentialsException $exception ){
+			throw new ConnectionException(
+				message: "Connection to SNS failed.",
+				previous: $exception
+			);
 		}
 		catch( Throwable $exception ){
 			throw new PublisherException(

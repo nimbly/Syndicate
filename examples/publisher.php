@@ -2,15 +2,11 @@
 
 use Predis\Client;
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\PubSub\Mqtt;
 use Nimbly\Syndicate\Queue\Redis;
-use Nimbly\Syndicate\PubSub\Redis as PubSubRedis;
-use PhpMqtt\Client\MqttClient;
 
 require __DIR__ . "/../vendor/autoload.php";
 
-//$publisher = new PubSubRedis(new Client(options: ["read_write_timeout" => 0]));
-$publisher = new Mqtt(new MqttClient("localhost"));
+$publisher = new Redis(new Client(options: ["read_write_timeout" => 0]));
 
 for( $i = 0; $i < ($argv[1] ?? 100); $i++ ){
 
@@ -33,7 +29,7 @@ for( $i = 0; $i < ($argv[1] ?? 100); $i++ ){
 	}
 
 	$payload = [
-		"fruit" => $fruit,
+		"name" => $fruit,
 		"published_at" => \date("c"),
 	];
 

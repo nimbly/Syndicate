@@ -5,6 +5,7 @@ namespace Nimbly\Syndicate;
 use DomainException;
 use Nimbly\Resolve\Resolve;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 use UnexpectedValueException;
 
 class Application
@@ -19,13 +20,15 @@ class Application
 	 * @param PublisherInterface|null $deadletter A deadletter publisher instance if you would like to use one.
 	 * @param ContainerInterface|null $container An optional container instance to be used when invoking the handler.
 	 * @param array<int> $signals Array of PHP signal constants to trigger a graceful shutdown. Defaults to SIGINT.
+	 * @param LoggerInterface|null $logger A LoggerInterface implementation for additional logging and context.
 	 */
 	public function __construct(
 		protected ConsumerInterface $consumer,
 		protected RouterInterface $router,
 		protected ?PublisherInterface $deadletter = null,
 		protected ?ContainerInterface $container = null,
-		protected array $signals = [SIGINT]
+		protected array $signals = [SIGINT],
+		protected ?LoggerInterface $logger = null
 	)
 	{
 		if( !\extension_loaded("pcntl") ){
@@ -41,7 +44,9 @@ class Application
 			);
 
 			if( $result === false ){
-				throw new UnexpectedValueException("Could not attach signal (" . $signal . ") handler.");
+				throw new UnexpectedValueException(
+					\sprintf("Could not attach signal (%i) handler.", $signal)
+				);
 			}
 		}
 	}
@@ -59,42 +64,81 @@ class Application
 	{
 		$this->listening = true;
 
+		$this->logger?->info(
+			"[NIMBLY/SYNDICATE] Consumer listening started.",
+			[
+				"consumer" => $this->consumer::class,
+				"location" => $location,
+				"max_messages" => $max_messages,
+				"nack_timeout" => $nack_timeout,
+				"polling_timeout" => $polling_timeout
+			]
+		);
+
 		while( $this->listening ) {
 			$messages = $this->consumer->consume($location, $max_messages, ["timeout" => $polling_timeout]);
 
-			if( $messages ) {
-				foreach( $messages as $message ){
-					$handler = $this->router->resolve($message);
+			foreach( $messages as $message ){
 
-					if( empty($handler) ){
+				$this->logger?->info(
+					"[NIMBLY/SYNDICATE] Dipatching message.",
+					[
+						"topic" => $message->getTopic(),
+					]
+				);
+
+				$response = $this->dispatch($message);
+
+				switch( $response ){
+					case Response::nack:
 						$this->consumer->nack($message, $nack_timeout);
-						throw new RoutingException("Failed to resolve route for message.");
-					}
+						break;
 
-					$response = $this->call(
-						$this->makeCallable($handler),
-						$this->container,
-						[Message::class => $message]
-					);
-
-					switch( $response ){
-						case Response::nack:
+					case Response::deadletter:
+						if( empty($this->deadletter) ){
 							$this->consumer->nack($message, $nack_timeout);
-							break;
+							throw new RoutingException("Cannot route message to deadletter as no deadletter implementation was given.");
+						}
 
-						case Response::deadletter:
-							if( empty($this->deadletter) ){
-								throw new RoutingException("Cannot route message to deadletter as no deadletter implementation was given.");
-							}
+						$this->deadletter->publish($message);
 
-							$this->deadletter->publish($message);
-
-						default:
-							$this->consumer->ack($message);
-					}
+					default:
+						$this->consumer->ack($message);
 				}
 			}
 		}
+	}
+
+	/**
+	 * Dispatch a Message to be handled.
+	 *
+	 * @param Message $message
+	 * @return mixed
+	 */
+	public function dispatch(Message $message): mixed
+	{
+		$handler = $this->router->resolve($message);
+
+		if( empty($handler) ){
+			$this->logger?->warning(
+				"[NIMBLY/SYNDICATE] A handler could not be resolved for this Message: attempting to deadletter.",
+				[
+					"topic" => $message->getTopic(),
+					"payload" => $message->getPayload(),
+					"attributes" => $message->getAttributes(),
+					"headers" => $message->getHeaders(),
+					"reference" => $message->getReference(),
+				]
+			);
+
+			return Response::deadletter;
+		}
+
+		return $this->call(
+			$this->makeCallable($handler),
+			$this->container,
+			[Message::class => $message]
+		);
 	}
 
 	/**

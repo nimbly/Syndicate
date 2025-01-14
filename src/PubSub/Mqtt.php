@@ -13,6 +13,7 @@ use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
 use Nimbly\Syndicate\ConnectionException;
 use Nimbly\Syndicate\LoopConsumerInterface;
+use PhpMqtt\Client\Exceptions\ConnectingToBrokerFailedException;
 
 class Mqtt implements PublisherInterface, LoopConsumerInterface
 {
@@ -64,6 +65,12 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 				retain: (bool) ($options["retain"] ?? false)
 			);
 		}
+		catch( ConnectingToBrokerFailedException $exception ){
+			throw new ConnectionException(
+				message: "Connection to MQTT broker failed.",
+				previous: $exception
+			);
+		}
 		catch( Throwable $exception ) {
 			throw new PublisherException(
 				message: "Failed to publish message.",
@@ -112,6 +119,12 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 					qualityOfService: $options["qos"] ?? MqttClient::QOS_AT_MOST_ONCE
 				);
 			}
+			catch( ConnectingToBrokerFailedException $exception ){
+				throw new ConnectionException(
+					message: "Connection to MQTT broker failed.",
+					previous: $exception
+				);
+			}
 			catch( Throwable $exception ){
 				throw new ConsumerException(
 					message: "Failed to subscribe to topic.",
@@ -141,6 +154,12 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 				queueWaitLimit: $options["timeout"] ?? null,
 			);
 		}
+		catch( ConnectingToBrokerFailedException $exception ){
+			throw new ConnectionException(
+				message: "Connection to MQTT broker failed.",
+				previous: $exception
+			);
+		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(
 				message: "Failed to consume message.",
@@ -157,6 +176,12 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 		try {
 
 			$this->client->interrupt();
+		}
+		catch( ConnectingToBrokerFailedException $exception ){
+			throw new ConnectionException(
+				message: "Connection to MQTT broker failed.",
+				previous: $exception
+			);
 		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(
@@ -181,7 +206,7 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 			}
 			catch( Throwable $exception ){
 				throw new ConnectionException(
-					message: "Failed to connect.",
+					message: "Connection to MQTT broker failed.",
 					previous: $exception
 				);
 			}

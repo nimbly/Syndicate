@@ -2,13 +2,15 @@
 
 namespace Nimbly\Syndicate\Queue;
 
+use Throwable;
+use Predis\Client;
+use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\ConsumerInterface;
-use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
-use Predis\Client;
-use Throwable;
+use Nimbly\Syndicate\ConnectionException;
+use Predis\Connection\ConnectionException as RedisConnectionException;
 
 class Redis implements PublisherInterface, ConsumerInterface
 {
@@ -30,6 +32,12 @@ class Redis implements PublisherInterface, ConsumerInterface
 			$result = $this->client->rpush(
 				$message->getTopic(),
 				[$message->getPayload()]
+			);
+		}
+		catch( RedisConnectionException $exception ){
+			throw new ConnectionException(
+				message: "Connection to Redis failed.",
+				previous: $exception
 			);
 		}
 		catch( Throwable $exception ){
@@ -56,6 +64,12 @@ class Redis implements PublisherInterface, ConsumerInterface
 			 * @var array<string> $messages
 			 */
 			$messages = $this->client->lpop($topic, $max_messages);
+		}
+		catch( RedisConnectionException $exception ){
+			throw new ConnectionException(
+				message: "Connection to Redis failed.",
+				previous: $exception
+			);
 		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(

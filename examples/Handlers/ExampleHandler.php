@@ -2,6 +2,7 @@
 
 namespace Nimbly\Syndicate\Examples\Handlers;
 
+use Nimbly\Syndicate\Consume;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;
 
@@ -13,6 +14,10 @@ class ExampleHandler
 	 * @param Message $message
 	 * @return Response|null
 	 */
+	#[Consume(
+		topic: "fruits",
+		payload: ["$.name" => "bananas"]
+	)]
 	public function onBananas(Message $message): ?Response
 	{
 		$payload = \json_decode($message->getPayload(), false);
@@ -36,6 +41,10 @@ class ExampleHandler
 	 * @param Message $message
 	 * @return Response|null
 	 */
+	 #[Consume(
+		topic: "fruits",
+		payload: ["$.name" => "kiwis"]
+	)]
 	public function onKiwis(Message $message): ?Response
 	{
 		$payload = \json_decode($message->getPayload(), false);
@@ -59,6 +68,10 @@ class ExampleHandler
 	 * @param Message $message
 	 * @return Response|null
 	 */
+	#[Consume(
+		topic: "fruits",
+		payload: ["$.name" => "oranges"]
+	)]
 	public function onOranges(Message $message): ?Response
 	{
 		$payload = \json_decode($message->getPayload(), false);
@@ -82,6 +95,10 @@ class ExampleHandler
 	 * @param Message $message
 	 * @return Response|null
 	 */
+	#[Consume(
+		topic: "fruits",
+		payload: ["$.name" => ["mangoes", "mangos"]]
+	)]
 	public function onMangoes(Message $message): ?Response
 	{
 		$payload = \json_decode($message->getPayload(), false);

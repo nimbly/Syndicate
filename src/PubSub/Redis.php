@@ -2,16 +2,18 @@
 
 namespace Nimbly\Syndicate\PubSub;
 
-use Nimbly\Resolve\Resolve;
-use Nimbly\Syndicate\ConsumerException;
 use Throwable;
 use Predis\Client;
+use Nimbly\Resolve\Resolve;
 use Predis\PubSub\Consumer;
 use Nimbly\Syndicate\Message;
+use Psr\Container\ContainerInterface;
+use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
+use Nimbly\Syndicate\ConnectionException;
 use Nimbly\Syndicate\LoopConsumerInterface;
-use Psr\Container\ContainerInterface;
+use Predis\Connection\ConnectionException as RedisConnectionException;
 
 class Redis implements PublisherInterface, LoopConsumerInterface
 {
@@ -41,6 +43,12 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 			$result = $this->client->publish(
 				$message->getTopic(),
 				$message->getPayload()
+			);
+		}
+		catch( RedisConnectionException $exception ){
+			throw new ConnectionException(
+				message: "Connection to Redis failed.",
+				previous: $exception
 			);
 		}
 		catch( Throwable $exception ) {
@@ -77,6 +85,12 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 			}
 
 			$this->getLoop()->subscribe(...$topic);
+		}
+		catch( RedisConnectionException $exception ){
+			throw new ConnectionException(
+				message: "Connection to Redis failed.",
+				previous: $exception
+			);
 		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(
@@ -118,6 +132,12 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 				}
 			}
 		}
+		catch( RedisConnectionException $exception ){
+			throw new ConnectionException(
+				message: "Connection to Redis failed.",
+				previous: $exception
+			);
+		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(
 				message: "Failed to consume message.",
@@ -134,6 +154,12 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 		try {
 
 			$this->getLoop()->stop(true);
+		}
+		catch( RedisConnectionException $exception ){
+			throw new ConnectionException(
+				message: "Connection to Redis failed.",
+				previous: $exception
+			);
 		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(

@@ -70,7 +70,7 @@ class Router implements RouterInterface
 	/**
 	 * Build a regex to match content.
 	 *
-	 * This method assumes the * is allowed as a wildcard, all other values
+	 * This method assumes the * (asterisk) is allowed as a wildcard, all other values
 	 * get regex escaped.
 	 *
 	 * @param string $pattern
@@ -135,6 +135,10 @@ class Router implements RouterInterface
 	 */
 	protected function matchJson(string $json, array $patterns): bool
 	{
+		if( empty($patterns) ){
+			return true;
+		}
+
 		$data = \json_decode($json, true);
 
 		if( \json_last_error() !== JSON_ERROR_NONE ){
@@ -150,7 +154,7 @@ class Router implements RouterInterface
 				return false;
 			}
 
-			if( count($data) > 1 || !\is_string($data[0]) ){
+			if( count($data) > 1 || (!\is_string($data[0]) && !\is_int($data[0])) ){
 				throw new UnexpectedValueException(
 					\sprintf(
 						"JSON path \"%s\" matched more than one value or the value is not a string. " .
@@ -160,7 +164,7 @@ class Router implements RouterInterface
 				);
 			}
 
-			$match = $this->matchString($data[0], $pattern);
+			$match = $this->matchString((string) $data[0], $pattern);
 
 			if( !$match ){
 				return false;

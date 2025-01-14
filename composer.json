@@ -31,7 +31,8 @@
         "symfony/var-dumper": "^6.0",
         "nimbly/carton": "^2.0",
         "nimbly/shuttle": "^1.1",
-        "mockery/mockery": "^1.6"
+        "mockery/mockery": "^1.6",
+        "monolog/monolog": "^3.8"
     },
     "autoload": {
         "psr-4": {
