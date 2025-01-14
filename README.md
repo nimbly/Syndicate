@@ -132,73 +132,57 @@ $consumer = new Sqs(
 
 ### Router
 
-In order to route incoming messages to a particular handler, you must define an implementation for `RouterInterface`.
+Syndicate uses the `Consume` attribute to tag your handlers. Simply add a `#[Consume]` attribute before your class method.
 
-Because event messages are unique per implementor and no standards exist, you must provide a way for `Syndicate` to know how to route each message. This could be based on the message topic, it could be based on a particular value in the message payload, or any myriad other ways.
-
-This interface provides a single `resolve` method that accepts a `Nimbly\Syndicate\Message` instance and returns a handler on match. The handler can be any `callable` or a string in the format `Fully\Qualified\ClassName@method` (eg, `App\Consumer\Handlers\UsersHandler@onUserRegistered`). `Syndicate` will automatically build and call this handler for you using dependency injection. If no matching handler could be found, you should return `null`.
-
-#### Example
-
-Suppose our event messages follow a company-wide standard. The message contains a unique ID, an origin from where the event was published, a timestamp of when the event was published, and a `name` property representing the name of the event.
-
-The message also contains a body that is unique to each kind of event. In this example, user account details for the `UserRegistered` event.
-
-```json
+```php
+#[Consume(
+	topic: "users",
+	payload: ["$.event" => "UserCreated"],
+)]
+public function onUserCreated(Message $message): Response
 {
- 	"id": "305d3112-b5ac-4643-921d-22c671b2b5b1",
- 	"name": "UserRegistered",
- 	"origin": "user_service.prod.company.com",
- 	"published_at": "2024-05-12T13:38:02Z",
- 	"body": {
- 		"id": "598f38b6-39e1-42ee-a085-e3591a77d6b4",
- 		"name": "John Doe",
- 		"email": "john@example.com"
- 	}
+	// Do something with message.
 }
 ```
 
-We would like to route messages to specific handlers based on the `name` field in the message: the name of the event.
-
-We might create a router that looks like this:
+You can provide multiple values for each property in the `Consume` attribute.
 
 ```php
-class Router implements RouterInterface
+#[Consume(
+	topic: ["users", "admins"]
+	payload: ["$.event" => "UserCreated", "$.body.role" => ["user", "admin"]],
+)]
+public function onUserCreated(Message $message): Response
 {
-	public function __construct(
-		protected array $routes,
-		protected callable $default
-	)
-	{
-	}
-
-	public function resolve(Message $message): string|callable|null
-	{
-		$payload = \json_decode($message->getPayload());
-
-		foreach( $this->routes as $key => $handler ){
-			if( $payload->name === $key ){
-				return $handler;
-			}
-		}
-
-		return $this->default;
-	}
+	// Do something with message.
 }
 ```
 
-When we instantiate our new router class, it might look something like this:
+In the above example, *either* the `users` or `admins` topic will match *and* the payload JSON paths must match.
+
+You can also use wildcards when defining matches.
 
 ```php
-$router = new Router(
-	routes: [
-		"UserRegistered" => "App\\Consumer\\Handlers\\UsersHandler@onUserRegistered"
-	],
-	default: function(): Response {
-		\error_log("No handler could be matched for this message, sending to deadletter queue.");
-		return Response::deadletter;
-	}
-)
+#[Consume(
+	topic: "users/*",
+	payload: ["$.event" => "Messages/*/User*"],
+	headers: ["Origin" => "*/Syndicate"]
+)]
+public function onUserCreated(Message $message): Response
+{
+	// Do something with message.
+}
+```
+
+In the above example, any topic that starts with "users/" will match. And the `Origin` header will match as long as it ends with `/Syndicate`.
+
+Finally, you can create a `Nimbly\Syndicate\Router` instance with the class names of your handlers with the `#[Consume]` attributes.
+
+```php
+$router = new Router([
+	App\Consumer\Handlers\UsersHandler::class,
+	App\Consumer\Handlers\AdminsHandler::class,
+]);
 ```
 
 ### Deadletter

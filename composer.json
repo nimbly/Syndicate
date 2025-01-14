@@ -22,7 +22,8 @@
 		"iron-io/iron_mq": "^4.0",
         "php-mqtt/client": "^2.2",
         "php-amqplib/php-amqplib": "^3.7",
-		"aws/aws-sdk-php": "^3.336"
+		"aws/aws-sdk-php": "^3.336",
+        "softcreatr/jsonpath": "^0.9.1"
     },
     "require-dev": {
         "vimeo/psalm": "^4.0",
@@ -37,6 +38,11 @@
             "Nimbly\\Syndicate\\": "src/",
 			"Nimbly\\Syndicate\\Examples\\": "examples/"
         }
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Nimbly\\Syndicate\\Tests\\": "tests/"
+		}
 	},
 	"config": {
 		"platform": {
