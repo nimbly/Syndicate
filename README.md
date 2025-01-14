@@ -87,7 +87,7 @@ foreach( $messages as $message ){
 }
 ```
 
-### Quick start, Application
+## Quick start, Application
 
 The quickstart examples above are sufficient for small singular needs however lacks any real robustness in routing messages of different types to custom handlers.
 
