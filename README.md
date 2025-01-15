@@ -1,7 +1,7 @@
 # Syndicate
 
 [![Latest Stable Version](https://img.shields.io/packagist/v/nimbly/Syndicate.svg?style=flat-square)](https://packagist.org/packages/nimbly/Syndicate)
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/nimbly/syndicate/php.yml?style=flat-square)](https://github.com/nimbly/Syndicate/actions/workflows/php.yml)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/nimbly/syndicate/test.yml?style=flat-square)](https://github.com/nimbly/Syndicate/actions/workflows/test.yml)
 [![Codecov branch](https://img.shields.io/codecov/c/github/nimbly/syndicate/master?style=flat-square)](https://app.codecov.io/github/nimbly/Syndicate)
 [![License](https://img.shields.io/github/license/nimbly/Syndicate.svg?style=flat-square)](https://packagist.org/packages/nimbly/Syndicate)
 
@@ -15,6 +15,12 @@ Syndicate is a powerful tool able to both publish and consume messages - ideal f
 ## Suggested
 
 * PSR-11 Container implementation
+
+## Uses cases
+
+* Publish messages to a queue, pubsub topic, or webhook
+* Event message processing
+* Background job processing
 
 ## Supported implementations
 
@@ -96,16 +102,30 @@ Typically, you need an application that continuously pulls messages from a known
 Syndicate ships with an `Application` instance that can do this for you with full dependency injection support.
 
 ```php
+$client = new Sqs(
+	new SqsClient([
+		"region" => "us-west-2",
+		"version" => "latest"
+	])
+);
+
 $application = new Application(
-	consumer: $consumer,
-	router: $router,
-	deadletter: $deadletter,
+	consumer: $client,
+	router: new Router([
+		App\Consumer\Handlers\UsersHandler::class,
+		App\Consumer\Handlers\OrdersHandler::class,
+	]),
+	deadletter: new DeadletterPublisher(
+		$client,
+		"https://sqs.us-east-2.amazonaws.com/123456789012/deadletter",
+	),
 	container: $container,
 	signals: [SIGINT, SIGTERM, SIGHUP]
 )
 ```
 
 To start consuming messages, call the `listen` method on the application instance.
+
 
 ```php
 $application->listen(
@@ -128,7 +148,10 @@ Example:
 
 ```php
 $consumer = new Sqs(
-	new SqsClient(["region" => "us-east-2", "version" => "latest"])
+	new SqsClient([
+		"region" => "us-east-2",
+		"version" => "latest"
+	])
 );
 ```
 
