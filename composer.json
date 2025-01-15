@@ -1,6 +1,7 @@
 {
     "name": "nimbly/syndicate",
-    "description": "Simple queue consumer framework that supports message routing and dispatching.",
+    "description": "A powerful queue and pubsub message consumer.",
+	"keywords": ["php", "event", "queue", "pubsub", "framework"],
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -26,8 +27,8 @@
         "softcreatr/jsonpath": "^0.9.1"
     },
     "require-dev": {
-        "vimeo/psalm": "^4.0",
-        "phpunit/phpunit": "^9.0",
+        "vimeo/psalm": "^5.0",
+        "phpunit/phpunit": "^10.0",
         "symfony/var-dumper": "^6.0",
         "nimbly/carton": "^2.0",
         "nimbly/shuttle": "^1.1",
