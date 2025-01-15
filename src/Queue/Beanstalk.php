@@ -2,14 +2,16 @@
 
 namespace Nimbly\Syndicate\Queue;
 
-use Nimbly\Syndicate\ConsumerException;
+use Throwable;
 use Pheanstalk\Pheanstalk;
 use Nimbly\Syndicate\Message;
+use Pheanstalk\Values\TubeName;
+use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\ConsumerInterface;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
-use Pheanstalk\Values\TubeName;
-use Throwable;
+use Nimbly\Syndicate\ConnectionException;
+use Pheanstalk\Exception\ConnectionException as PheanstalkConnectionException;
 
 class Beanstalk implements PublisherInterface, ConsumerInterface
 {
@@ -44,6 +46,12 @@ class Beanstalk implements PublisherInterface, ConsumerInterface
 				timeToRelease: $options["time_to_release"] ??  Pheanstalk::DEFAULT_TTR
 			);
 		}
+		catch( PheanstalkConnectionException $exception ){
+			throw new ConnectionException(
+				message: "Connection to Beanstalkd failed.",
+				previous: $exception
+			);
+		}
 		catch( Throwable $exception ){
 			throw new PublisherException(
 				message: "Failed to publish message.",
@@ -73,6 +81,12 @@ class Beanstalk implements PublisherInterface, ConsumerInterface
 
 			$job = $this->client->reserveWithTimeout(
 				timeout: $options["timeout"] ?? 10
+			);
+		}
+		catch( PheanstalkConnectionException $exception ){
+			throw new ConnectionException(
+				message: "Connection to Beanstalkd failed.",
+				previous: $exception
 			);
 		}
 		catch( Throwable $exception ){
@@ -106,6 +120,12 @@ class Beanstalk implements PublisherInterface, ConsumerInterface
 				job: $message->getReference()
 			);
 		}
+		catch( PheanstalkConnectionException $exception ){
+			throw new ConnectionException(
+				message: "Connection to Beanstalkd failed.",
+				previous: $exception
+			);
+		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(
 				message: "Failed to ack message.",
@@ -125,6 +145,12 @@ class Beanstalk implements PublisherInterface, ConsumerInterface
 				job: $message->getReference(),
 				priority: Pheanstalk::DEFAULT_PRIORITY,
 				delay: $timeout
+			);
+		}
+		catch( PheanstalkConnectionException $exception ){
+			throw new ConnectionException(
+				message: "Connection to Beanstalkd failed.",
+				previous: $exception
 			);
 		}
 		catch( Throwable $exception ){

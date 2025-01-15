@@ -117,8 +117,13 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 				if( $msg->kind === "message" ){
 					$callback = $this->subscriptions[$msg->channel] ?? null;
 
-					if( empty($callback) ){
-						throw new ConsumerException("Message received from channel, but no callback defined for it: " . $msg->channel . ".");
+					if( $callback === null ){
+						throw new ConsumerException(
+							\sprintf(
+								"Message received from channel \"%s\", but no callback defined for it.",
+								$msg->channel
+							)
+						);
 					}
 
 					\call_user_func(

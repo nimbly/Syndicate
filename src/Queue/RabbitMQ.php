@@ -2,6 +2,7 @@
 
 namespace Nimbly\Syndicate\Queue;
 
+use Nimbly\Syndicate\ConnectionException;
 use Throwable;
 use Nimbly\Syndicate\Message;
 use PhpAmqpLib\Channel\AMQPChannel;
@@ -10,6 +11,8 @@ use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\ConsumerInterface;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
+use PhpAmqpLib\Exception\AMQPConnectionBlockedException;
+use PhpAmqpLib\Exception\AMQPConnectionClosedException;
 
 class RabbitMQ implements PublisherInterface, ConsumerInterface
 {
@@ -41,6 +44,12 @@ class RabbitMQ implements PublisherInterface, ConsumerInterface
 				ticket: $options["ticket"] ?? null,
 			);
 		}
+		catch( AMQPConnectionClosedException|AMQPConnectionBlockedException $exception ){
+			throw new ConnectionException(
+				message: "Connection to RabbitMQ failed.",
+				previous: $exception
+			);
+		}
 		catch( Throwable $exception ){
 			throw new PublisherException(
 				message: "Failed to publish message.",
@@ -66,6 +75,12 @@ class RabbitMQ implements PublisherInterface, ConsumerInterface
 				queue: $topic,
 				no_ack: $options["no_ack"] ?? true,
 				ticket: $options["ticket"] ?? null,
+			);
+		}
+		catch( AMQPConnectionClosedException|AMQPConnectionBlockedException $exception ){
+			throw new ConnectionException(
+				message: "Connection to RabbitMQ failed.",
+				previous: $exception
 			);
 		}
 		catch( Throwable $exception ){
@@ -102,6 +117,12 @@ class RabbitMQ implements PublisherInterface, ConsumerInterface
 
 			$rabbitMessage->ack();
 		}
+		catch( AMQPConnectionClosedException|AMQPConnectionBlockedException $exception ){
+			throw new ConnectionException(
+				message: "Connection to RabbitMQ failed.",
+				previous: $exception
+			);
+		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(
 				message: "Failed to ack message.",
@@ -123,6 +144,12 @@ class RabbitMQ implements PublisherInterface, ConsumerInterface
 		try {
 
 			$rabbitMessage->reject(true);
+		}
+		catch( AMQPConnectionClosedException|AMQPConnectionBlockedException $exception ){
+			throw new ConnectionException(
+				message: "Connection to RabbitMQ failed.",
+				previous: $exception
+			);
 		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(

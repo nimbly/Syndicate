@@ -2,7 +2,9 @@
 
 namespace Nimbly\Syndicate\Queue;
 
+use IronCore\HttpException;
 use IronMQ\IronMQ;
+use Nimbly\Syndicate\ConnectionException;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\ConsumerInterface;
 use Nimbly\Syndicate\Message;
@@ -33,6 +35,12 @@ class Iron implements PublisherInterface, ConsumerInterface
 				$options
 			);
 		}
+		catch( HttpException $exception ){
+			throw new ConnectionException(
+				message: "Connection to IronMQ failed.",
+				previous: $exception
+			);
+		}
 		catch( Throwable $exception ){
 			throw new PublisherException(
 				message: "Failed to publish message.",
@@ -59,6 +67,12 @@ class Iron implements PublisherInterface, ConsumerInterface
 				count: $max_messages,
 				timeout: $options["timeout"] ?? IronMQ::GET_MESSAGE_TIMEOUT,
 				wait: $options["wait"] ?? IronMQ::GET_MESSAGE_WAIT
+			);
+		}
+		catch( HttpException $exception ){
+			throw new ConnectionException(
+				message: "Connection to IronMQ failed.",
+				previous: $exception
 			);
 		}
 		catch( Throwable $exception ){
@@ -95,6 +109,12 @@ class Iron implements PublisherInterface, ConsumerInterface
 				$reservation_id,
 			);
 		}
+		catch( HttpException $exception ){
+			throw new ConnectionException(
+				message: "Connection to IronMQ failed.",
+				previous: $exception
+			);
+		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(
 				message: "Failed to ack message.",
@@ -117,6 +137,12 @@ class Iron implements PublisherInterface, ConsumerInterface
 				$message_id,
 				$reservation_id,
 				$timeout
+			);
+		}
+		catch( HttpException $exception ){
+			throw new ConnectionException(
+				message: "Connection to IronMQ failed.",
+				previous: $exception
 			);
 		}
 		catch( Throwable $exception ){

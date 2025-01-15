@@ -10,11 +10,11 @@ Syndicate is a powerful framework able to both publish and consume messages - id
 ## Requirements
 
 * PHP 8.2+
-* php-pcntl (process control)
 
 ## Suggested
 
-* PSR-11 Container implementation
+* ext-pcntl
+* PSR-11 Container
 
 ## Uses cases
 
@@ -23,11 +23,11 @@ Syndicate is a powerful framework able to both publish and consume messages - id
 * Background job processing
 * General queue message processing
 
-## Supported implementations
+## Supported integrations
 
 ### Queues
 
-| Implementation | Publisher | Consumer | Library |
+| Integration    | Publisher | Consumer | Library |
 | -------------- | --------- | -------- | ------- |
 | Redis          | Y         | Y        | `predis/predis:^2.0` |
 | Azure          | Y         | Y        | `microsoft/azure-storage-queue:^1.3` |
@@ -38,7 +38,7 @@ Syndicate is a powerful framework able to both publish and consume messages - id
 
 ### PubSubs
 
-| Implementation | Publisher | Consumer | Library |
+| Integration    | Publisher | Consumer | Library |
 | -------------- | --------- | -------- | ------- |
 | Redis          | Y         | Loop     | `predis/predis:^2.0` |
 | SNS            | Y         | N        | `aws/aws-sdk-php:^3.336` |
@@ -47,7 +47,7 @@ Syndicate is a powerful framework able to both publish and consume messages - id
 | Webhook        | Y         | N        | n/a |
 
 
-Is there an implementation you would like to see supported? Let us know in [Github Discussions](https://github.com/nimbly/Syndicate/discussions) or open a Pull Request!
+Is there an integration you would like to see supported? Let us know in [Github Discussions](https://github.com/nimbly/Syndicate/discussions) or open a Pull Request!
 
 Alternatively, you can implement your own consumers and publishers by adhering to the `Nimbly\Syndicate\ConsumerInterface` and/or `Nimbly\Syndicate\PublisherInterface` interfaces.
 
@@ -97,6 +97,7 @@ $application = new Application(
 		"https://sqs.us-west-2.amazonaws.com/123456789012/deadletter",
 	),
 	container: $container,
+	logger: new Logger,
 	signals: [SIGINT, SIGTERM, SIGHUP]
 )
 ```
@@ -109,7 +110,8 @@ $application->listen(
 	location: "https://sqs.us-west-2.amazonaws.com/123456789012/MyQueue",
 	max_messages: 10,
 	nack_timeout: 12,
-	polling_timeout: 5
+	polling_timeout: 5,
+	deadletter_options: ["option" => "value"]
 );
 ```
 
@@ -121,7 +123,9 @@ The `max_messages` parameter defines how many messages should be pulled off at a
 
 The `nack_timeout` parameter defines how long (in minutes) the message should be held before it can be pulled again when a `Response::nack` is returned by your handler. Some implementations do not support modifying the message visibility timeout.
 
-And finally, the `polling_timeout` parameter defines how long (in seconds) the consumer implementation should block waiting for messages before disconnecting and trying again.
+The `polling_timeout` parameter defines how long (in seconds) the consumer implementation should block waiting for messages before disconnecting and trying again.
+
+And finally, the `deadletter_options` parameter is a set of options that will be passed to the deadletter publisher. These options are dependent on the implementation being used.
 
 Now, let's dig deeper into each of the constructor parameters for the `Application` instance.
 
@@ -221,21 +225,23 @@ class UsersHandler
 
 In this example, both the `Message` and the `EmailService` dependecies are injected - assuming the container has the `EmailService` instance in it.
 
-### Signals
-
-The `signals` parameter is an array of PHP interrupt signal constants (eg, `SIGINT`, `SIGTERM`, etc) that you would like your application to respond to and gracefully shutdown the application. I.e. once all messages in the batch have been processed by your handlers, the application will terminate.
-
-If no signals are caught, any interrupt signal received will force an immediate shutdown, even if in the middle of processing a message which could lead to unintended outcomes.
-
 ### LoggerInterface
 
 The `logger` parameter allows you to pass a `Psr\Log\LoggerInterface` instance to the application. Syndicate will use this logger instance to log messages to give you better visibility into your application.
+
+### Signals
+
+The `signals` parameter is an array of PHP interrupt signal constants (eg, `SIGINT`, `SIGTERM`, etc) that you would like your application to respond to and gracefully shutdown the application. I.e. once all messages in flight have been processed by your handlers, the application will terminate. It defaults to `[SIGINT, SIGTERM]` which are common interrupts for both command line (Ctrl-C) and container orchestration systems like Kubernetes or ECS.
+
+If no signals are caught, any interrupt signal received will force an immediate shutdown, even if in the middle of processing a message. This could lead to unintended outcomes like lost messages or messages that were only partially processed by your handlers.
+
+**NOTE:** Graceful shutdown via interrupt signals *requires* the `ext-pcntl` PHP extension and is only available on Unix-like systems (Linux & Mac OS).
 
 ## Handlers
 
 A handler is your code that will receive the event message and process it. The handler can be any `callable` type but typically is a class method.
 
-`Syndicate` will call your handlers with full dependency resolution and injection with a PSR-11 Container instance you have provided. Both the constructor and the method to be called will have dependencies automatically resolved and injected.
+`Syndicate` will call your handlers with full dependency resolution and injection as long as a PSR-11 Container instance was provided. Both the constructor and the method to be called will have dependencies automatically resolved and injected for you.
 
 **NOTE:** The `Nimbly\Syndicate\Message` instance can *always* be resolved with or without a conatiner.
 

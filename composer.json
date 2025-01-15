@@ -35,6 +35,9 @@
         "mockery/mockery": "^1.6",
         "monolog/monolog": "^3.8"
     },
+	"suggest": {
+		"ext-pcntl": "Enables graceful shutdown of the consumer listener."
+	},
     "autoload": {
         "psr-4": {
             "Nimbly\\Syndicate\\": "src/",

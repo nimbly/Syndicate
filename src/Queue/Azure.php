@@ -2,9 +2,11 @@
 
 namespace Nimbly\Syndicate\Queue;
 
+use MicrosoftAzure\Storage\Common\Exceptions\ServiceException;
 use MicrosoftAzure\Storage\Queue\Models\ListMessagesOptions;
 use MicrosoftAzure\Storage\Queue\Models\QueueMessage;
 use MicrosoftAzure\Storage\Queue\QueueRestProxy;
+use Nimbly\Syndicate\ConnectionException;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\ConsumerInterface;
 use Nimbly\Syndicate\Message;
@@ -34,6 +36,12 @@ class Azure implements PublisherInterface, ConsumerInterface
 				$message->getPayload(),
 			);
 		}
+		catch( ServiceException $exception ){
+			throw new ConnectionException(
+				message: "Connection to Azure failed.",
+				previous: $exception
+			);
+		}
 		catch( Throwable $exception ){
 			throw new PublisherException(
 				message: "Failed to publish message.",
@@ -58,6 +66,12 @@ class Azure implements PublisherInterface, ConsumerInterface
 			$listMessageResult = $this->client->listMessages(
 				$topic,
 				$this->buildListMessageOptions($max_messages, $options)
+			);
+		}
+		catch( ServiceException $exception ){
+			throw new ConnectionException(
+				message: "Connection to Azure failed.",
+				previous: $exception
 			);
 		}
 		catch( Throwable $exception ){
@@ -119,6 +133,12 @@ class Azure implements PublisherInterface, ConsumerInterface
 				$pop_receipt
 			);
 		}
+		catch( ServiceException $exception ){
+			throw new ConnectionException(
+				message: "Connection to Azure failed.",
+				previous: $exception
+			);
+		}
 		catch( Throwable $exception ){
 			throw new ConsumerException(
 				message: "Failed to ack message.",
@@ -142,6 +162,12 @@ class Azure implements PublisherInterface, ConsumerInterface
 				$pop_receipt,
 				$message->getPayload(),
 				$timeout
+			);
+		}
+		catch( ServiceException $exception ){
+			throw new ConnectionException(
+				message: "Connection to Azure failed.",
+				previous: $exception
 			);
 		}
 		catch( Throwable $exception ){
