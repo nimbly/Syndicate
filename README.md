@@ -5,7 +5,7 @@
 [![Codecov branch](https://img.shields.io/codecov/c/github/nimbly/syndicate/master?style=flat-square)](https://app.codecov.io/github/nimbly/Syndicate)
 [![License](https://img.shields.io/github/license/nimbly/Syndicate.svg?style=flat-square)](https://packagist.org/packages/nimbly/Syndicate)
 
-Syndicate is a powerful tool able to both publish and consume messages - ideal for your event driven application or as a job processor. It supports common queues and PubSub integrations with an `Application` layer that can be used to route incoming messages to any handler of your choosing with full dependency injection using a PSR-11 Container instance.
+Syndicate is a powerful framework able to both publish and consume messages - ideal for your event driven application or as a job processor. It supports common queues and PubSub integrations with an `Application` layer that can be used to route incoming messages to any handler of your choosing with full dependency injection using a PSR-11 Container instance.
 
 ## Requirements
 
@@ -21,6 +21,7 @@ Syndicate is a powerful tool able to both publish and consume messages - ideal f
 * Publish messages to a queue, pubsub topic, or webhook
 * Event message processing
 * Background job processing
+* General queue message processing
 
 ## Supported implementations
 
@@ -46,7 +47,7 @@ Syndicate is a powerful tool able to both publish and consume messages - ideal f
 | Webhook        | Y         | N        | n/a |
 
 
-Is there an implementation you would like to see supported? Let me know in [Github Discussions](https://github.com/nimbly/Syndicate/discussions) or open a Pull Request!
+Is there an implementation you would like to see supported? Let us know in [Github Discussions](https://github.com/nimbly/Syndicate/discussions) or open a Pull Request!
 
 Alternatively, you can implement your own consumers and publishers by adhering to the `Nimbly\Syndicate\ConsumerInterface` and/or `Nimbly\Syndicate\PublisherInterface` interfaces.
 
@@ -78,7 +79,7 @@ $publisher->publish($message);
 ## Quick start, Application
 
 ```php
-$client = new Sqs(
+$consumer = new Sqs(
 	new SqsClient([
 		"region" => "us-west-2",
 		"version" => "latest"
@@ -92,7 +93,7 @@ $application = new Application(
 		App\Consumer\Handlers\OrdersHandler::class,
 	]),
 	deadletter: new DeadletterPublisher(
-		$client,
+		$consumer,
 		"https://sqs.us-west-2.amazonaws.com/123456789012/deadletter",
 	),
 	container: $container,
@@ -112,15 +113,21 @@ $application->listen(
 );
 ```
 
-Syndicate will continue to poll for new messages and route them to your handlers. To shutdown the listener, you must send an interrupt signal: SIGINT (ctrl-c), SIGHUP, SIGTERM, etc.
+The `listen` method will continue to poll for new messages and route them to your handlers. To shutdown the listener, you must send an interrupt signal that was defined in the `Application` constructor, typically SIGINT (ctrl-c), SIGHUP, SIGTERM, etc.
 
-Let's dig deeper into each of the constructor parameters.
+The `location` parameter is the topic name, queue name, or queue URL you will be listening on. This parameter value is dependent on which consumer implementation you are using.
+
+The `max_messages` parameter defines how many messages should be pulled off at a single time. Some implementations only allow a single message at a time.
+
+The `nack_timeout` parameter defines how long (in minutes) the message should be held before it can be pulled again when a `Response::nack` is returned by your handler. Some implementations do not support modifying the message visibility timeout.
+
+And finally, the `polling_timeout` parameter defines how long (in seconds) the consumer implementation should block waiting for messages before disconnecting and trying again.
+
+Now, let's dig deeper into each of the constructor parameters for the `Application` instance.
 
 ### Consumer
 
 The `consumer` parameter is any instance of `Nimbly\Syndicate\ConsumerInterface` - the source where messages should be pulled from.
-
-Example:
 
 ```php
 $consumer = new Sqs(
@@ -133,8 +140,7 @@ $consumer = new Sqs(
 
 ### Router
 
-The `router` parameter is an instance of `Nimbly\Syndicate\Router`. This router relies on your handlers using the `Nimbly\Syndicate\Consume` attribute. Simply add a `#[Consume]` attribute with your routing criteria before your class methods on your handlers (please see **Consume Attribute** section for more documentation). Finally, pass these class names off to the `Router` instance.
-
+The `router` parameter is an instance of `Nimbly\Syndicate\Router` (or any instance of `Nimbly\Syndicate\RouterInterface`). This router relies on your handlers using the `Nimbly\Syndicate\Consume` attribute. Simply add a `#[Consume]` attribute with your routing criteria before your class methods on your handlers (please see **Handlers** and **Consume Attribute** sections for more documentation). Finally, pass these class names off to the `Router` instance.
 
 ```php
 $router = new Router(
@@ -145,7 +151,7 @@ $router = new Router(
 );
 ```
 
-The `Router` class also supports an optional default handler. This is any `callable` that will be used if no matching routes could be found.
+The `Router` class also supports an optional `default` handler. This is any `callable` that will be used if no matching routes could be found.
 
 ```php
 $router = new Router(
@@ -201,7 +207,7 @@ class UsersHandler
 		$result = $email->send(
 			$body->payload->email,
 			$body->payload->name,
-			"templates/user_registered"
+			"templates/registration.tpl"
 		);
 
 		if( $result === false ){
@@ -229,7 +235,9 @@ The `logger` parameter allows you to pass a `Psr\Log\LoggerInterface` instance t
 
 A handler is your code that will receive the event message and process it. The handler can be any `callable` type but typically is a class method.
 
-`Syndicate` will call your handlers with full dependency resolution and injection. This means with a PSR-11 Container instance, your application dependencies can be automatically injected into your handlers either in the constructor of a class or as arguments to your class method.
+`Syndicate` will call your handlers with full dependency resolution and injection with a PSR-11 Container instance you have provided. Both the constructor and the method to be called will have dependencies automatically resolved and injected.
+
+**NOTE:** The `Nimbly\Syndicate\Message` instance can *always* be resolved with or without a conatiner.
 
 ```php
 namespace App\Consumer\Handlers;
@@ -242,6 +250,12 @@ use Nimbly\Syndicate\Response;
 
 class UsersHandler
 {
+	public function __construct(
+		protected LoggerInterface $logger
+	)
+	{
+	}
+
 	#[Consume(
 		topic: "users",
 		payload: ["$.event" => "UserCreated"]
@@ -249,6 +263,8 @@ class UsersHandler
 	public function onUserRegistered(Message $message, EmailService $email): Response
 	{
 		// Do something with the message
+
+		$this->logger->debug("Received UserCreated message.");
 	}
 
 	#[Consume(
@@ -258,6 +274,8 @@ class UsersHandler
 	public function onUserDeleted(Message $message): Response
 	{
 		// Do something with the message
+
+		$this->logger->debug("Received UserDeleted message.");
 	}
 }
 ```
@@ -295,7 +313,7 @@ Here is an example where the topic must start with `users/` **AND** the payload 
 )]
 ```
 
-In this example, the `Origin` header will match as long as it ends with `/Syndicate` *OR* begins with `Deadletter/`.
+In this example, the `Origin` header will match as long as it ends with `/Syndicate` **OR** begins with `Deadletter/`.
 
 ```php
 #[Consume(
@@ -307,13 +325,13 @@ In this example, the `Origin` header will match as long as it ends with `/Syndic
 
 After processing a message in your handler, you may return a `Nimbly\Syndicate\Response` enum to explicity declare what should be done with the message.
 
-**NOTE:** If no response value is returned, or the value is not one of `nack` or `deadletter` it is assumed the message should be `ack`ed.
-
 Possible response enum values:
 
 * `Response::ack` - Acknowledge the message (removes the message from the source)
 * `Response::nack` - Do not acknowledge the message (the message will be made availble again for processing after a short time, also known as releasing the message)
 * `Response::deadletter` - Move the message to a separate deadletter location, provided in the `Application` constructor
+
+**NOTE:** If no response value is returned by the handler (eg, `null` or `void`), or the response value is not one of `Response::nack` or `Response::deadletter` it is assumed the message should be `ack`ed. Best practice is to be explicit and always return a `Response` enum value.
 
 ```php
 public function onUserRegistered(Message $message, EmailService $email): Response
@@ -345,3 +363,11 @@ public function onUserRegistered(Message $message, EmailService $email): Respons
 ## Custom router
 
 Although using the `#[Consume]` attribute is the fastest and easiest way to get your message handlers registered with the application router, you may want to implement your own custom  routing solution. Syndicate provides a `Nimbly\Syndicate\RouterInterface` for you to implement.
+
+## Custom publishers and consumers
+
+If you find that `Syndicate` does not support a particular publisher or consumer, we'd love to see a [Github Issues](https://github.com/nimbly/Syndicate/issues) opened or a message posted in [Github Discussions](https://github.com/nimbly/Syndicate/discussions).
+
+Alternatively, you can create your own implementation using the `Nimbly\Syndicate\PublisherInterface` and/or the `Nimbly\Syndicate\ConsumerInterface`.
+
+If you feel like sharing your implementations, we encourage you opening up a PR!
