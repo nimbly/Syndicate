@@ -1,6 +1,6 @@
 {
     "name": "nimbly/syndicate",
-    "description": "A powerful queue and pubsub message consumer.",
+    "description": "A powerful queue and pubsub message publisher and consumer framework.",
 	"keywords": ["php", "event", "queue", "pubsub", "framework"],
     "type": "library",
     "license": "MIT",
