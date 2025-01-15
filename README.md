@@ -64,42 +64,18 @@ Select an integration you would like to publish messages to. In this example, we
 
 ```php
 $publisher = new Sns(
-	client: new SnsClient(["region" => "us-east-2", "version" => "latest"]),
+	client: new SnsClient(["region" => "us-west-2", "version" => "latest"]),
 );
 
 $message = new Message(
-	topic: "arn:aws:sns:us-east-2:010393102219:orders",
+	topic: "arn:aws:sns:us-west-2:010393102219:orders",
 	payload: \json_encode($order)
 );
 
 $publisher->publish($message);
 ```
 
-## Quick start, consumer
-
-A consumer pulls messages from a known location like a queue or from a PubSub topic and returns those messages.
-
-Select an integration to begin consuming from. In this example, we will be consuming messages from an SQS queue.
-
-```php
-$consumer = new Sqs(
-	new SqsClient(["region" => "us-east-2", "version" => "latest"])
-);
-
-$messages = $consumer->consume($sqs_queue_url, 10);
-
-foreach( $messages as $message ){
-	// do your logic...
-}
-```
-
 ## Quick start, Application
-
-The quickstart examples above are sufficient for small singular needs however lacks any real robustness in routing messages of different types to custom handlers.
-
-Typically, you need an application that continuously pulls messages from a known location, and distinctly handles those messages accoridingly.
-
-Syndicate ships with an `Application` instance that can do this for you with full dependency injection support.
 
 ```php
 $client = new Sqs(
@@ -117,7 +93,7 @@ $application = new Application(
 	]),
 	deadletter: new DeadletterPublisher(
 		$client,
-		"https://sqs.us-east-2.amazonaws.com/123456789012/deadletter",
+		"https://sqs.us-west-2.amazonaws.com/123456789012/deadletter",
 	),
 	container: $container,
 	signals: [SIGINT, SIGTERM, SIGHUP]
@@ -129,7 +105,7 @@ To start consuming messages, call the `listen` method on the application instanc
 
 ```php
 $application->listen(
-	location: "https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue",
+	location: "https://sqs.us-west-2.amazonaws.com/123456789012/MyQueue",
 	max_messages: 10,
 	nack_timeout: 12,
 	polling_timeout: 5
@@ -149,7 +125,7 @@ Example:
 ```php
 $consumer = new Sqs(
 	new SqsClient([
-		"region" => "us-east-2",
+		"region" => "us-west-2",
 		"version" => "latest"
 	])
 );
@@ -157,68 +133,27 @@ $consumer = new Sqs(
 
 ### Router
 
-The `router` parameter is any instance of `Nimbly\Syndicate\RouterInterface`. However, there is a default router provided: `Nimbly\Syndicate\Router`. This router relies on your handlers using the `Nimbly\Syndicate\Consume` attribute. Simply add a `#[Consume]` attribute with your routing criteria before your class method on your handlers.
+The `router` parameter is an instance of `Nimbly\Syndicate\Router`. This router relies on your handlers using the `Nimbly\Syndicate\Consume` attribute. Simply add a `#[Consume]` attribute with your routing criteria before your class methods on your handlers (please see **Consume Attribute** section for more documentation). Finally, pass these class names off to the `Router` instance.
 
-```php
-#[Consume(
-	topic: "users",
-	payload: ["$.event" => "UserCreated"],
-)]
-public function onUserCreated(Message $message): Response
-{
-	// Do something with message.
-}
-```
-
-You can provide multiple values for each property in the `Consume` attribute.
-
-```php
-#[Consume(
-	topic: ["users", "admins"]
-	payload: ["$.event" => "UserCreated", "$.body.role" => ["user", "admin"]],
-)]
-public function onUserCreated(Message $message): Response
-{
-	// Do something with message.
-}
-```
-
-In the above example, *either* the `users` *or* `admins` topic will match *and* the payload JSON paths all must match.
-
-You can also use wildcards when defining matches.
-
-```php
-#[Consume(
-	topic: "users/*",
-	payload: ["$.event" => "Messages/*/User*"],
-	headers: ["Origin" => ["*/Syndicate", "Deadletter/*"]]
-)]
-public function onUserCreated(Message $message): Response
-{
-	// Do something with message.
-}
-```
-
-In the above example, any topic that starts with "users/" will match. And the `Origin` header will match as long as it ends with `/Syndicate` *OR* begins with `Deadletter/`.
-
-Finally, you can create a `Nimbly\Syndicate\Router` instance with the class names of your handlers that contain `#[Consume]` attributes.
-
-```php
-$router = new Router([
-	App\Consumer\Handlers\UsersHandler::class,
-	App\Consumer\Handlers\AdminsHandler::class,
-]);
-```
-
-The default router also supports an optional default handler. This is any `callable` that will be used if no matching routes could be found.
 
 ```php
 $router = new Router(
 	handlers: [
 		App\Consumer\Handlers\UsersHandler::class,
-		App\Consumer\Handlers\AdminsHandler::class,
+		App\Consumer\Handlers\OrdersHandler::class
+	]
+);
+```
+
+The `Router` class also supports an optional default handler. This is any `callable` that will be used if no matching routes could be found.
+
+```php
+$router = new Router(
+	handlers: [
+		App\Consumer\Handlers\UsersHandler::class,
+		App\Consumer\Handlers\OrdersHandler::class,
 	],
-	default: function(Message $message){
+	default: function(Message $message): Response {
 		// do something with message that could not be routed
 
 		if( $foo ){
@@ -244,6 +179,8 @@ $deadletter = new DeadletterPublisher(
 ```
 
 In this example, we would like to use a Redis queue for our deadletters and to push them into the `foo_service_deadletter` queue.
+
+The `deadletter` implementation is used any time a message could not be routed and no default handler was provided *or* if you explicitly return `Response::deadletter` from your event handler.
 
 ### Container
 
@@ -276,7 +213,7 @@ class UsersHandler
 }
 ```
 
-In this example, both the `Message` and the `EmailService` dependecies are injected - assuming the container has the `EmailService` in it.
+In this example, both the `Message` and the `EmailService` dependecies are injected - assuming the container has the `EmailService` instance in it.
 
 ### Signals
 
@@ -290,11 +227,83 @@ The `logger` parameter allows you to pass a `Psr\Log\LoggerInterface` instance t
 
 ## Handlers
 
-A handler is your code that will receive the event message and process it. The handler can be any `callable` type (closure, function, etc) or a string in the format `Fully\Qualified\NameSpace@methodName` (eg, `App\Consumer\Handlers\UsersHandler@onUserRegistered`).
+A handler is your code that will receive the event message and process it. The handler can be any `callable` type but typically is a class method.
 
-`Syndicate` will call your handlers with full dependency resolution and injection. This means with a PSR-11 Container instance, your application dependencies can be automatically injected into your handlers.
+`Syndicate` will call your handlers with full dependency resolution and injection. This means with a PSR-11 Container instance, your application dependencies can be automatically injected into your handlers either in the constructor of a class or as arguments to your class method.
 
-## Response
+```php
+namespace App\Consumer\Handlers;
+
+use App\Services\EmailService;
+use Nimbly\Syndicate\Consume;
+use Nimbly\Syndicate\Message;
+use Nimbly\Syndicate\Response;
+
+
+class UsersHandler
+{
+	#[Consume(
+		topic: "users",
+		payload: ["$.event" => "UserCreated"]
+	)]
+	public function onUserRegistered(Message $message, EmailService $email): Response
+	{
+		// Do something with the message
+	}
+
+	#[Consume(
+		topic: "users",
+		payload: ["$.event" => "UserDeleted"]
+	)]
+	public function onUserDeleted(Message $message): Response
+	{
+		// Do something with the message
+	}
+}
+```
+
+### Consume Attribute
+
+The `#[Consume]` attribute allows you to add routing criteria/filters to your handlers. The criteria supported are:
+
+* `topic` The topic name or an array of names.
+* `payload` An array of key/value pair of JSON Path statements to a string or array of strings to match.
+* `headers` An array of key/value pair of header names to a string or array of strings to match.
+* `attributes` An array of key/value pair of attribute names to a string or array of strings to match.
+
+You can have as many or as few routing criteria as you like. You may also use an **asterisk** as a wildcard for matching. Each type of criteria you add is ANDed together.
+
+**NOTE:** In order to use the `payload` filter, your message content **must** be in JSON.
+
+#### Examples
+
+Here is an example where the topic must match exactly `users` **AND** the message body must have a `type` property that is exactly `UserCreated` **AND** the `body.role` property is either `user` **OR** `admin`.
+
+```php
+#[Consume(
+	topic: "users",
+	payload: ["$.type" => "UserCreated", "$.body.role" => ["user", "admin"]],
+)]
+```
+
+Here is an example where the topic must start with `users/` **AND** the payload `type` property either starts with `User` **OR** starts with `Admin` **AND** the payload `body.role` property is either `user` **OR** `admin`.
+
+```php
+#[Consume(
+	topic: ["users/*"],
+	payload: ["$.type" => ["User*", "Admin*"], "$.body.role" => ["user", "admin"]],
+)]
+```
+
+In this example, the `Origin` header will match as long as it ends with `/Syndicate` *OR* begins with `Deadletter/`.
+
+```php
+#[Consume(
+	headers: ["Origin" => ["*/Syndicate", "Deadletter/*"]]
+)]
+```
+
+### Response
 
 After processing a message in your handler, you may return a `Nimbly\Syndicate\Response` enum to explicity declare what should be done with the message.
 
@@ -302,16 +311,14 @@ After processing a message in your handler, you may return a `Nimbly\Syndicate\R
 
 Possible response enum values:
 
-* `Response::ack` - Acknowledge the message
-* `Response::nack` - Do not acknowledge the message (the message will be made availble again for processing after a short time)
+* `Response::ack` - Acknowledge the message (removes the message from the source)
+* `Response::nack` - Do not acknowledge the message (the message will be made availble again for processing after a short time, also known as releasing the message)
 * `Response::deadletter` - Move the message to a separate deadletter location, provided in the `Application` constructor
-
-Example:
 
 ```php
 public function onUserRegistered(Message $message, EmailService $email): Response
 {
-	$payload = \json_decode($message->getBody());
+	$payload = \json_decode($message->getPayload());
 
 	// There is something fundamentally wrong with this message.
 	// Let's push to the deadletter and investigate later.
@@ -337,4 +344,4 @@ public function onUserRegistered(Message $message, EmailService $email): Respons
 
 ## Custom router
 
-Although using the `#[Consume]` attribute is the fastest and easiest way to get your message handlers registered with the application router, you may want to implement your own custom `Message` routing solution. Syndicate provides a `Nimbly\Syndicate\RouterInterface` for you to implement.
+Although using the `#[Consume]` attribute is the fastest and easiest way to get your message handlers registered with the application router, you may want to implement your own custom  routing solution. Syndicate provides a `Nimbly\Syndicate\RouterInterface` for you to implement.
