@@ -5,7 +5,7 @@
 [![Codecov branch](https://img.shields.io/codecov/c/github/nimbly/syndicate/master?style=flat-square)](https://app.codecov.io/github/nimbly/Syndicate)
 [![License](https://img.shields.io/github/license/nimbly/Syndicate.svg?style=flat-square)](https://packagist.org/packages/nimbly/Syndicate)
 
-Syndicate is a powerful framework able to both publish and consume messages - ideal for your event driven application or as a job processor. It supports common queues and PubSub integrations with an `Application` layer that can be used to route incoming messages to any handler of your choosing with full dependency injection using a PSR-11 Container instance.
+`Syndicate` is a powerful framework able to both publish and consume messages - ideal for your event driven application or as a job processor. It supports common queues and PubSub integrations with an `Application` layer that can be used to route incoming messages to any handler of your choosing with full dependency injection using a PSR-11 Container instance.
 
 ## Requirements
 
@@ -57,7 +57,7 @@ Alternatively, you can implement your own consumers and publishers by adhering t
 composer require nimbly/syndicate
 ```
 
-## Quick start, publisher
+## Publisher: Quick Start
 
 A publisher sends (aka publishes) messages to a known location like a queue or to a PubSub topic.
 
@@ -76,7 +76,9 @@ $message = new Message(
 $publisher->publish($message);
 ```
 
-## Quick start, Application
+## Application: Quick Start
+
+Create a consumer instance by selecting your integration.
 
 ```php
 $consumer = new Sqs(
@@ -85,9 +87,35 @@ $consumer = new Sqs(
 		"version" => "latest"
 	])
 );
+```
 
+Create an `Application` instance with the consumer and class names of where your handlers are. The classes you use for your handlers should have methods tagged with the `#[Consume]` attribute. (See **Handlers** and **Consume Attribute** sections for more details.)
+
+```php
 $application = new Application(
-	consumer: $client,
+	consumer: $consumer,
+	router: new Router([
+		App\Consumer\Handlers\UsersHandler::class,
+		App\Consumer\Handlers\OrdersHandler::class,
+	]),
+);
+```
+
+To start consuming messages, call the `listen` method on the application instance with the topic name, queue name, or queue URL as the `location`.
+
+```php
+$application->listen(
+	location: "https://sqs.us-west-2.amazonaws.com/123456789012/MyQueue",
+);
+```
+
+## Application: In Depth
+
+The quick start above only scratches the surface of what `Syndicate` can do. Let's look at more detailed examples of all its options and features.
+
+```php
+$application = new Application(
+	consumer: $consumer,
 	router: new Router([
 		App\Consumer\Handlers\UsersHandler::class,
 		App\Consumer\Handlers\OrdersHandler::class,
@@ -97,37 +125,10 @@ $application = new Application(
 		"https://sqs.us-west-2.amazonaws.com/123456789012/deadletter",
 	),
 	container: $container,
-	logger: new Logger,
+	logger: $logger,
 	signals: [SIGINT, SIGTERM, SIGHUP]
 )
 ```
-
-To start consuming messages, call the `listen` method on the application instance.
-
-
-```php
-$application->listen(
-	location: "https://sqs.us-west-2.amazonaws.com/123456789012/MyQueue",
-	max_messages: 10,
-	nack_timeout: 12,
-	polling_timeout: 5,
-	deadletter_options: ["option" => "value"]
-);
-```
-
-The `listen` method will continue to poll for new messages and route them to your handlers. To shutdown the listener, you must send an interrupt signal that was defined in the `Application` constructor, typically SIGINT (ctrl-c), SIGHUP, SIGTERM, etc.
-
-The `location` parameter is the topic name, queue name, or queue URL you will be listening on. This parameter value is dependent on which consumer implementation you are using.
-
-The `max_messages` parameter defines how many messages should be pulled off at a single time. Some implementations only allow a single message at a time.
-
-The `nack_timeout` parameter defines how long (in minutes) the message should be held before it can be pulled again when a `Response::nack` is returned by your handler. Some implementations do not support modifying the message visibility timeout.
-
-The `polling_timeout` parameter defines how long (in seconds) the consumer implementation should block waiting for messages before disconnecting and trying again.
-
-And finally, the `deadletter_options` parameter is a set of options that will be passed to the deadletter publisher. These options are dependent on the implementation being used.
-
-Now, let's dig deeper into each of the constructor parameters for the `Application` instance.
 
 ### Consumer
 
@@ -144,7 +145,7 @@ $consumer = new Sqs(
 
 ### Router
 
-The `router` parameter is an instance of `Nimbly\Syndicate\Router` (or any instance of `Nimbly\Syndicate\RouterInterface`). This router relies on your handlers using the `Nimbly\Syndicate\Consume` attribute. Simply add a `#[Consume]` attribute with your routing criteria before your class methods on your handlers (please see **Handlers** and **Consume Attribute** sections for more documentation). Finally, pass these class names off to the `Router` instance.
+The `router` parameter is an instance of `Nimbly\Syndicate\Router`. This router relies on your handlers using the `Nimbly\Syndicate\Consume` attribute. Simply add a `#[Consume]` attribute with your routing criteria before your class methods on your handlers (please see **Handlers** and **Consume Attribute** sections for more details). Finally, pass these class names off to the `Router` instance.
 
 ```php
 $router = new Router(
@@ -177,26 +178,26 @@ $router = new Router(
 
 ### Deadletter
 
-The `deadletter` parameter allows you to define a deadletter location: a place to put messages that cannot be processed for whatever reason. The `deadletter` is simply a `PublisherInterface` instance. However, a helper is provided with the `DeadletterPublisher` class.
+The `deadletter` parameter allows you to define a deadletter location: a place to put messages that cannot be routed or processed for whatever reason. The `deadletter` is simply a `PublisherInterface` instance - however, a helper is provided with the `DeadletterPublisher` class.
 
 ```php
 $redis = new Nimbly\Syndicate\Queue\Redis(new Client);
 
 $deadletter = new DeadletterPublisher(
 	$redis,
-	"foo_service_deadletter"
+	"deadletter"
 );
 ```
 
-In this example, we would like to use a Redis queue for our deadletters and to push them into the `foo_service_deadletter` queue.
+In this example, we would like to use a Redis queue for our deadletters and to push them into the `deadletter` queue.
 
-The `deadletter` implementation is used any time a message could not be routed and no default handler was provided *or* if you explicitly return `Response::deadletter` from your event handler.
+The `deadletter` implementation is used any time a message could not be routed and no default handler was provided *or* if you explicitly return `Response::deadletter` from your message handler.
 
 ### Container
 
 The `container` parameter allows you to pass along a PSR-11 Container instance to be used in autowiring and dependency injection when calling your message handlers.
 
-The `Nimbly\Syndicate\Message` instance can *always* be resolved without the need of a conatiner.
+**NOTE:** The `Nimbly\Syndicate\Message` instance can *always* be resolved with or without a conatiner.
 
 ```php
 class UsersHandler
@@ -225,21 +226,54 @@ class UsersHandler
 
 In this example, both the `Message` and the `EmailService` dependecies are injected - assuming the container has the `EmailService` instance in it.
 
-### LoggerInterface
+### Logger
 
-The `logger` parameter allows you to pass a `Psr\Log\LoggerInterface` instance to the application. Syndicate will use this logger instance to log messages to give you better visibility into your application.
+The `logger` parameter allows you to pass a `Psr\Log\LoggerInterface` instance to the application. `Syndicate` will use this logger instance to log messages to give you better visibility into your application.
 
 ### Signals
 
 The `signals` parameter is an array of PHP interrupt signal constants (eg, `SIGINT`, `SIGTERM`, etc) that you would like your application to respond to and gracefully shutdown the application. I.e. once all messages in flight have been processed by your handlers, the application will terminate. It defaults to `[SIGINT, SIGTERM]` which are common interrupts for both command line (Ctrl-C) and container orchestration systems like Kubernetes or ECS.
 
-If no signals are caught, any interrupt signal received will force an immediate shutdown, even if in the middle of processing a message. This could lead to unintended outcomes like lost messages or messages that were only partially processed by your handlers.
+If no signals are defined, any interrupt signal received will force an immediate shutdown, even if in the middle of processing a message. This could lead to unintended outcomes like lost messages or messages that were only partially processed by your handlers.
 
 **NOTE:** Graceful shutdown via interrupt signals *requires* the `ext-pcntl` PHP extension and is only available on Unix-like systems (Linux & Mac OS).
 
+## Listening
+
+The `listen` method will start the polling process for new messages and route them to your handlers. To shutdown the listener, you must send an interrupt signal that was defined in the `Application` constructor, typically `SIGINT` (Ctrl-C) or `SIGTERM`.
+
+```php
+$application->listen(
+	location: "https://sqs.us-west-2.amazonaws.com/123456789012/MyQueue",
+	max_messages: 10,
+	nack_timeout: 12,
+	polling_timeout: 5,
+	deadletter_options: ["option" => "value"]
+);
+```
+
+### Location
+
+The `location` parameter is the topic name, queue name, or queue URL you will be listening on. This parameter value is dependent on which consumer implementation you are using.
+
+### Max Messages
+
+The `max_messages` parameter defines how many messages should be pulled off at a single time. Some implementations only allow a single message at a time, regardless of what value you use here.
+
+### Nack Timeout
+
+The `nack_timeout` parameter defines how long (in minutes) the message should be held before it can be pulled again when a `Response::nack` is returned by your handler. Some implementations do not support modifying the message visibility timeout and will ignore this value entirely.
+
+### Polling Timeout
+
+The `polling_timeout` parameter defines how long (in seconds) the consumer implementation should block waiting for messages before disconnecting and trying again.
+
+### Deadletter Options
+The `deadletter_options` parameter is a set of options that will be passed to the deadletter publisher. These options are dependent on the implementation being used.
+
 ## Handlers
 
-A handler is your code that will receive the event message and process it. The handler can be any `callable` type but typically is a class method.
+A handler is your code that will receive the  `Nimbly\Syndicate\Message` instance and process it. The handler can be any `callable` type but typically is a class method.
 
 `Syndicate` will call your handlers with full dependency resolution and injection as long as a PSR-11 Container instance was provided. Both the constructor and the method to be called will have dependencies automatically resolved and injected for you.
 
@@ -252,7 +286,6 @@ use App\Services\EmailService;
 use Nimbly\Syndicate\Consume;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;
-
 
 class UsersHandler
 {
@@ -327,9 +360,32 @@ In this example, the `Origin` header will match as long as it ends with `/Syndic
 )]
 ```
 
+### Message
+
+`Syndicate` will pass a `Nimbly\Syndicate\Message` instance to your handler. This `Message` instance contains the topic, payload, headers, and attributes of the message that was consumed. The payload is returned exactly as it was consumed: no parsing of the data is done.
+
+**NOTE:** Not all consumers support headers or attributes.
+
+```php
+public function onUserRegistered(Message $message, EmailService $email): Response
+{
+	// Get the topic, queue name, or queue URL the message came from
+	$topic = $message->getTopic();
+
+	// JSON decode the message payload
+	$payload = \json_decode($message->getPayload());
+
+	// Get all headers of the message
+	$headers = $message->getHeaders();
+
+	// Get all attributes of the message
+	$attributes = $message->getAttributes();
+}
+```
+
 ### Response
 
-After processing a message in your handler, you may return a `Nimbly\Syndicate\Response` enum to explicity declare what should be done with the message.
+After processing a message in your handler, you may (and should) return a `Nimbly\Syndicate\Response` enum to explicity declare what should be done with the message.
 
 Possible response enum values:
 
@@ -368,7 +424,7 @@ public function onUserRegistered(Message $message, EmailService $email): Respons
 
 ## Custom router
 
-Although using the `#[Consume]` attribute is the fastest and easiest way to get your message handlers registered with the application router, you may want to implement your own custom  routing solution. Syndicate provides a `Nimbly\Syndicate\RouterInterface` for you to implement.
+Although using the `#[Consume]` attribute is the fastest and easiest way to get your message handlers registered with the application router, you may want to implement your own custom  routing solution. `Syndicate` provides a `Nimbly\Syndicate\RouterInterface` for you to implement.
 
 ## Custom publishers and consumers
 

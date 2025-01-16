@@ -16,7 +16,7 @@ class Sqs implements PublisherInterface, ConsumerInterface
 {
 	/**
 	 * @param SqsClient $client
-	 * @param string|null $base_url An optional base URL if you are publishing or consuming all messages to the same queue. With this option set, when you publish a message or consume, its topic does not need to include the base URL portion.
+	 * @param string|null $base_url An optional base URL if you are publishing or consuming all messages to the same AWS account. With this option set, when you publish a message or consume, its topic does not need to include the base URL portion.
 	 */
 	public function __construct(
 		protected SqsClient $client,
