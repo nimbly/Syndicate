@@ -109,8 +109,7 @@ class RedisPubSubTest extends TestCase
 
 		$subscriptions = $reflectionProperty->getValue($consumer);
 
-		$this->assertInstanceOf(
-			Closure::class,
+		$this->assertIsCallable(
 			$subscriptions["test"]
 		);
 	}
@@ -140,13 +139,11 @@ class RedisPubSubTest extends TestCase
 
 		$subscriptions = $reflectionProperty->getValue($consumer);
 
-		$this->assertInstanceOf(
-			Closure::class,
+		$this->assertIsCallable(
 			$subscriptions["test"]
 		);
 
-		$this->assertInstanceOf(
-			Closure::class,
+		$this->assertIsCallable(
 			$subscriptions["test2"]
 		);
 	}

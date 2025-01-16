@@ -14,7 +14,7 @@ class Application
 	protected bool $listening = false;
 
 	/**
-	 * @param ConsumerInterface $consumer The consumer to pull messages from.
+	 * @param ConsumerInterface|LoopConsumerInterface $consumer The consumer to pull messages from.
 	 * @param RouterInterface $router A router instance that will aid resolving Messages received into callables.
 	 * @param PublisherInterface|null $deadletter A deadletter publisher instance if you would like to use one.
 	 * @param ContainerInterface|null $container An optional container instance to be used when invoking the handler.
@@ -22,7 +22,7 @@ class Application
 	 * @param array<int> $signals Array of PHP signal constants to trigger a graceful shutdown. Defaults to [SIGINT, SIGTERM].
 	 */
 	public function __construct(
-		protected ConsumerInterface $consumer,
+		protected ConsumerInterface|LoopConsumerInterface $consumer,
 		protected RouterInterface $router,
 		protected ?PublisherInterface $deadletter = null,
 		protected ?ContainerInterface $container = null,
@@ -69,7 +69,7 @@ class Application
 	/**
 	 * Begin listening for new messages.
 	 *
-	 * @param string $location The location to pull messages from the consumer: topic name, queue name, queue URL, etc
+	 * @param string|array<string> $location The location to pull messages from the consumer: topic name, queue name, queue URL, etc. If using a `LoopConsumerInstance`, you can pass an array of topics to listen on.
 	 * @param integer $max_messages Maximum number of messages to pull at once.
 	 * @param integer $nack_timeout If nacking a message, how much timeout/delay before message is able to be reserved again. Also known as "visibility delay".
 	 * @param integer $polling_timeout Amount of time in seconds to poll before trying again.
@@ -79,57 +79,96 @@ class Application
 	 * @throws PublisherException
 	 * @return void
 	 */
-	public function listen(string $location, int $max_messages = 1, int $nack_timeout = 0, int $polling_timeout = 10, array $deadletter_options = []): void
+	public function listen(string|array $location, int $max_messages = 1, int $nack_timeout = 0, int $polling_timeout = 10, array $deadletter_options = []): void
 	{
 		$this->listening = true;
 
-		$this->logger?->info(
-			"[NIMBLY/SYNDICATE] Consumer listening started.",
-			[
-				"consumer" => $this->consumer::class,
-				"location" => $location,
-				"max_messages" => $max_messages,
-				"nack_timeout" => $nack_timeout,
-				"polling_timeout" => $polling_timeout
-			]
-		);
+		if( $this->consumer instanceof LoopConsumerInterface ){
 
-		/**
-		 * @psalm-suppress RedundantCondition
-		 */
-		while( $this->listening ) {
-			$messages = $this->consumer->consume($location, $max_messages, ["timeout" => $polling_timeout]);
-
-			foreach( $messages as $message ){
-
-				$this->logger?->debug(
-					"[NIMBLY/SYNDICATE] Dispatching message.",
-					[
-						"topic" => $message->getTopic(),
-						"payload" => $message->getPayload(),
-						"attributes" => $message->getAttributes(),
-						"headers" => $message->getHeaders(),
-						"reference" => $message->getReference(),
-					]
+			if( !\is_array($location) ){
+				$location = \array_map(
+					fn(string $topic) => \trim($topic),
+					\explode(",", $location)
 				);
+			}
 
-				$response = $this->dispatch($message);
+			$this->consumer->subscribe($location, [$this, "dispatch"]);
 
-				switch( $response ){
-					case Response::nack:
-						$this->consumer->nack($message, $nack_timeout);
-						break;
+			$this->logger?->info(
+				"[NIMBLY/SYNDICATE] Loop consumer listening started.",
+				[
+					"consumer" => $this->consumer::class,
+					"topics" => $location
+				]
+			);
 
-					case Response::deadletter:
-						if( $this->deadletter === null ){
+			$this->consumer->loop();
+		}
+		else {
+
+			$this->logger?->info(
+				"[NIMBLY/SYNDICATE] Consumer listening started.",
+				[
+					"consumer" => $this->consumer::class,
+					"location" => $location,
+					"max_messages" => $max_messages,
+					"nack_timeout" => $nack_timeout,
+					"polling_timeout" => $polling_timeout
+				]
+			);
+
+			/**
+			 * @psalm-suppress RedundantCondition
+			 */
+			while( $this->listening ) {
+
+				if( \is_array($location) ){
+					throw new UnexpectedValueException("Cannot consume from more than one location.");
+				}
+
+				$messages = $this->consumer->consume($location, $max_messages, ["timeout" => $polling_timeout]);
+
+				foreach( $messages as $message ){
+
+					$this->logger?->debug(
+						"[NIMBLY/SYNDICATE] Dispatching message.",
+						[
+							"topic" => $message->getTopic(),
+							"payload" => $message->getPayload(),
+							"attributes" => $message->getAttributes(),
+							"headers" => $message->getHeaders(),
+							"reference" => $message->getReference(),
+						]
+					);
+
+					$response = $this->dispatch($message);
+
+					switch( $response ){
+						case Response::nack:
 							$this->consumer->nack($message, $nack_timeout);
-							throw new RoutingException("Cannot route message to deadletter as no deadletter implementation was given.");
-						}
+							break;
 
-						$this->deadletter->publish($message, $deadletter_options);
+						case Response::deadletter:
+							if( $this->deadletter === null ){
+								$this->consumer->nack($message, $nack_timeout);
+								throw new RoutingException("Cannot route message to deadletter as no deadletter implementation was given.");
+							}
 
-					default:
-						$this->consumer->ack($message);
+							$this->logger?->warning(
+								"[NIMBLY/SYNDICATE] Deadlettering message.",
+								[
+									"topic" => $message->getTopic(),
+									"payload" => $message->getPayload(),
+									"headers" => $message->getHeaders(),
+									"attributes" => $message->getAttributes(),
+								]
+							);
+
+							$this->deadletter->publish($message, $deadletter_options);
+
+						default:
+							$this->consumer->ack($message);
+					}
 				}
 			}
 		}
@@ -149,7 +188,7 @@ class Application
 
 		if( $handler === null ){
 			$this->logger?->warning(
-				"[NIMBLY/SYNDICATE] A handler could not be resolved for this message. Attempting to deadletter.",
+				"[NIMBLY/SYNDICATE] A handler could not be resolved for this message.",
 				[
 					"topic" => $message->getTopic(),
 					"payload" => $message->getPayload(),
@@ -177,10 +216,14 @@ class Application
 	public function shutdown(?int $signal = null): void
 	{
 		$this->logger?->info(
-			"[NIMBLY/SYNDICATE] Interrupt signal received. Draining in flight messages.",
+			"[NIMBLY/SYNDICATE] Interrupt signal received. Draining in-flight messages.",
 			["signal" => $signal]
 		);
 
 		$this->listening = false;
+
+		if( $this->consumer instanceof LoopConsumerInterface ){
+			$this->consumer->shutdown();
+		}
 	}
 }

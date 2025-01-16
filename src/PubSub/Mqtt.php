@@ -3,11 +3,8 @@
 namespace Nimbly\Syndicate\PubSub;
 
 use Throwable;
-use Nimbly\Resolve\Resolve;
 use Nimbly\Syndicate\Message;
-use UnexpectedValueException;
 use PhpMqtt\Client\MqttClient;
-use Psr\Container\ContainerInterface;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
@@ -17,31 +14,13 @@ use PhpMqtt\Client\Exceptions\ConnectingToBrokerFailedException;
 
 class Mqtt implements PublisherInterface, LoopConsumerInterface
 {
-	use Resolve;
-
 	/**
 	 * @param MqttClient $client
 	 */
 	public function __construct(
-		protected MqttClient $client,
-		protected ?ContainerInterface $container = null,
-		array $signals = [SIGINT, SIGHUP, SIGTERM]
+		protected MqttClient $client
 	)
 	{
-		if( \extension_loaded("pcntl") ){
-			\pcntl_async_signals(true);
-
-			foreach( $signals as $signal ){
-				$result = \pcntl_signal(
-					$signal,
-					[$this, "shutdown"]
-				);
-
-				if( $result === false ){
-					throw new UnexpectedValueException("Could not attach signal (" . $signal . ") handler.");
-				}
-			}
-		}
 	}
 
 	/**
@@ -87,19 +66,22 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 	 * Options:
 	 * 	* `qos` One of `MqttClient::QOS_AT_MOST_ONCE`, `MqttClient::QOS_AT_LEAST_ONCE`, or `MqttClient::QOS_EXACTLY_ONCE`. Defaults to `MqttClient::QOS_AT_MOST_ONCE`.
 	 */
-	public function subscribe(string|array $topic, string|callable $callback, array $options = []): void
+	public function subscribe(string|array $topics, callable $callback, array $options = []): void
 	{
-		if( !\is_array($topic) ){
-			$topic = [$topic];
+		if( !\is_array($topics) ){
+			$topics = \array_map(
+				fn(string $topic) => \trim($topic),
+				\explode(",", $topics)
+			);
 		}
 
 		$this->connect();
 
-		foreach( $topic as $t ){
+		foreach( $topics as $topic ){
 			try {
 
 				$this->client->subscribe(
-					topicFilter: $t,
+					topicFilter: $topic,
 					callback: function(string $topic, string $body, bool $retained, array $matched) use ($callback): void {
 						$message = new Message(
 							topic: $topic,
@@ -110,11 +92,7 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 							]
 						);
 
-						$this->call(
-							$this->makeCallable($callback),
-							$this->container,
-							[Message::class => $message]
-						);
+						\call_user_func($callback, $message);
 					},
 					qualityOfService: $options["qos"] ?? MqttClient::QOS_AT_MOST_ONCE
 				);
@@ -166,6 +144,8 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 				previous: $exception
 			);
 		}
+
+		$this->disconnect();
 	}
 
 	/**
@@ -203,6 +183,28 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 			try {
 
 				$this->client->connect();
+			}
+			catch( Throwable $exception ){
+				throw new ConnectionException(
+					message: "Connection to MQTT broker failed.",
+					previous: $exception
+				);
+			}
+		}
+	}
+
+	/**
+	 * Disconnect from Mqtt.
+	 *
+	 * @return void
+	 */
+	private function disconnect(): void
+	{
+		if( $this->client->isConnected() ){
+
+			try {
+
+				$this->client->disconnect();
 			}
 			catch( Throwable $exception ){
 				throw new ConnectionException(

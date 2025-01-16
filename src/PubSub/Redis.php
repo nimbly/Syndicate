@@ -4,10 +4,8 @@ namespace Nimbly\Syndicate\PubSub;
 
 use Throwable;
 use Predis\Client;
-use Nimbly\Resolve\Resolve;
 use Predis\PubSub\Consumer;
 use Nimbly\Syndicate\Message;
-use Psr\Container\ContainerInterface;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
@@ -17,8 +15,6 @@ use Predis\Connection\ConnectionException as RedisConnectionException;
 
 class Redis implements PublisherInterface, LoopConsumerInterface
 {
-	use Resolve;
-
 	protected ?Consumer $loop = null;
 
 	/**
@@ -28,7 +24,6 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 
 	public function __construct(
 		protected Client $client,
-		protected ?ContainerInterface $container = null
 	)
 	{
 	}
@@ -64,27 +59,22 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 	/**
 	 * @inheritDoc
 	 */
-	public function subscribe(string|array $topic, string|callable $callback, array $options = []): void
+	public function subscribe(string|array $topics, callable $callback, array $options = []): void
 	{
-		if( !\is_array($topic) ){
-			$topic = [$topic];
+		if( !\is_array($topics) ){
+			$topics = \array_map(
+				fn(string $topic) => \trim($topic),
+				\explode(",", $topics)
+			);
 		}
 
 		try {
 
-			foreach( $topic as $channel ){
-				$callback = $this->makeCallable($callback);
-
-				$this->subscriptions[$channel] = function(Message $message) use ($callback): void {
-					$this->call(
-						$callback,
-						$this->container,
-						[Message::class => $message]
-					);
-				};
+			foreach( $topics as $channel ){
+				$this->subscriptions[$channel] = $callback;
 			}
 
-			$this->getLoop()->subscribe(...$topic);
+			$this->getLoop()->subscribe(...$topics);
 		}
 		catch( RedisConnectionException $exception ){
 			throw new ConnectionException(
@@ -126,14 +116,13 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 						);
 					}
 
-					\call_user_func(
-						$callback,
-						new Message(
-							topic: $msg->channel,
-							payload: $msg->payload,
-							reference: $msg
-						)
+					$message = new Message(
+						topic: $msg->channel,
+						payload: $msg->payload,
+						reference: $msg
 					);
+
+					\call_user_func($callback, $message);
 				}
 			}
 		}

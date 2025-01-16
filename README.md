@@ -27,7 +27,7 @@
 
 ### Queues
 
-| Integration    | Publisher | Consumer | Library |
+| Integration    | Publish   | Consume  | Library |
 | -------------- | --------- | -------- | ------- |
 | Redis          | Y         | Y        | `predis/predis:^2.0` |
 | Azure          | Y         | Y        | `microsoft/azure-storage-queue:^1.3` |
@@ -38,14 +38,15 @@
 
 ### PubSubs
 
-| Integration    | Publisher | Consumer | Library |
+| Integration    | Publish   | Consume  | Library |
 | -------------- | --------- | -------- | ------- |
-| Redis          | Y         | Loop     | `predis/predis:^2.0` |
+| Redis          | Y         | Y*       | `predis/predis:^2.0` |
 | SNS            | Y         | N        | `aws/aws-sdk-php:^3.336` |
-| MQTT           | Y         | Loop     | `php-mqtt/client:^1.1` |
+| MQTT           | Y         | Y*       | `php-mqtt/client:^1.1` |
 | Google         | Y         | Y        | `google/cloud-pubsub:^2.0` |
 | Webhook        | Y         | N        | n/a |
 
+**NOTE:** Consumers denoted with **\*** indicate they do not support `ack`ing, `nack`ing, or `deadletter`ing messages. Additionally, the `predis/predis` library currently does not play well with interrupts and gracefully stopping its internal pubsub loop. If using this integration, you should set the `signals` option to an empty array. See the **Consumer** section below for more details.
 
 Is there an integration you would like to see supported? Let us know in [Github Discussions](https://github.com/nimbly/Syndicate/discussions) or open a Pull Request!
 
@@ -132,7 +133,7 @@ $application = new Application(
 
 ### Consumer
 
-The `consumer` parameter is any instance of `Nimbly\Syndicate\ConsumerInterface` - the source where messages should be pulled from.
+The `consumer` parameter is any instance of `Nimbly\Syndicate\ConsumerInterface` or `Nimbly\Syndicate\LoopConsumerInterface` - the source where messages should be pulled from.
 
 ```php
 $consumer = new Sqs(
@@ -142,6 +143,13 @@ $consumer = new Sqs(
 	])
 );
 ```
+
+#### A note on the LoopConsumerInterface
+`LoopConsumerInterface` integrations behave a little differently than the other integrations in that the libraries that back them already have their own looping solution for consuming messages.
+
+These integrations do not support `ack`ing or `nack`ing of messages due to the nature of PubSub. `deadletter`ing messages with these integrations is not currently supported natively by `Syndicate`. Any return value from handlers will be ignored by these integrations.
+
+Setting up a deadletter for these integrations could be achieved by defining a default handler option in the `Router` that publishes to another location.
 
 ### Router
 
@@ -249,6 +257,14 @@ $application->listen(
 	nack_timeout: 12,
 	polling_timeout: 5,
 	deadletter_options: ["option" => "value"]
+);
+```
+
+For consumers that implement the `LoopConsumerInterface` (curently `PubSub\Redis` and `PubSub\Mqtt`), you can pass in an array of `location` strings representing `topics` to subscribe to or a comma seperated list of topic names.
+
+```php
+$application->listen(
+	location: ["users", "orders"],
 );
 ```
 
