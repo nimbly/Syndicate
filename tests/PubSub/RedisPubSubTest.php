@@ -1,13 +1,16 @@
 <?php
 
-use Nimbly\Syndicate\Message;
-use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\ConsumerException;
-use Nimbly\Syndicate\PublisherException;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
-use Nimbly\Syndicate\PubSub\Redis;
 use Predis\Client;
 use Predis\PubSub\Consumer;
+use Nimbly\Syndicate\Message;
+use PHPUnit\Framework\TestCase;
+use Nimbly\Syndicate\PubSub\Redis;
+use Nimbly\Syndicate\ConsumerException;
+use Nimbly\Syndicate\PublisherException;
+use Nimbly\Syndicate\ConnectionException;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use Predis\Connection\ConnectionException as RedisConnectionException;
+use Predis\Connection\NodeConnectionInterface;
 
 /**
  * @covers Nimbly\Syndicate\PubSub\Redis
@@ -48,6 +51,24 @@ class RedisPubSubTest extends TestCase
 			"123",
 			$receipt
 		);
+	}
+
+	public function test_publish_redis_connection_exception_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(Client::class);
+		$mock->shouldReceive("publish")
+			->andThrow(
+				new RedisConnectionException(
+					Mockery::mock(NodeConnectionInterface::class)
+				)
+			);
+
+		$message = new Message("test", "Ok");
+
+		$publisher = new Redis($mock);
+
+		$this->expectException(ConnectionException::class);
+		$publisher->publish($message);
 	}
 
 	public function test_publish_failure_throws_publisher_exception(): void
@@ -128,6 +149,27 @@ class RedisPubSubTest extends TestCase
 			Closure::class,
 			$subscriptions["test2"]
 		);
+	}
+
+	public function test_subscribe_redis_connection_exception_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(Client::class);
+		$mockConsumer = Mockery::mock(Consumer::class);
+
+		$mock->shouldReceive("pubSubLoop")
+			->andReturns($mockConsumer);
+
+		$mockConsumer->shouldReceive("subscribe")
+			->andThrow(
+				new RedisConnectionException(
+					Mockery::mock(NodeConnectionInterface::class)
+				)
+			);
+
+		$consumer = new Redis($mock);
+
+		$this->expectException(ConnectionException::class);
+		$consumer->subscribe("test", "strtolower");
 	}
 
 	public function test_subscribe_failure_throws_consumer_exception(): void
@@ -212,6 +254,27 @@ class RedisPubSubTest extends TestCase
 		$consumer->shutdown();
 
 		$mockConsumer->shouldHaveReceived("stop", [true]);
+	}
+
+	public function test_shutdown_redis_connection_exception_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(Client::class);
+		$mockConsumer = Mockery::mock(Consumer::class)->shouldAllowMockingProtectedMethods();
+
+		$mock->shouldReceive("pubSubLoop")
+		->andReturn($mockConsumer);
+
+		$mockConsumer->shouldReceive("stop")
+			->andThrow(
+				new RedisConnectionException(
+					Mockery::mock(NodeConnectionInterface::class)
+				)
+			);
+
+		$consumer = new Redis($mock);
+
+		$this->expectException(ConnectionException::class);
+		$consumer->shutdown();
 	}
 
 	public function test_shutdown_failure_throws_consumer_exception(): void
