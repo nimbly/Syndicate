@@ -1,9 +1,11 @@
 <?php
 
+use Nimbly\Syndicate\Router;
+use Nimbly\Syndicate\Consume;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;
+use Nimbly\Syndicate\RoutingException;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\Router;
 use Nimbly\Syndicate\Tests\Fixtures\TestHandler;
 
 /**
@@ -70,6 +72,59 @@ class RouterTest extends TestCase
 			["origin" => "value"],
 			$routes["\\Nimbly\\Syndicate\\Tests\\Fixtures\\TestHandler@onAdminDeleted"]->getHeaders()
 		);
+	}
+
+	public function test_method_without_consume_attribute_is_skipped(): void
+	{
+		$router = new Router([
+			new class {
+				protected function helper(): void
+				{
+				}
+
+				#[Consume(topic: "test")]
+				public function onFoo(Message $message)
+				{
+				}
+			}
+		]);
+
+		$reflectionClass = new ReflectionClass($router);
+		$reflectionProperty = $reflectionClass->getProperty("routes");
+		$reflectionProperty->setAccessible(true);
+
+		$routes = $reflectionProperty->getValue($router);
+
+		$this->assertCount(1, $routes);
+	}
+
+	public function test_method_with_consume_attribute_and_non_public_visibility_throws_routing_exception(): void
+	{
+		$this->expectException(RoutingException::class);
+		$router = new Router([
+			new class {
+
+				#[Consume(topic: "test")]
+				private function onFoo(Message $message) {
+
+				}
+			}
+		]);
+	}
+
+	public function test_method_with_multiple_consume_attributes_throws_routing_exception(): void
+	{
+		$this->expectException(RoutingException::class);
+		$router = new Router([
+			new class {
+
+				#[Consume(topic: "test")]
+				#[Consume(topic: "foo")]
+				public function onFoo(Message $message) {
+
+				}
+			}
+		]);
 	}
 
 	public function test_build_regex(): void
@@ -162,7 +217,7 @@ class RouterTest extends TestCase
 		$this->assertFalse($match);
 	}
 
-	public function test_match_values(): void
+	public function test_match_key_value_pairs(): void
 	{
 		$router = new Router([]);
 
@@ -179,7 +234,7 @@ class RouterTest extends TestCase
 		$this->assertTrue($match);
 	}
 
-	public function test_match_values_no_patterns_returns_true(): void
+	public function test_match_key_value_pairs_no_patterns_returns_true(): void
 	{
 		$router = new Router([]);
 
@@ -196,7 +251,24 @@ class RouterTest extends TestCase
 		$this->assertTrue($match);
 	}
 
-	public function test_match_values_false(): void
+	public function test_match_key_value_pairs_missing_key_returns_false(): void
+	{
+		$router = new Router([]);
+
+		$reflectionClass = new ReflectionClass($router);
+		$reflectionMethod = $reflectionClass->getMethod("matchKeyValuePairs");
+		$reflectionMethod->setAccessible(true);
+
+		$match = $reflectionMethod->invoke(
+			$router,
+			["Header1" => "Value1"],
+			["Header2" => "Value2"]
+		);
+
+		$this->assertFalse($match);
+	}
+
+	public function test_match_key_value_pairs_false(): void
 	{
 		$router = new Router([]);
 
@@ -241,6 +313,80 @@ class RouterTest extends TestCase
 		);
 
 		$this->assertTrue($match);
+	}
+
+	public function test_match_json_empty_patterns_returns_true(): void
+	{
+		$router = new Router([]);
+
+		$reflectionClass = new ReflectionClass($router);
+		$reflectionMethod = $reflectionClass->getMethod("matchJson");
+		$reflectionMethod->setAccessible(true);
+
+		$json = [
+			"id" => "421d7fdb-f552-4214-bda3-62e4fd64d7ef",
+			"topic" => "users",
+			"origin" => "Syndicate",
+			"event" => "UserCreated",
+			"body" => [
+				"id" => "efa8157c-953f-4ff7-9664-21bf3101ae51",
+				"name" => "John Doe",
+				"email" => "john@example.com",
+				"role" => "admin"
+			]
+		];
+
+		$match = $reflectionMethod->invoke(
+			$router,
+			\json_encode($json),
+			[]
+		);
+
+		$this->assertTrue($match);
+	}
+
+	public function test_match_json_failed_decoding_throws_unexpected_value_exception(): void
+	{
+		$router = new Router([]);
+
+		$reflectionClass = new ReflectionClass($router);
+		$reflectionMethod = $reflectionClass->getMethod("matchJson");
+		$reflectionMethod->setAccessible(true);
+
+		$json = "id: 421d7fdb-f552-4214-bda3-62e4fd64d7ef";
+
+		$this->expectException(UnexpectedValueException::class);
+		$reflectionMethod->invoke($router,	$json, ["$.body.title" => "books"]);
+	}
+
+	public function test_match_json_path_empty_data_returns_false(): void
+	{
+		$router = new Router([]);
+
+		$reflectionClass = new ReflectionClass($router);
+		$reflectionMethod = $reflectionClass->getMethod("matchJson");
+		$reflectionMethod->setAccessible(true);
+
+		$json = [
+			"id" => "421d7fdb-f552-4214-bda3-62e4fd64d7ef",
+			"topic" => "users",
+			"origin" => "Syndicate",
+			"event" => "UserCreated",
+			"body" => [
+				"id" => "efa8157c-953f-4ff7-9664-21bf3101ae51",
+				"name" => "John Doe",
+				"email" => "john@example.com",
+				"role" => "admin"
+			]
+		];
+
+		$match = $reflectionMethod->invoke(
+			$router,
+			\json_encode($json),
+			["$.body.title" => "books"]
+		);
+
+		$this->assertFalse($match);
 	}
 
 	public function test_match_json_matched_multiple_values_throws_exception(): void

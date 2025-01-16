@@ -39,9 +39,27 @@ class Router implements RouterInterface
 						continue;
 					}
 
-					foreach( $reflectionAttributes as $reflectionAttribute ) {
-						$routes[\sprintf("\%s@%s", $reflectionClass->getName(), $reflectionMethod->getName())] = $reflectionAttribute->newInstance();
+					if( $reflectionMethod->isPublic() === false ){
+						throw new RoutingException(
+							\sprintf(
+								"Handler %s@%s must be public.",
+								$reflectionClass->getName(),
+								$reflectionMethod->getName()
+							)
+						);
 					}
+
+					if( count($reflectionAttributes) > 1 ){
+						throw new RoutingException(
+							\sprintf(
+								"Handler %s@%s has more than one Consume attribute.",
+								$reflectionClass->getName(),
+								$reflectionMethod->getName()
+							)
+						);
+					}
+
+					$routes[\sprintf("\%s@%s", $reflectionClass->getName(), $reflectionMethod->getName())] = $reflectionAttributes[0]->newInstance();
 				}
 
 				return $routes;
