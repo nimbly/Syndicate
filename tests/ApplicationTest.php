@@ -1,20 +1,25 @@
 <?php
 
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Nimbly\Carton\Container;
 use Nimbly\Syndicate\Application;
 use Nimbly\Syndicate\DeadletterPublisher;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\PubSub\Mock;
 use Nimbly\Syndicate\Response;
+use Nimbly\Syndicate\Router;
 use Nimbly\Syndicate\RouterInterface;
 use Nimbly\Syndicate\RoutingException;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * @covers Nimbly\Syndicate\Application
  */
 class ApplicationTest extends TestCase
 {
+	use MockeryPHPUnitIntegration;
+
 	public function test_routing(): void
 	{
 		$mock = new Mock;
@@ -77,6 +82,22 @@ class ApplicationTest extends TestCase
 
 		$application->listen("test_topic");
 		$this->assertCount(0, $mock->getMessages("test_topic"));
+	}
+
+	public function test_empty_signals_logs_warning(): void
+	{
+		$logger = Mockery::mock(LoggerInterface::class);
+
+		$logger->shouldReceive("warning");
+
+		$application = new Application(
+			consumer: new Mock,
+			router: new Router([]),
+			logger: $logger,
+			signals: []
+		);
+
+		$logger->shouldHaveReceived("warning");
 	}
 
 	public function test_no_response_acks_message(): void

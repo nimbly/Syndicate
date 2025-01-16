@@ -29,4 +29,8 @@ class TestHandler
 	{
 		return Response::ack;
 	}
+
+	protected function classHelper(): void
+	{
+	}
 }
