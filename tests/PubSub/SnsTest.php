@@ -4,10 +4,12 @@ use Aws\Result;
 use Aws\Sns\SnsClient;
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
+use Nimbly\Syndicate\PubSub\Sns;
+use Aws\Exception\CredentialsException;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
+use Nimbly\Syndicate\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
-use Nimbly\Syndicate\PubSub\Sns;
 
 /**
  * @covers Nimbly\Syndicate\PubSub\Sns
@@ -64,6 +66,21 @@ class SnsTest extends TestCase
 			"afd1cbe8-6ee3-4de0-90f5-50c019a9a887",
 			$receipt
 		);
+	}
+
+	public function test_publish_credentials_exception_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(SnsClient::class);
+
+		$mock->shouldReceive("publish")
+			->andThrows(new CredentialsException("Failure"));
+
+		$message = new Message("sns_topic", "Ok");
+
+		$publisher = new Sns($mock);
+
+		$this->expectException(ConnectionException::class);
+		$publisher->publish($message);
 	}
 
 	public function test_publish_failure_throws_publisher_exception(): void

@@ -1,11 +1,13 @@
 <?php
 
+use IronCore\HttpException;
 use IronMQ\IronMQ;
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use Nimbly\Syndicate\ConnectionException;
 use Nimbly\Syndicate\Queue\Iron;
 
 /**
@@ -56,12 +58,26 @@ class IronMQTest extends TestCase
 		);
 	}
 
+	public function test_publish_http_failure_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(IronMQ::class);
+
+		$mock->shouldReceive("postMessage")
+		->andThrows(new HttpException("Failure"));
+
+		$message = new Message("ironmq", "Ok");
+
+		$publisher = new Iron($mock);
+
+		$this->expectException(ConnectionException::class);
+		$publisher->publish($message);
+	}
+
 	public function test_publish_failure_throws_publisher_exception(): void
 	{
 		$mock = Mockery::mock(IronMQ::class);
 
 		$mock->shouldReceive("postMessage")
-		->withArgs(["ironmq", "Ok", ["opt1" => "val1", "opt2" => "val2"]])
 		->andThrows(new Exception("Failure"));
 
 		$message = new Message("ironmq", "Ok");
@@ -69,7 +85,7 @@ class IronMQTest extends TestCase
 		$publisher = new Iron($mock);
 
 		$this->expectException(PublisherException::class);
-		$publisher->publish($message, ["opt1" => "val1", "opt2" => "val2"]);
+		$publisher->publish($message);
 	}
 
 	public function test_consume_integration(): void
@@ -147,12 +163,24 @@ class IronMQTest extends TestCase
 		);
 	}
 
+	public function test_consume_http_failure_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(IronMQ::class);
+
+		$mock->shouldReceive("reserveMessages")
+		->andThrows(new HttpException("Failure"));
+
+		$publisher = new Iron($mock);
+
+		$this->expectException(ConnectionException::class);
+		$publisher->consume("ironmq");
+	}
+
 	public function test_consume_failure_throws_consumer_exception(): void
 	{
 		$mock = Mockery::mock(IronMQ::class);
 
 		$mock->shouldReceive("reserveMessages")
-		->withArgs(["ironmq", 10, 15, 20])
 		->andThrows(new Exception("Failure"));
 
 		$publisher = new Iron($mock);
@@ -178,6 +206,25 @@ class IronMQTest extends TestCase
 			"deleteMessage",
 			["ironmq", "afd1cbe8-6ee3-4de0-90f5-50c019a9a887", "0be31d6e-0b46-43d4-854c-772e7d717ce5"]
 		);
+	}
+
+	public function test_ack_http_failure_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(IronMQ::class);
+
+		$mock->expects("deleteMessage")
+		->andThrows(new HttpException("Failure"));
+
+		$message = new Message(
+			topic: "ironmq",
+			payload: "Ok",
+			reference: ["afd1cbe8-6ee3-4de0-90f5-50c019a9a887", "0be31d6e-0b46-43d4-854c-772e7d717ce5"]
+		);
+
+		$consumer = new Iron($mock);
+
+		$this->expectException(ConnectionException::class);
+		$consumer->ack($message);
 	}
 
 	public function test_ack_failure_throws_consumer_exception(): void
@@ -217,6 +264,25 @@ class IronMQTest extends TestCase
 			"releaseMessage",
 			["ironmq", "afd1cbe8-6ee3-4de0-90f5-50c019a9a887", "0be31d6e-0b46-43d4-854c-772e7d717ce5", 10]
 		);
+	}
+
+	public function test_nack_http_failure_throws_connection_exception(): void
+	{
+		$mock = Mockery::spy(IronMQ::class);
+
+		$mock->expects("releaseMessage")
+		->andThrows(new HttpException("Failure"));
+
+		$message = new Message(
+			topic: "ironmq",
+			payload: "Ok",
+			reference: ["afd1cbe8-6ee3-4de0-90f5-50c019a9a887", "0be31d6e-0b46-43d4-854c-772e7d717ce5"]
+		);
+
+		$consumer = new Iron($mock);
+
+		$this->expectException(ConnectionException::class);
+		$consumer->nack($message);
 	}
 
 	public function test_nack_failure_throws_consumer_exception(): void

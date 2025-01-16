@@ -7,7 +7,10 @@ use PhpAmqpLib\Message\AMQPMessage;
 use Nimbly\Syndicate\Queue\RabbitMQ;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
+use Nimbly\Syndicate\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use PhpAmqpLib\Exception\AMQPConnectionClosedException;
+use PhpAmqpLib\Exception\AMQPConnectionBlockedException;
 
 /**
  * @covers Nimbly\Syndicate\Queue\RabbitMQ
@@ -35,6 +38,34 @@ class RabbitMQTest extends TestCase
 			)->once();
 	}
 
+	public function test_publish_connection_closed_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(AMQPChannel::class);
+
+		$mock->shouldReceive("basic_publish")
+		->withAnyArgs()
+		->andThrows(new AMQPConnectionClosedException("Failure"));
+
+		$publisher = new RabbitMQ($mock);
+
+		$this->expectException(ConnectionException::class);
+		$publisher->publish(new Message("message", "Ok"));
+	}
+
+	public function test_publish_connection_blocked_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(AMQPChannel::class);
+
+		$mock->shouldReceive("basic_publish")
+		->withAnyArgs()
+		->andThrows(new AMQPConnectionBlockedException("Failure"));
+
+		$publisher = new RabbitMQ($mock);
+
+		$this->expectException(ConnectionException::class);
+		$publisher->publish(new Message("message", "Ok"));
+	}
+
 	public function test_publish_failure_throws_publisher_exception(): void
 	{
 		$mock = Mockery::mock(AMQPChannel::class);
@@ -46,7 +77,7 @@ class RabbitMQTest extends TestCase
 		$publisher = new RabbitMQ($mock);
 
 		$this->expectException(PublisherException::class);
-		$publisher->publish(new Message("ironmq", "Ok"));
+		$publisher->publish(new Message("message", "Ok"));
 	}
 
 	public function test_consume_integration(): void
@@ -77,7 +108,7 @@ class RabbitMQTest extends TestCase
 		->andReturns($message);
 
 		$publisher = new RabbitMQ($mock);
-		$messages = $publisher->consume("ironmq");
+		$messages = $publisher->consume("rabbitmq");
 
 		$this->assertCount(1, $messages);
 
@@ -90,6 +121,34 @@ class RabbitMQTest extends TestCase
 			$message,
 			$messages[0]->getReference()
 		);
+	}
+
+	public function test_consume_connection_closed_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(AMQPChannel::class);
+
+		$mock->shouldReceive("basic_get")
+		->withAnyArgs()
+		->andThrows(new AMQPConnectionClosedException("Failure"));
+
+		$publisher = new RabbitMQ($mock);
+
+		$this->expectException(ConnectionException::class);
+		$publisher->consume("rabbitmq");
+	}
+
+	public function test_consume_connection_blocked_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(AMQPChannel::class);
+
+		$mock->shouldReceive("basic_get")
+		->withAnyArgs()
+		->andThrows(new AMQPConnectionBlockedException("Failure"));
+
+		$publisher = new RabbitMQ($mock);
+
+		$this->expectException(ConnectionException::class);
+		$publisher->consume("rabbitmq");
 	}
 
 	public function test_consume_failure_throws_consumer_exception(): void
@@ -124,6 +183,54 @@ class RabbitMQTest extends TestCase
 		$consumer->ack($message);
 
 		$mockReference->shouldHaveReceived("ack");
+	}
+
+	public function test_ack_connection_closed_throws_connection_exception(): void
+	{
+		$mock = Mockery::spy(AMQPChannel::class);
+
+		$reference = new AMQPMessage("Ok");
+		$reference->setChannel($mock);
+		$mockReference = Mockery::spy($reference);
+
+		$mockReference->shouldReceive("ack")
+		->withAnyArgs()
+		->andThrows(new AMQPConnectionClosedException("Failure"));
+
+		$message = new Message(
+			topic: "rabbitmq",
+			payload: "Ok",
+			reference: $mockReference
+		);
+
+		$consumer = new RabbitMQ($mock);
+
+		$this->expectException(ConnectionException::class);
+		$consumer->ack($message);
+	}
+
+	public function test_ack_connection_blocked_throws_connection_exception(): void
+	{
+		$mock = Mockery::spy(AMQPChannel::class);
+
+		$reference = new AMQPMessage("Ok");
+		$reference->setChannel($mock);
+		$mockReference = Mockery::spy($reference);
+
+		$mockReference->shouldReceive("ack")
+		->withAnyArgs()
+		->andThrows(new AMQPConnectionBlockedException("Failure"));
+
+		$message = new Message(
+			topic: "rabbitmq",
+			payload: "Ok",
+			reference: $mockReference
+		);
+
+		$consumer = new RabbitMQ($mock);
+
+		$this->expectException(ConnectionException::class);
+		$consumer->ack($message);
 	}
 
 	public function test_ack_failure_throws_consumer_exception(): void
@@ -168,6 +275,30 @@ class RabbitMQTest extends TestCase
 		$consumer->nack($message);
 
 		$mockReference->shouldHaveReceived("reject", [true]);
+	}
+
+	public function test_nack_connection_closed_throws_connection_exception(): void
+	{
+		$mock = Mockery::spy(AMQPChannel::class);
+
+		$reference = new AMQPMessage("Ok");
+		$reference->setChannel($mock);
+		$mockReference = Mockery::spy($reference);
+
+		$mockReference->shouldReceive("reject")
+		->withAnyArgs()
+		->andThrows(new AMQPConnectionBlockedException("Failure"));
+
+		$message = new Message(
+			topic: "rabbitmq",
+			payload: "Ok",
+			reference: $mockReference
+		);
+
+		$consumer = new RabbitMQ($mock);
+
+		$this->expectException(ConnectionException::class);
+		$consumer->nack($message);
 	}
 
 	public function test_nack_failure_throws_consumer_exception(): void

@@ -3,11 +3,13 @@
 use Aws\Result;
 use Aws\Sqs\SqsClient;
 use Nimbly\Syndicate\Message;
+use Nimbly\Syndicate\Queue\Sqs;
 use PHPUnit\Framework\TestCase;
+use Aws\Exception\CredentialsException;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
-use Nimbly\Syndicate\Queue\Sqs;
+use Nimbly\Syndicate\ConnectionException;
 
 /**
  * @covers Nimbly\Syndicate\Queue\Sqs
@@ -64,6 +66,21 @@ class SqsTest extends TestCase
 			"afd1cbe8-6ee3-4de0-90f5-50c019a9a887",
 			$receipt
 		);
+	}
+
+	public function test_publish_credentials_exception_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(SqsClient::class);
+
+		$mock->shouldReceive("sendMessage")
+		->andThrows(new CredentialsException("Failure"));
+
+		$message = new Message("queue_url", "Ok");
+
+		$sqs = new Sqs($mock);
+
+		$this->expectException(ConnectionException::class);
+		$sqs->publish($message);
 	}
 
 	public function test_publish_failure_throws_publisher_exception(): void
@@ -174,12 +191,24 @@ class SqsTest extends TestCase
 		);
 	}
 
+	public function test_consume_credentials_exception_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(SqsClient::class);
+
+		$mock->shouldReceive("receiveMessage")
+		->andThrows(new CredentialsException("Failure"));
+
+		$sqs = new Sqs($mock);
+
+		$this->expectException(ConnectionException::class);
+		$sqs->consume("queue_url", 10);
+	}
+
 	public function test_consume_failure_throws_exception(): void
 	{
 		$mock = Mockery::mock(SqsClient::class);
 
 		$mock->shouldReceive("receiveMessage")
-		->withAnyArgs()
 		->andThrows(new Exception("Failure"));
 
 		$sqs = new Sqs($mock);
@@ -206,6 +235,20 @@ class SqsTest extends TestCase
 				]
 			]
 		);
+	}
+
+	public function test_ack_credentials_exception_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(SqsClient::class);
+		$mock->shouldReceive("deleteMessage")
+		->andThrows(new CredentialsException("Failure"));
+
+		$message = new Message("queue_url", "Message1", [], [], "afd1cbe8-6ee3-4de0-90f5-50c019a9a887");
+
+		$sqs = new Sqs($mock);
+
+		$this->expectException(ConnectionException::class);
+		$sqs->ack($message);
 	}
 
 	public function test_ack_failure_throws_consumer_exception(): void
@@ -244,11 +287,26 @@ class SqsTest extends TestCase
 		);
 	}
 
+	public function test_nack_credentials_exception_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(SqsClient::class);
+
+		$mock->shouldReceive("changeMessageVisibility")
+		->andThrows(new CredentialsException("Failure"));
+
+		$message = new Message("queue_url", "Message1", [], [], "afd1cbe8-6ee3-4de0-90f5-50c019a9a887");
+
+		$sqs = new Sqs($mock);
+
+		$this->expectException(ConnectionException::class);
+		$sqs->nack($message);
+	}
+
 	public function test_nack_failure_throws_consumer_exception(): void
 	{
 		$mock = Mockery::mock(SqsClient::class);
+
 		$mock->shouldReceive("changeMessageVisibility")
-		->withAnyArgs()
 		->andThrows(new Exception("Failure"));
 
 		$message = new Message("queue_url", "Message1", [], [], "afd1cbe8-6ee3-4de0-90f5-50c019a9a887");

@@ -1,16 +1,19 @@
 <?php
 
+use Nimbly\Capsule\Response;
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Queue\Azure;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
+use Nimbly\Syndicate\ConnectionException;
 use MicrosoftAzure\Storage\Queue\QueueRestProxy;
 use MicrosoftAzure\Storage\Common\Internal\Resources;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use MicrosoftAzure\Storage\Queue\Models\ListMessagesResult;
 use MicrosoftAzure\Storage\Queue\Models\CreateMessageResult;
 use MicrosoftAzure\Storage\Queue\Models\ListMessagesOptions;
+use MicrosoftAzure\Storage\Common\Exceptions\ServiceException;
 
 /**
  * @covers Nimbly\Syndicate\Queue\Azure
@@ -25,8 +28,7 @@ class AzureTest extends TestCase
 
 		$client = Mockery::mock(QueueRestProxy::class);
 
-		$client->expects()
-			->createMessage($message->getTopic(), $message->getPayload())
+		$client->shouldReceive("createMessage")
 			->andReturns(
 				CreateMessageResult::create([
 					"QueueMessage" => [
@@ -39,17 +41,37 @@ class AzureTest extends TestCase
 				])
 			);
 
-		/**
-		 * @var QueueRestProxy $client
-		 */
 		$publisher = new Azure($client);
 
 		$receipt_id = $publisher->publish($message);
+
+		$client->shouldHaveReceived(
+			"createMessage",
+			[$message->getTopic(), $message->getPayload()]
+		);
 
 		$this->assertEquals(
 			"afd1cbe8-6ee3-4de0-90f5-50c019a9a887",
 			$receipt_id
 		);
+	}
+
+	public function test_publish_service_exception_throws_connection_exception(): void
+	{
+		$message = new Message("azure", "Ok");
+
+		$client = Mockery::mock(QueueRestProxy::class);
+
+		$client->shouldReceive("createMessage")
+			->andThrows(new ServiceException(new Response(400)));
+
+		/**
+		 * @var QueueRestProxy $client
+		 */
+		$publisher = new Azure($client);
+
+		$this->expectException(ConnectionException::class);
+		$publisher->publish($message);
 	}
 
 	public function test_publish_failure_throws_publisher_exception(): void
@@ -58,13 +80,9 @@ class AzureTest extends TestCase
 
 		$client = Mockery::mock(QueueRestProxy::class);
 
-		$client->expects()
-			->createMessage($message->getTopic(), $message->getPayload())
+		$client->shouldReceive("createMessage")
 			->andThrows(new Exception("Failure"));
 
-		/**
-		 * @var QueueRestProxy $client
-		 */
 		$publisher = new Azure($client);
 
 		$this->expectException(PublisherException::class);
@@ -75,8 +93,7 @@ class AzureTest extends TestCase
 	{
 		$client = Mockery::mock(QueueRestProxy::class);
 
-		$client->expects()
-			->listMessages("azure", anyArgs())
+		$client->shouldReceive("listMessages")
 			->andReturns(
 				ListMessagesResult::create(
 					[
@@ -105,11 +122,13 @@ class AzureTest extends TestCase
 				)
 			);
 
-		/**
-		 * @var QueueRestProxy $client
-		 */
 		$publisher = new Azure($client);
 		$messages = $publisher->consume("azure", 10, ["timeout" => 25, "delay" => 20]);
+
+		$client->shouldHaveReceived(
+			"listMessages",
+			["azure", anyArgs()]
+		);
 
 		$this->assertCount(2, $messages);
 
@@ -144,12 +163,24 @@ class AzureTest extends TestCase
 		);
 	}
 
+	public function test_consume_service_exception_throws_connection_exception(): void
+	{
+		$client = Mockery::mock(QueueRestProxy::class);
+
+		$client->shouldReceive("listMessages")
+			->andThrows(new ServiceException(new Response(500)));
+
+		$publisher = new Azure($client);
+
+		$this->expectException(ConnectionException::class);
+		$publisher->consume("azure");
+	}
+
 	public function test_consume_failure_throws_consumer_exception(): void
 	{
 		$client = Mockery::mock(QueueRestProxy::class);
 
-		$client->expects()
-			->listMessages("azure", anyArgs())
+		$client->shouldReceive("listMessages")
 			->andThrows(new Exception("Failure"));
 
 		/**
@@ -205,19 +236,38 @@ class AzureTest extends TestCase
 
 		$client = Mockery::spy(QueueRestProxy::class);
 
+		$publisher = new Azure($client);
+		$publisher->ack($message);
+
+		$client->shouldHaveReceived(
+			"deleteMessage",
+			[
+				$message->getTopic(),
+				"afd1cbe8-6ee3-4de0-90f5-50c019a9a887",
+				"0be31d6e-0b46-43d4-854c-772e7d717ce5"
+			]
+		)->once();
+	}
+
+	public function test_ack_service_exception_throws_connection_exception(): void
+	{
+		$message = new Message(
+			topic: "azure",
+			payload: "Ok",
+			reference: ["afd1cbe8-6ee3-4de0-90f5-50c019a9a887", "0be31d6e-0b46-43d4-854c-772e7d717ce5"]
+		);
+
+		$client = Mockery::mock(QueueRestProxy::class);
+		$client->shouldReceive("deleteMessage")
+			->andThrows(new ServiceException(new Response(500)));
+
 		/**
 		 * @var QueueRestProxy $client
 		 */
 		$publisher = new Azure($client);
-		$publisher->ack($message);
 
-		$client->shouldHaveReceived()
-		->deleteMessage(
-			$message->getTopic(),
-			"afd1cbe8-6ee3-4de0-90f5-50c019a9a887",
-			"0be31d6e-0b46-43d4-854c-772e7d717ce5"
-		)
-		->once();
+		$this->expectException(ConnectionException::class);
+		$publisher->ack($message);
 	}
 
 	public function test_ack_failure_throws_consumer_exception(): void
@@ -229,13 +279,8 @@ class AzureTest extends TestCase
 		);
 
 		$client = Mockery::mock(QueueRestProxy::class);
-		$client->expects()
-		->deleteMessage(
-			$message->getTopic(),
-			"afd1cbe8-6ee3-4de0-90f5-50c019a9a887",
-			"0be31d6e-0b46-43d4-854c-772e7d717ce5"
-		)
-		->andThrows(new Exception("Failure"));
+		$client->shouldReceive("deleteMessage")
+			->andThrows(new Exception("Failure"));
 
 		/**
 		 * @var QueueRestProxy $client
@@ -262,15 +307,45 @@ class AzureTest extends TestCase
 		$publisher = new Azure($client);
 		$publisher->nack($message, 12);
 
-		$client->shouldHaveReceived()
+		$client->shouldHaveReceived(
+			"updateMessage",
+			[
+				$message->getTopic(),
+				"afd1cbe8-6ee3-4de0-90f5-50c019a9a887",
+				"0be31d6e-0b46-43d4-854c-772e7d717ce5",
+				"Ok",
+				12
+			]
+		)
+		->once();
+	}
+
+	public function test_nack_service_exception_throws_connection_exception(): void
+	{
+		$message = new Message(
+			topic: "azure",
+			payload: "Ok",
+			reference: ["afd1cbe8-6ee3-4de0-90f5-50c019a9a887", "0be31d6e-0b46-43d4-854c-772e7d717ce5"]
+		);
+
+		$client = Mockery::mock(QueueRestProxy::class);
+		$client->expects()
 		->updateMessage(
 			$message->getTopic(),
 			"afd1cbe8-6ee3-4de0-90f5-50c019a9a887",
 			"0be31d6e-0b46-43d4-854c-772e7d717ce5",
-			"Ok",
-			12
+			$message->getPayload(),
+			0
 		)
-		->once();
+		->andThrows(new ServiceException(new Response(500)));
+
+		/**
+		 * @var QueueRestProxy $client
+		 */
+		$publisher = new Azure($client);
+
+		$this->expectException(ConnectionException::class);
+		$publisher->nack($message);
 	}
 
 	public function test_nack_failure_throws_consumer_exception(): void

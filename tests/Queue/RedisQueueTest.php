@@ -1,12 +1,15 @@
 <?php
 
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
-use Nimbly\Syndicate\ConsumerException;
-use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\Queue\Redis;
-use PHPUnit\Framework\TestCase;
 use Predis\Client;
+use Nimbly\Syndicate\Message;
+use PHPUnit\Framework\TestCase;
+use Nimbly\Syndicate\Queue\Redis;
+use Nimbly\Syndicate\ConsumerException;
+use Nimbly\Syndicate\PublisherException;
+use Nimbly\Syndicate\ConnectionException;
+use Predis\Connection\NodeConnectionInterface;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use Predis\Connection\ConnectionException as RedisConnectionException;
 
 /**
  * @covers Nimbly\Syndicate\Queue\Redis
@@ -58,12 +61,29 @@ class RedisQueueTest extends TestCase
 		);
 	}
 
+	public function test_publish_connection_failure_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(Client::class);
+
+		$mock->shouldReceive("rpush")
+		->andThrows(new RedisConnectionException(
+				Mockery::mock(NodeConnectionInterface::class),
+				"Failure"
+			)
+		);
+
+		$message = new Message("redis", "Ok");
+
+		$redis = new Redis($mock);
+		$this->expectException(ConnectionException::class);
+		$redis->publish($message);
+	}
+
 	public function test_publish_failure_throws_publisher_exception(): void
 	{
 		$mock = Mockery::mock(Client::class);
 
 		$mock->shouldReceive("rpush")
-		->withAnyArgs()
 		->andThrows(new Exception("Failure"));
 
 		$message = new Message("redis", "Ok");
@@ -139,6 +159,23 @@ class RedisQueueTest extends TestCase
 		$this->assertCount(0, $messages);
 	}
 
+	public function test_consume_connection_failure_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(Client::class);
+
+		$mock->shouldReceive("lpop")
+		->andThrows(new RedisConnectionException(
+				Mockery::mock(NodeConnectionInterface::class),
+				"Failure"
+			)
+		);
+
+		$redis = new Redis($mock);
+
+		$this->expectException(ConnectionException::class);
+		$redis->consume("redis");
+	}
+
 	public function test_consume_failure_throws_consumer_exception(): void
 	{
 		$mock = Mockery::mock(Client::class);
@@ -182,6 +219,25 @@ class RedisQueueTest extends TestCase
 			"rpush",
 			["redis", ["Message1"]]
 		);
+	}
+
+	public function test_nack_connection_failure_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(Client::class);
+
+		$mock->shouldReceive("rpush")
+		->andThrows(new RedisConnectionException(
+				Mockery::mock(NodeConnectionInterface::class),
+				"Failure"
+			)
+		);
+
+		$message = new Message("redis", "Message1");
+
+		$redis = new Redis($mock);
+
+		$this->expectException(ConnectionException::class);
+		$redis->nack($message);
 	}
 
 	public function test_nack_failure_throws_consumer_exception(): void
