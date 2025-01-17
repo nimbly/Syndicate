@@ -182,6 +182,16 @@ class Application
 							$this->deadletter->publish($message, $deadletter_options);
 
 						default:
+							$this->logger?->debug(
+								"[NIMBLY/SYNDICATE] Acking message.",
+								[
+									"topic" => $message->getTopic(),
+									"payload" => $message->getPayload(),
+									"headers" => $message->getHeaders(),
+									"attributes" => $message->getAttributes(),
+								]
+							);
+
 							$this->consumer->ack($message);
 					}
 				}
