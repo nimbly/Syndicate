@@ -90,7 +90,7 @@ $consumer = new Sqs(
 );
 ```
 
-Create an `Application` instance with the consumer and class names of where your handlers are. The classes you use for your handlers should have methods tagged with the `#[Consume]` attribute. (See **Handlers** and **Consume Attribute** sections for more details.)
+Create an `Application` instance with your consumer and a `Router` instance with the class names of where your handlers are. The classes you use for your handlers should have methods tagged with the `#[Consume]` attribute. (See **Handlers** and **Consume Attribute** sections for more details.)
 
 ```php
 $application = new Application(
@@ -147,9 +147,36 @@ $consumer = new Sqs(
 #### A note on the LoopConsumerInterface
 `LoopConsumerInterface` integrations behave a little differently than the other integrations in that the libraries that back them already have their own looping solution for consuming messages.
 
-These integrations do not support `ack`ing or `nack`ing of messages due to the nature of PubSub. `deadletter`ing messages with these integrations is not currently supported natively by `Syndicate`. Any return value from handlers will be ignored by these integrations.
+These integrations do not support `ack`ing or `nack`ing of messages due to the nature of pubsub. `deadletter`ing messages with these integrations is not currently supported natively by `Syndicate`. Any return value from handlers will be ignored by these integrations.
 
-Setting up a deadletter for these integrations could be achieved by defining a default handler option in the `Router` that publishes to another location.
+Setting up a deadletter for these integrations *could* be achieved by defining a default handler option in the `Router` that publishes to another location.
+
+```php
+// Create a Redis queue publisher instance as our deadletter.
+$deadletter = new Redis(new Client);
+
+$application = new Application(
+	consumer: new Mqtt(new MqttClient("localhost")),
+	router: new Router(
+		handlers: [
+			App\Consumer\Handlers\UsersHandler::class
+		],
+		default: function(Message $message) use ($deadletter): void {
+			$deadletter->publish(
+				new Message(
+					topic: "deadletter",
+
+					// Use the original topic and original payload.
+					payload: \json_encode([
+						"topic" => $message->getTopic(),
+						"payload" => \json_decode($message->getPayload())
+					])
+				)
+			);
+		}
+	)
+);
+```
 
 ### Router
 
