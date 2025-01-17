@@ -1,18 +1,39 @@
 <?php
 
+/**
+ * This example will publish N messages to a Redis queue on the localhost.
+ * By default, N=100, but you can pass a command line argument to set the
+ * number of messags to send.
+ *
+ * Example:
+ * `php examples/publisher.php 1200`
+ *
+ * If you don't have Redis running, you can quickly get an instance
+ * up with Docker:
+ *
+ * `docker run -p 6379:6379 redis:latest`
+ *
+ * Inentionally, there is one message that is unroutable and should end up
+ * in a deadletter state.
+ *
+ * You can use `examples/consumer.php` to consume the messages published
+ * by this script.
+ */
+
 use Predis\Client;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Queue\Redis;
 
 require __DIR__ . "/../vendor/autoload.php";
 
-$publisher = new Redis(new Client(options: ["read_write_timeout" => 0]));
+$publisher = new Redis(new Client);
 
 for( $i = 0; $i < ($argv[1] ?? 100); $i++ ){
 
 	$c = \mt_rand(1, 100);
 
 	if( $c <= 5 ){
+		// There is no hanler defined for this and should end up in the deadletter.
 		$fruit = "apples";
 	}
 	elseif( $c <= 30 ){
@@ -24,8 +45,11 @@ for( $i = 0; $i < ($argv[1] ?? 100); $i++ ){
 	elseif( $c <= 80 ){
 		$fruit = "oranges";
 	}
-	else {
+	elseif( $c <= 90) {
 		$fruit = "mangoes";
+	}
+	else {
+		$fruit = "mangos";
 	}
 
 	$payload = [

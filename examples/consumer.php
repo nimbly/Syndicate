@@ -1,5 +1,21 @@
 <?php
 
+/**
+ * This example sets up a consumer listening on a Redis queue on
+ * your localhost and using the `Handlers\ExampleHandler.php` as
+ * message handlers.
+ *
+ * If you don't have Redis running, you can quickly get an instance
+ * up with Docker:
+ *
+ * `docker run -p 6379:6379 redis:latest`
+ *
+ * You can send this consumer example messages by running the
+ * `examples/publisher.php` script.
+ *
+ * To exit, just hit Ctrl-C.
+ */
+
 use Predis\Client;
 use Monolog\Logger;
 use Nimbly\Syndicate\Router;
@@ -18,15 +34,12 @@ $application = new Application(
 	router: new Router(
 		handlers: [
 			ExampleHandler::class,
-		]
+		],
 	),
 	deadletter: new DeadletterPublisher($client, "deadletter"),
-	signals: [SIGINT, SIGHUP, SIGTERM],
-	logger: new Logger("EXAMPLE", [new ErrorLogHandler])
+	logger: new Logger("EXAMPLE", [new ErrorLogHandler]),
 );
 
 $application->listen(
 	location: "fruits",
-	max_messages: 10,
-	polling_timeout: 5
 );

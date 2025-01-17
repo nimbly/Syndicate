@@ -12,19 +12,16 @@ class ExampleHandler
 	 * Handle all messages about bananas.
 	 *
 	 * @param Message $message
-	 * @return Response|null
+	 * @return Response
 	 */
 	#[Consume(
 		topic: "fruits",
 		payload: ["$.name" => "bananas"]
 	)]
-	public function onBananas(Message $message): ?Response
+	public function onBananas(Message $message): Response
 	{
-		$payload = \json_decode($message->getPayload(), false);
-
 		echo \sprintf(
-			"[%s] Received message: %s\n",
-			$payload->name,
+			"[HANDLER] Received message: %s\n",
 			$message->getPayload()
 		);
 
@@ -39,19 +36,16 @@ class ExampleHandler
 	 * Handle all messages about kiwis.
 	 *
 	 * @param Message $message
-	 * @return Response|null
+	 * @return Response
 	 */
 	 #[Consume(
 		topic: "fruits",
 		payload: ["$.name" => "kiwis"]
 	)]
-	public function onKiwis(Message $message): ?Response
+	public function onKiwis(Message $message): Response
 	{
-		$payload = \json_decode($message->getPayload(), false);
-
 		echo \sprintf(
-			"[%s] Received message: %s\n",
-			$payload->name,
+			"[HANDLER] Received message: %s\n",
 			$message->getPayload()
 		);
 
@@ -66,19 +60,16 @@ class ExampleHandler
 	 * Handle all messages about oranges.
 	 *
 	 * @param Message $message
-	 * @return Response|null
+	 * @return Response
 	 */
 	#[Consume(
 		topic: "fruits",
 		payload: ["$.name" => "oranges"]
 	)]
-	public function onOranges(Message $message): ?Response
+	public function onOranges(Message $message): Response
 	{
-		$payload = \json_decode($message->getPayload(), false);
-
 		echo \sprintf(
-			"[%s] Received message: %s\n",
-			$payload->name,
+			"[HANDLER] Received message: %s\n",
 			$message->getPayload()
 		);
 
@@ -90,22 +81,19 @@ class ExampleHandler
 	}
 
 	/**
-	 * Handle all messages about mangoes.
+	 * Handle all messages about mangoes or mangos.
 	 *
 	 * @param Message $message
-	 * @return Response|null
+	 * @return Response
 	 */
 	#[Consume(
 		topic: "fruits",
 		payload: ["$.name" => ["mangoes", "mangos"]]
 	)]
-	public function onMangoes(Message $message): ?Response
+	public function onMangoes(Message $message): Response
 	{
-		$payload = \json_decode($message->getPayload(), false);
-
 		echo \sprintf(
-			"[%s] Received message: %s\n",
-			$payload->name,
+			"[HANDLER] Received message: %s\n",
 			$message->getPayload()
 		);
 
