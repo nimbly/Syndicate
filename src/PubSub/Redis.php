@@ -96,6 +96,16 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 	 */
 	public function loop(array $options = []): void
 	{
+		/**
+		 * Because Predis uses fgets() to read from a socket,
+		 * it is a hard blocking call. We disable async signals
+		 * and manually call pcntl_signal_dispatch() with each
+		 * loop. This requires data to be read first from the socket,
+		 * so if there is no data, you will still block and wait
+		 * until there is data.
+		 */
+		\pcntl_async_signals(false);
+
 		try {
 
 			$loop = $this->getLoop();
@@ -124,6 +134,8 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 
 					\call_user_func($callback, $message);
 				}
+
+				\pcntl_signal_dispatch();
 			}
 		}
 		catch( RedisConnectionException $exception ){
