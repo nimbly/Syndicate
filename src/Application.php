@@ -106,6 +106,15 @@ class Application
 		}
 		else {
 
+			if( \is_array($location) ){
+				throw new UnexpectedValueException(
+					\sprintf(
+						"The %s consumer cannot listen from more than one location.",
+						$this->consumer::class
+					)
+				);
+			}
+
 			$this->logger?->info(
 				"[NIMBLY/SYNDICATE] Consumer listening started.",
 				[
@@ -121,10 +130,6 @@ class Application
 			 * @psalm-suppress RedundantCondition
 			 */
 			while( $this->listening ) {
-
-				if( \is_array($location) ){
-					throw new UnexpectedValueException("Cannot consume from more than one location.");
-				}
 
 				$messages = $this->consumer->consume($location, $max_messages, ["timeout" => $polling_timeout]);
 
@@ -145,15 +150,20 @@ class Application
 
 					switch( $response ){
 						case Response::nack:
+							$this->logger?->debug(
+								"[NIMBLY/SYNDICATE] Nacking message.",
+								[
+									"topic" => $message->getTopic(),
+									"payload" => $message->getPayload(),
+									"headers" => $message->getHeaders(),
+									"attributes" => $message->getAttributes(),
+								]
+							);
+
 							$this->consumer->nack($message, $nack_timeout);
 							break;
 
 						case Response::deadletter:
-							if( $this->deadletter === null ){
-								$this->consumer->nack($message, $nack_timeout);
-								throw new RoutingException("Cannot route message to deadletter as no deadletter implementation was given.");
-							}
-
 							$this->logger?->warning(
 								"[NIMBLY/SYNDICATE] Deadlettering message.",
 								[
@@ -163,6 +173,11 @@ class Application
 									"attributes" => $message->getAttributes(),
 								]
 							);
+
+							if( $this->deadletter === null ){
+								$this->consumer->nack($message, $nack_timeout);
+								throw new RoutingException("Cannot route message to deadletter as no deadletter implementation was given.");
+							}
 
 							$this->deadletter->publish($message, $deadletter_options);
 
