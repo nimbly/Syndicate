@@ -24,6 +24,8 @@ use Nimbly\Syndicate\Queue\Redis;
 use Monolog\Handler\ErrorLogHandler;
 use Nimbly\Syndicate\DeadletterPublisher;
 use Nimbly\Syndicate\Examples\Handlers\ExampleHandler;
+use Nimbly\Syndicate\Message;
+use Nimbly\Syndicate\MiddlewareInterface;
 
 require_once __DIR__ . "/../vendor/autoload.php";
 
@@ -38,6 +40,23 @@ $application = new Application(
 	),
 	deadletter: new DeadletterPublisher($client, "deadletter"),
 	logger: new Logger("EXAMPLE", [new ErrorLogHandler]),
+	middleware: [
+		new class implements MiddlewareInterface {
+			public function handle(Message $message, callable $next): mixed
+			{
+				echo "I am in the middleware, 1\n";
+				$response = $next($message);
+			}
+		},
+
+		new class implements MiddlewareInterface {
+			public function handle(Message $message, callable $next): mixed
+			{
+				echo "I am in the middleware, 2\n";
+				return $next($message);
+			}
+		},
+	]
 );
 
 $application->listen(

@@ -14,11 +14,19 @@ class Application
 	protected bool $listening = false;
 
 	/**
+	 * The kernel to run.
+	 *
+	 * @var callable
+	 */
+	protected $kernel;
+
+	/**
 	 * @param ConsumerInterface|LoopConsumerInterface $consumer The consumer to pull messages from.
 	 * @param RouterInterface $router A router instance that will aid resolving Messages received into callables.
 	 * @param PublisherInterface|null $deadletter A deadletter publisher instance if you would like to use one.
 	 * @param ContainerInterface|null $container An optional container instance to be used when invoking the handler.
 	 * @param LoggerInterface|null $logger A LoggerInterface implementation for additional logging and context.
+	 * @param array<MiddlewareInterface|class-string> $middleware
 	 * @param array<int> $signals Array of PHP signal constants to trigger a graceful shutdown. Defaults to [SIGINT, SIGTERM].
 	 */
 	public function __construct(
@@ -27,6 +35,7 @@ class Application
 		protected ?PublisherInterface $deadletter = null,
 		protected ?ContainerInterface $container = null,
 		protected ?LoggerInterface $logger = null,
+		protected array $middleware = [],
 		protected array $signals = [SIGINT, SIGTERM],
 	)
 	{
@@ -64,6 +73,8 @@ class Application
 				}
 			}
 		}
+
+		$this->kernel = $this->compile($middleware, [$this, "dispatch"]);
 	}
 
 	/**
@@ -92,7 +103,7 @@ class Application
 				);
 			}
 
-			$this->consumer->subscribe($location, [$this, "dispatch"]);
+			$this->consumer->subscribe($location, $this->kernel);
 
 			$this->logger?->info(
 				"[NIMBLY/SYNDICATE] Loop consumer listening started.",
@@ -146,7 +157,7 @@ class Application
 						]
 					);
 
-					$response = $this->dispatch($message);
+					$response = \call_user_func($this->kernel, $message);
 
 					switch( $response ){
 						case Response::nack:
@@ -250,5 +261,52 @@ class Application
 		if( $this->consumer instanceof LoopConsumerInterface ){
 			$this->consumer->shutdown();
 		}
+	}
+
+	/**
+	 * Build a middleware chain out of middleware using provided Kernel as the final handler.
+	 *
+	 * @param array<MiddlewareInterface|class-string> $middleware
+	 * @param callable $kernel
+	 * @return callable
+	 */
+	protected function compile(array $middleware, callable $kernel): callable
+	{
+		return \array_reduce(
+			$this->normalize(\array_reverse($middleware)),
+			function(callable $handler, MiddlewareInterface $middleware): callable {
+				return function(Message $message) use ($handler, $middleware): mixed {
+					return $middleware->handle($message, $handler);
+				};
+			},
+			$kernel
+		);
+	}
+
+	/**
+	 * Normalize the given middlewares into instances of MiddlewareInterface.
+	 *
+	 * @param array<MiddlewareInterface|class-string> $middlewares
+	 * @throws UnexpectedValueException
+	 * @return array<MiddlewareInterface>
+	 */
+	protected function normalize(array $middlewares): array
+	{
+		$normalized_middlewares = [];
+
+		foreach( $middlewares as $index => $middleware ){
+
+			if( \is_string($middleware) ){
+				$middleware = $this->make($middleware, $this->container);
+			}
+
+			if( $middleware instanceof MiddlewareInterface === false ){
+				throw new UnexpectedValueException("Provided middleware must be an instance of Nimbly\Syndicate\MiddlewareInterface or a class-string that references Nimbly\Syndicate\MiddlewareInterface implementation.");
+			}
+
+			$normalized_middlewares[] = $middleware;
+		}
+
+		return $normalized_middlewares;
 	}
 }
