@@ -14,11 +14,11 @@ class Application
 	protected bool $listening = false;
 
 	/**
-	 * The kernel to run.
+	 * The compiled middleware chain.
 	 *
 	 * @var callable
 	 */
-	protected $kernel;
+	protected $middleware;
 
 	/**
 	 * @param ConsumerInterface|LoopConsumerInterface $consumer The consumer to pull messages from.
@@ -26,7 +26,7 @@ class Application
 	 * @param PublisherInterface|null $deadletter A deadletter publisher instance if you would like to use one.
 	 * @param ContainerInterface|null $container An optional container instance to be used when invoking the handler.
 	 * @param LoggerInterface|null $logger A LoggerInterface implementation for additional logging and context.
-	 * @param array<MiddlewareInterface|class-string> $middleware
+	 * @param array<MiddlewareInterface|class-string> $middleware An array of MiddlewareInterface instances or class-string of a MiddlewareInterface implementation.
 	 * @param array<int> $signals Array of PHP signal constants to trigger a graceful shutdown. Defaults to [SIGINT, SIGTERM].
 	 */
 	public function __construct(
@@ -35,46 +35,12 @@ class Application
 		protected ?PublisherInterface $deadletter = null,
 		protected ?ContainerInterface $container = null,
 		protected ?LoggerInterface $logger = null,
-		protected array $middleware = [],
+		array $middleware = [],
 		protected array $signals = [SIGINT, SIGTERM],
 	)
 	{
-		if( !\extension_loaded("pcntl") ){
-			$this->logger?->warning(
-				"[NIMBLY/SYNDICATE] The pcntl PHP extension doesn't appear to be installed. " .
-				"It is highly recommended to install this extension. Without this extension, " .
-				"terminating the consumer listener will likely result in messages left in flight, " .
-				"lost messages, or messages that were only partially processed."
-			);
-		}
-		else {
-
-			if( empty($signals) ){
-				$this->logger?->warning(
-					"[NIMBLY/SYNDICATE] No interrupt signals were given. " .
-					"It is highly recommended to have one or more interrupt signals to enable a graceful shutdown. " .
-					"Without any interrupt signals, terminating the consumer listener will likely result in messages " .
-					"left in flight, lost messages, or messages that were only partially processed."
-				);
-			}
-
-			\pcntl_async_signals(true);
-
-			foreach( $signals as $signal ){
-				$result = \pcntl_signal(
-					$signal,
-					[$this, "shutdown"]
-				);
-
-				if( $result === false ){
-					throw new UnexpectedValueException(
-						\sprintf("Could not attach signal (%s) handler.", (string) $signal)
-					);
-				}
-			}
-		}
-
-		$this->kernel = $this->compile($middleware, [$this, "dispatch"]);
+		$this->attachInterruptSignals($signals);
+		$this->middleware = $this->compileMiddleware($middleware, [$this, "dispatch"]);
 	}
 
 	/**
@@ -96,15 +62,7 @@ class Application
 
 		if( $this->consumer instanceof LoopConsumerInterface ){
 
-			if( !\is_array($location) ){
-				$location = \array_map(
-					fn(string $topic) => \trim($topic),
-					\explode(",", $location)
-				);
-			}
-
-			$this->consumer->subscribe($location, $this->kernel);
-
+			$this->consumer->subscribe($location, $this->middleware);
 			$this->logger?->info(
 				"[NIMBLY/SYNDICATE] Loop consumer listening started.",
 				[
@@ -157,7 +115,7 @@ class Application
 						]
 					);
 
-					$response = \call_user_func($this->kernel, $message);
+					$response = \call_user_func($this->middleware, $message);
 
 					switch( $response ){
 						case Response::nack:
@@ -251,15 +209,17 @@ class Application
 	 */
 	public function shutdown(?int $signal = null): void
 	{
-		$this->logger?->info(
-			"[NIMBLY/SYNDICATE] Interrupt signal received. Draining in-flight messages.",
-			["signal" => $signal]
-		);
+		if( $this->listening ){
+			$this->logger?->info(
+				"[NIMBLY/SYNDICATE] Interrupt signal received. Draining in-flight messages.",
+				["signal" => $signal]
+			);
 
-		$this->listening = false;
+			$this->listening = false;
 
-		if( $this->consumer instanceof LoopConsumerInterface ){
-			$this->consumer->shutdown();
+			if( $this->consumer instanceof LoopConsumerInterface ){
+				$this->consumer->shutdown();
+			}
 		}
 	}
 
@@ -270,10 +230,10 @@ class Application
 	 * @param callable $kernel
 	 * @return callable
 	 */
-	protected function compile(array $middleware, callable $kernel): callable
+	protected function compileMiddleware(array $middleware, callable $kernel): callable
 	{
 		return \array_reduce(
-			$this->normalize(\array_reverse($middleware)),
+			$this->normalizeMiddleware(\array_reverse($middleware)),
 			function(callable $handler, MiddlewareInterface $middleware): callable {
 				return function(Message $message) use ($handler, $middleware): mixed {
 					return $middleware->handle($message, $handler);
@@ -290,23 +250,67 @@ class Application
 	 * @throws UnexpectedValueException
 	 * @return array<MiddlewareInterface>
 	 */
-	protected function normalize(array $middlewares): array
+	protected function normalizeMiddleware(array $middlewares): array
 	{
 		$normalized_middlewares = [];
 
-		foreach( $middlewares as $index => $middleware ){
+		foreach( $middlewares as $middleware ){
 
 			if( \is_string($middleware) ){
 				$middleware = $this->make($middleware, $this->container);
 			}
 
 			if( $middleware instanceof MiddlewareInterface === false ){
-				throw new UnexpectedValueException("Provided middleware must be an instance of Nimbly\Syndicate\MiddlewareInterface or a class-string that references Nimbly\Syndicate\MiddlewareInterface implementation.");
+				throw new UnexpectedValueException("Provided middleware must be an instance of Nimbly\Syndicate\MiddlewareInterface or a class-string that references a Nimbly\Syndicate\MiddlewareInterface implementation.");
 			}
 
 			$normalized_middlewares[] = $middleware;
 		}
 
 		return $normalized_middlewares;
+	}
+
+	/**
+	 * Attach interrupt signals.
+	 *
+	 * @param array<int> $signals
+	 * @return void
+	 */
+	protected function attachInterruptSignals(array $signals = []): void
+	{
+		if( !\extension_loaded("pcntl") ){
+			$this->logger?->warning(
+				"[NIMBLY/SYNDICATE] The pcntl PHP extension doesn't appear to be installed. " .
+				"It is highly recommended to install this extension. Without this extension, " .
+				"terminating the consumer listener will likely result in messages left in flight, " .
+				"lost messages, or messages that were only partially processed."
+			);
+		}
+		else {
+
+			if( empty($signals) ){
+				$this->logger?->warning(
+					"[NIMBLY/SYNDICATE] No interrupt signals were given. " .
+					"It is highly recommended to have one or more interrupt signals to enable a graceful shutdown. " .
+					"Without any interrupt signals, terminating the consumer listener will likely result in messages " .
+					"left in flight, lost messages, or messages that were only partially processed."
+				);
+			}
+
+			\pcntl_async_signals(true);
+
+			foreach( $signals as $signal ){
+				$result = \pcntl_signal(
+					$signal,
+					[$this, "shutdown"]
+				);
+
+				if( $result === false ){
+					throw new UnexpectedValueException(
+						\sprintf("Could not attach signal (%s) handler.", (string) $signal)
+					);
+				}
+			}
+		}
 	}
 }
