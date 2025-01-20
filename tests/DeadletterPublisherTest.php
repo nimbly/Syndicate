@@ -2,7 +2,7 @@
 
 use Nimbly\Syndicate\DeadletterPublisher;
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\PubSub\Mock;
+use Nimbly\Syndicate\Queue\Mock;
 use PHPUnit\Framework\TestCase;
 
 /**

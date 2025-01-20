@@ -2,7 +2,7 @@
 
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\PubSub\Mock;
+use Nimbly\Syndicate\Queue\Mock;
 use Nimbly\Syndicate\ValidatorPublisher;
 use Nimbly\Syndicate\MessageValidationException;
 use Nimbly\Syndicate\Validators\JsonSchemaValidator;
