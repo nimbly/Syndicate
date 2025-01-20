@@ -6,11 +6,13 @@ use Nimbly\Syndicate\Application;
 use Nimbly\Syndicate\DeadletterPublisher;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\MiddlewareInterface;
-use Nimbly\Syndicate\PubSub\Mock;
+use Nimbly\Syndicate\PubSub\Mock as PubSubMock;
+use Nimbly\Syndicate\Queue\Mock;
 use Nimbly\Syndicate\Response;
 use Nimbly\Syndicate\Router;
 use Nimbly\Syndicate\RouterInterface;
 use Nimbly\Syndicate\RoutingException;
+use Nimbly\Syndicate\Tests\Fixtures\TestHandler;
 use Nimbly\Syndicate\Tests\Fixtures\TestMiddleware;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -102,7 +104,50 @@ class ApplicationTest extends TestCase
 		$logger->shouldHaveReceived("warning");
 	}
 
-	public function test_no_response_acks_message(): void
+	public function test_listen_with_loop_consumer(): void
+	{
+		$consumer = new PubSubMock(
+			[
+				"fruits" => [
+					new Message("fruits", "apples"),
+					new Message("fruits", "oranges"),
+					new Message("fruits", "bananas"),
+				]
+			]
+		);
+
+		$application = new Application(
+			consumer: $consumer,
+			router: new Router([
+				TestHandler::class
+			])
+		);
+
+		$application->listen("fruits");
+
+		$this->assertCount(0, $consumer->getMessages("fruits"));
+	}
+
+	public function test_shutdown_with_loop_consumer(): void
+	{
+		$consumer = new PubSubMock(
+			["fruits" => []]
+		);
+
+		$application = new Application(
+			consumer: $consumer,
+			router: new Router([
+				TestHandler::class
+			])
+		);
+
+		$application->listen("fruits");
+		$application->shutdown();
+
+		$this->assertTrue($consumer->getIsShutdown());
+	}
+
+	public function test_listen_no_response_acks_message(): void
 	{
 		$mock = new Mock;
 		$mock->publish(new Message("test_topic", "Ok"));
@@ -123,7 +168,7 @@ class ApplicationTest extends TestCase
 		$this->assertCount(0, $mock->getMessages("test_topic"));
 	}
 
-	public function test_nack_response_releases_message(): void
+	public function test_listen_nack_response_releases_message(): void
 	{
 		$mock = new Mock;
 		$mock->publish(new Message("test_topic", "Ok"));
@@ -145,7 +190,7 @@ class ApplicationTest extends TestCase
 		$this->assertCount(1, $mock->getMessages("test_topic"));
 	}
 
-	public function test_deadletter_response_publishes_message_to_deadletter(): void
+	public function test_listen_deadletter_response_publishes_message_to_deadletter(): void
 	{
 		$mock = new Mock;
 		$mock->publish(new Message("test_topic", "Ok"));
@@ -170,7 +215,7 @@ class ApplicationTest extends TestCase
 		$this->assertCount(1, $mock->getMessages("deadletter"));
 	}
 
-	public function test_deadletter_response_with_no_deadletter_publisher_throws_exception(): void
+	public function test_listen_deadletter_response_with_no_deadletter_publisher_throws_exception(): void
 	{
 		$mock = new Mock;
 		$mock->publish(new Message("test_topic", "Ok"));

@@ -33,4 +33,13 @@ class TestHandler
 	protected function classHelper(): void
 	{
 	}
+
+
+	#[Consume(
+		topic: "fruits"
+	)]
+	public function onFruits(Message $message): Response
+	{
+		return Response::ack;
+	}
 }

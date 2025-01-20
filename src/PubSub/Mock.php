@@ -2,19 +2,22 @@
 
 namespace Nimbly\Syndicate\PubSub;
 
-use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\ConsumerInterface;
+use Nimbly\Syndicate\LoopConsumerInterface;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
 
-class Mock implements PublisherInterface, ConsumerInterface
+class Mock implements PublisherInterface, LoopConsumerInterface
 {
+	protected bool $isShutdown = false;
+
 	/**
 	 * @param array<string,array<Message>> $messages Array of preloaded messages in queue, indexed by topic.
+	 * @param array<string,callable> $subscriptions Array of topic names mapped to a callable.
 	 */
 	public function __construct(
-		protected array $messages = [])
+		protected array $messages = [],
+		protected array $subscriptions = [])
 	{
 	}
 
@@ -34,45 +37,75 @@ class Mock implements PublisherInterface, ConsumerInterface
 	/**
 	 * @inheritDoc
 	 */
-	public function consume(string $topic, int $max_messages = 1, array $options = []): array
+	public function subscribe(string|array $topics, callable $callback, array $options = []): void
 	{
-		if( isset($options["exception"]) ){
-			throw new ConsumerException("Failed to consume messages.");
+		if( \is_string($topics) ){
+			$topics = \array_map(
+				fn(string $topic) => \trim($topic),
+				\explode(",", $topics)
+			);
 		}
 
-		if( !\array_key_exists($topic, $this->messages) ){
-			return [];
+		foreach( $topics as $topic ){
+			$this->subscriptions[$topic] = $callback;
 		}
-
-		$messages = \array_splice($this->messages[$topic], 0, $max_messages);
-
-		return $messages;
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public function ack(Message $message): void
+	public function loop(array $options = []): void
 	{
+		foreach( $this->subscriptions as $topic => $callback ){
+			if( !isset($this->messages[$topic]) ){
+				continue;
+			}
+
+			while( count($this->messages[$topic]) ){
+				$messages = \array_splice($this->messages[$topic], 0, 1);
+				\call_user_func($callback, $messages[0]);
+			}
+		}
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function shutdown(): void
+	{
+		$this->isShutdown = true;
 		return;
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public function nack(Message $message, int $timeout = 0): void
-	{
-		$this->publish($message);
 	}
 
 	/**
 	 * Get all the messages in a topic.
 	 *
-	 * @param string $topic
-	 * @return array<Message>
+	 * @param string $topic The topic name.
+	 * @return array<Message> Returns all pending messages in the topic.
 	 */
 	public function getMessages(string $topic): array
 	{
 		return $this->messages[$topic] ?? [];
+	}
+
+	/**
+	 * Get the subscription (callback) for a topic.
+	 *
+	 * @param string $topic The topic name.
+	 * @return callable|null Returns null if no subscription does not exist.
+	 */
+	public function getSubscription(string $topic): ?callable
+	{
+		return $this->subscriptions[$topic] ?? null;
+	}
+
+	/**
+	 * Get the shutdown value.
+	 *
+	 * @return boolean
+	 */
+	public function getIsShutdown(): bool
+	{
+		return $this->isShutdown;
 	}
 }
