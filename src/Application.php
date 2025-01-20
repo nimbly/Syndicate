@@ -26,7 +26,7 @@ class Application
 	 * @param PublisherInterface|null $deadletter A deadletter publisher instance if you would like to use one.
 	 * @param ContainerInterface|null $container An optional container instance to be used when invoking the handler.
 	 * @param LoggerInterface|null $logger A LoggerInterface implementation for additional logging and context.
-	 * @param array<MiddlewareInterface|class-string> $middleware An array of MiddlewareInterface instances or class-string of a MiddlewareInterface implementation.
+	 * @param array<MiddlewareInterface|class-string> $middleware An array of MiddlewareInterface instances or a class-string of a MiddlewareInterface implementation.
 	 * @param array<int> $signals Array of PHP signal constants to trigger a graceful shutdown. Defaults to [SIGINT, SIGTERM].
 	 */
 	public function __construct(
@@ -252,22 +252,29 @@ class Application
 	 */
 	protected function normalizeMiddleware(array $middlewares): array
 	{
-		$normalized_middlewares = [];
+		return \array_map(
+			function(MiddlewareInterface|string $middleware): MiddlewareInterface {
 
-		foreach( $middlewares as $middleware ){
+				if( \is_string($middleware) ){
+					$middleware = $this->make($middleware, $this->container);
+				}
 
-			if( \is_string($middleware) ){
-				$middleware = $this->make($middleware, $this->container);
-			}
+				if( $middleware instanceof MiddlewareInterface === false ){
+					throw new UnexpectedValueException(
+						\sprintf(
+							"Provided middleware must be an instance of Nimbly\Syndicate\MiddlewareInterface or ".
+							"a class-string that references a Nimbly\Syndicate\MiddlewareInterface implementation. ".
+							"%s was given.",
+							$middleware::class
+						)
+					);
+				}
 
-			if( $middleware instanceof MiddlewareInterface === false ){
-				throw new UnexpectedValueException("Provided middleware must be an instance of Nimbly\Syndicate\MiddlewareInterface or a class-string that references a Nimbly\Syndicate\MiddlewareInterface implementation.");
-			}
+				return $middleware;
 
-			$normalized_middlewares[] = $middleware;
-		}
-
-		return $normalized_middlewares;
+			},
+			$middlewares
+		);
 	}
 
 	/**

@@ -5,11 +5,13 @@ use Nimbly\Carton\Container;
 use Nimbly\Syndicate\Application;
 use Nimbly\Syndicate\DeadletterPublisher;
 use Nimbly\Syndicate\Message;
+use Nimbly\Syndicate\MiddlewareInterface;
 use Nimbly\Syndicate\PubSub\Mock;
 use Nimbly\Syndicate\Response;
 use Nimbly\Syndicate\Router;
 use Nimbly\Syndicate\RouterInterface;
 use Nimbly\Syndicate\RoutingException;
+use Nimbly\Syndicate\Tests\Fixtures\TestMiddleware;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -223,5 +225,72 @@ class ApplicationTest extends TestCase
 
 		$application->listen("test_topic");
 		$this->assertCount(0, $mock->getMessages("test_topic"));
+	}
+
+	public function test_compile_creates_callable_chain(): void
+	{
+		$application = new Application(new Mock, new Router([]));
+
+		$reflectionClass = new ReflectionClass($application);
+		$reflectionMethod = $reflectionClass->getMethod("compileMiddleware");
+		$reflectionMethod->setAccessible(true);
+
+		$chain = $reflectionMethod->invoke(
+			$application,
+			[
+				new class implements MiddlewareInterface {
+					public function handle(Message $message, callable $next): mixed
+					{
+						return $next(new Message("veggies", "broccoli"));
+					}
+				}
+			],
+			function(Message $message): string {
+				return $message->getTopic();
+			}
+		);
+
+		$this->assertIsCallable($chain);
+
+		$this->assertEquals(
+			"veggies",
+			\call_user_func($chain, new Message("fruits", "apples"))
+		);
+	}
+
+	public function test_normalize_invalid_middleware_throws_unexpected_value_exception(): void
+	{
+		$application = new Application(new Mock, new Router([]));
+
+		$reflectionClass = new ReflectionClass($application);
+		$reflectionMethod = $reflectionClass->getMethod("normalizeMiddleware");
+		$reflectionMethod->setAccessible(true);
+
+		$this->expectException(UnexpectedValueException::class);
+		$reflectionMethod->invoke(
+			$application,
+			[
+				Nimbly\Syndicate\PubSub\Mock::class
+			]
+		);
+	}
+
+	public function test_normalize_creates_class_string_instances(): void
+	{
+		$application = new Application(new Mock, new Router([]));
+
+		$reflectionClass = new ReflectionClass($application);
+		$reflectionMethod = $reflectionClass->getMethod("normalizeMiddleware");
+		$reflectionMethod->setAccessible(true);
+
+		$middleware = $reflectionMethod->invoke(
+			$application,
+			[
+				TestMiddleware::class
+			]
+		);
+
+		$this->assertCount(1, $middleware);
+		$this->assertInstanceOf(TestMiddleware::class, $middleware[0]);
 	}
 }
