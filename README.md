@@ -465,6 +465,30 @@ public function onUserRegistered(Message $message, EmailService $email): Respons
 }
 ```
 
+## Schema validation
+
+A good practice is to validate your messages before publishing or at least within your unit tests. `Syndicate` offers a `ValidatorPublisher` publisher class wrapper that can assist in this: each message will be validated against your validator before being published.
+
+### JSON Schema validator
+
+You pass in the actual publisher instance and a key/value pair array of topics and a JSON schema that messages in that topic must validate against.
+
+```php
+$publisher = new ValidatorPublisher(
+	new JsonSchemaValidator([
+		"fruits" => \file_get_contents("schemas/fruits.json"),
+		"veggies" => \file_get_contents("schemas/veggies.json")
+	]),
+	new Mqtt(new MqttClient("localhost"))
+);
+
+$publisher->publish(new Message("veggies", \json_encode($payload)));
+```
+
+In the example above, the `Mqtt` publisher will be used to publish messages and the `Message` instance being published will be validated against the `veggies` JSON schema.
+
+If validation fails when publishing, a `MessageValidationException` is thrown.
+
 ## Custom router
 
 Although using the `#[Consume]` attribute is the fastest and easiest way to get your message handlers registered with the application router, you may want to implement your own custom  routing solution. `Syndicate` provides a `Nimbly\Syndicate\RouterInterface` for you to implement.

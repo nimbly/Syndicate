@@ -1,19 +1,20 @@
 <?php
 
-namespace Nimbly\Syndicate;
+namespace Nimbly\Syndicate\Validators;
 
+use Nimbly\Syndicate\Message;
 use Opis\JsonSchema\Validator;
+use Nimbly\Syndicate\ValidatorInterface;
+use Nimbly\Syndicate\MessageValidationException;
 
-class JsonSchemaPublisher implements PublisherInterface
+class JsonSchemaValidator implements ValidatorInterface
 {
 	protected Validator $validator;
 
 	/**
-	 * @param PublisherInterface $publisher The publisher to send messages to.
-	 * @param array<string> $schemas A key/value pair array of topic names to JSON schemas.
+	 * @param array<string,string> $schemas A key/value pair array of topic names to JSON schemas.
 	 */
 	public function __construct(
-		protected PublisherInterface $publisher,
 		protected array $schemas = [],
 	)
 	{
@@ -23,8 +24,9 @@ class JsonSchemaPublisher implements PublisherInterface
 
 	/**
 	 * @inheritDoc
+	 * @throws MessageValidationException
 	 */
-	public function publish(Message $message, array $options = []): ?string
+	public function validate(Message $message): bool
 	{
 		if( !isset($this->schemas[$message->getTopic()]) ){
 			throw new MessageValidationException(
@@ -49,6 +51,6 @@ class JsonSchemaPublisher implements PublisherInterface
 			);
 		}
 
-		return $this->publisher->publish($message, $options);
+		return true;
 	}
 }
