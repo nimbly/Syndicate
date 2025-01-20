@@ -128,23 +128,15 @@ class ApplicationTest extends TestCase
 		$this->assertCount(0, $consumer->getMessages("fruits"));
 	}
 
-	public function test_shutdown_with_loop_consumer(): void
+	public function test_listen_with_multiple_locations_on_consumer_interface_instance_throws_unexpected_value_exception(): void
 	{
-		$consumer = new PubSubMock(
-			["fruits" => []]
-		);
-
 		$application = new Application(
-			consumer: $consumer,
-			router: new Router([
-				TestHandler::class
-			])
+			consumer: new Mock,
+			router: new Router(handlers: [TestHandler::class])
 		);
 
-		$application->listen("fruits");
-		$application->shutdown();
-
-		$this->assertTrue($consumer->getIsShutdown());
+		$this->expectException(UnexpectedValueException::class);
+		$application->listen(["test_topic", "foo"]);
 	}
 
 	public function test_listen_no_response_acks_message(): void
@@ -270,6 +262,25 @@ class ApplicationTest extends TestCase
 
 		$application->listen("test_topic");
 		$this->assertCount(0, $mock->getMessages("test_topic"));
+	}
+
+	public function test_shutdown_with_loop_consumer(): void
+	{
+		$consumer = new PubSubMock(
+			["fruits" => []]
+		);
+
+		$application = new Application(
+			consumer: $consumer,
+			router: new Router([
+				TestHandler::class
+			])
+		);
+
+		$application->listen("fruits");
+		$application->shutdown();
+
+		$this->assertTrue($consumer->getIsShutdown());
 	}
 
 	public function test_compile_creates_callable_chain(): void
