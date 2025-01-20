@@ -38,15 +38,58 @@ class MockPubSubTest extends TestCase
 			return Response::ack;
 		};
 
-		$mock = new Mock(
-			subscriptions: [
-				"fruits" => $callback
-			]
-		);
+		$mock = new Mock;
+		$mock->subscribe("fruits", $callback);
 
 		$subscription = $mock->getSubscription("fruits");
 
 		$this->assertSame($callback, $subscription);
+	}
+
+	public function test_subscribe_with_array_of_topics(): void
+	{
+		$callback = function(Message $message): Response {
+			return Response::ack;
+		};
+
+		$mock = new Mock;
+		$mock->subscribe(["fruits", "veggies"], $callback);
+
+		$subscription = $mock->getSubscription("fruits");
+		$this->assertSame($callback, $subscription);
+
+		$subscription = $mock->getSubscription("veggies");
+		$this->assertSame($callback, $subscription);
+	}
+
+	public function test_subscribe_comma_separated_list_of_topics(): void
+	{
+		$callback = function(Message $message): Response {
+			return Response::ack;
+		};
+
+		$mock = new Mock;
+		$mock->subscribe("fruits, veggies", $callback);
+
+		$subscription = $mock->getSubscription("fruits");
+		$this->assertSame($callback, $subscription);
+
+		$subscription = $mock->getSubscription("veggies");
+		$this->assertSame($callback, $subscription);
+	}
+
+	public function test_loop_topic_with_no_messages_skips(): void
+	{
+		$callback = function(Message $message): Response {
+			return Response::ack;
+		};
+
+		$mock = new Mock(messages: ["veggies" => [new Message("veggies", "OK")]]);
+		$mock->subscribe("fruits, veggies", $callback);
+
+		$mock->loop();
+
+		$this->assertCount(0, $mock->getMessages("veggies"));
 	}
 
 	public function test_loop(): void
@@ -74,5 +117,13 @@ class MockPubSubTest extends TestCase
 
 		$this->assertCount(0, $mock->getMessages("fruits"));
 		$this->assertCount(1, $mock->getMessages("veggies"));
+	}
+
+	public function test_shutdown(): void
+	{
+		$mock = new Mock;
+		$mock->shutdown();
+
+		$this->assertTrue($mock->getIsShutdown());
 	}
 }
