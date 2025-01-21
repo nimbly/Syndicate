@@ -177,7 +177,7 @@ class MqttTest extends TestCase
 		$consumer->subscribe("test", "strtolower");
 	}
 
-	public function test_loop_integration(): void
+	public function test_loop_integration_tries_to_connect(): void
 	{
 		$mock = Mockery::mock(MqttClient::class);
 
@@ -195,6 +195,41 @@ class MqttTest extends TestCase
 			"loop",
 			[false, true, 12]
 		);
+	}
+
+	public function test_loop_integration_tries_to_disconnect_when_done(): void
+	{
+		$mock = Mockery::mock(MqttClient::class);
+
+		$mock->shouldReceive("isConnected")
+			->andReturn(true);
+		$mock->shouldReceive("loop")
+			->andReturn(true);
+		$mock->shouldReceive("disconnect");
+
+		$consumer = new Mqtt($mock);
+		$consumer->loop();
+
+		$mock->shouldHaveReceived("disconnect");
+	}
+
+	public function test_disconnect_failure_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(MqttClient::class);
+
+		$mock->shouldReceive("isConnected")
+			->andReturn(false, true);
+		$mock->shouldReceive("connect");
+		$mock->shouldReceive("loop");
+		$mock->shouldReceive("disconnect")
+			->andThrows(new Exception("Failure"));
+
+		$consumer = new Mqtt($mock);
+
+		$this->expectException(ConnectionException::class);
+		$consumer->loop();
+
+		$mock->shouldHaveReceived("disconnect");
 	}
 
 	public function test_loop_connecting_to_broker_exception_throws_connection_exception(): void

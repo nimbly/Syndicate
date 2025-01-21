@@ -23,10 +23,21 @@
 use Predis\Client;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Queue\Redis;
+use Nimbly\Syndicate\ValidatorPublisher;
+use Nimbly\Syndicate\Validators\JsonSchemaValidator;
 
 require __DIR__ . "/../vendor/autoload.php";
 
-$publisher = new Redis(new Client);
+/**
+ * Use the fruits.json schema to validate all messages
+ * published to the "fruits" topic.
+ */
+$publisher = new ValidatorPublisher(
+	validator: new JsonSchemaValidator([
+		"fruits" => \file_get_contents(__DIR__ . "/schemas/fruits.json")
+	]),
+	publisher: new Redis(new Client)
+);
 
 for( $i = 0; $i < ($argv[1] ?? 100); $i++ ){
 

@@ -24,8 +24,8 @@ use Nimbly\Syndicate\Queue\Redis;
 use Monolog\Handler\ErrorLogHandler;
 use Nimbly\Syndicate\DeadletterPublisher;
 use Nimbly\Syndicate\Examples\Handlers\ExampleHandler;
-use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\MiddlewareInterface;
+use Nimbly\Syndicate\Middleware\ValidateMessages;
+use Nimbly\Syndicate\Validators\JsonSchemaValidator;
 
 require_once __DIR__ . "/../vendor/autoload.php";
 
@@ -41,24 +41,18 @@ $application = new Application(
 	deadletter: new DeadletterPublisher($client, "deadletter"),
 	logger: new Logger("EXAMPLE", [new ErrorLogHandler]),
 	middleware: [
-		new class implements MiddlewareInterface {
-			public function handle(Message $message, callable $next): mixed
-			{
-				echo "I am in the middleware, 1\n";
-				$response = $next($message);
-			}
-		},
-
-		new class implements MiddlewareInterface {
-			public function handle(Message $message, callable $next): mixed
-			{
-				echo "I am in the middleware, 2\n";
-				return $next($message);
-			}
-		},
+		/**
+		 * Validate all consumed messages on the "fruits" topic/location.
+		 * If message does not validate, it will be sent to the deadletter.
+		 */
+		new ValidateMessages(
+			new JsonSchemaValidator(
+				[
+					"fruits" => \file_get_contents(__DIR__ . "/schemas/fruits.json")
+				]
+			)
+		)
 	]
 );
 
-$application->listen(
-	location: "fruits",
-);
+$application->listen(location: "fruits");

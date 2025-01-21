@@ -64,6 +64,10 @@ class Mock implements PublisherInterface, LoopConsumerInterface
 			while( count($this->messages[$topic]) ){
 				$messages = \array_splice($this->messages[$topic], 0, 1);
 				\call_user_func($callback, $messages[0]);
+
+				if( $this->isShutdown ){
+					return;
+				}
 			}
 		}
 	}

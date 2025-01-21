@@ -12,7 +12,7 @@ use Nimbly\Syndicate\Validators\JsonSchemaValidator;
  */
 class ValidateMessagesTest extends TestCase
 {
-	public function test_handle_missing_schema_throws_message_validation_exception(): void
+	public function test_handle_missing_schema(): void
 	{
 		$middleware = new ValidateMessages(
 			new JsonSchemaValidator([
@@ -34,16 +34,20 @@ class ValidateMessagesTest extends TestCase
 			])
 		);
 
-		$this->expectException(MessageValidationException::class);
-		$middleware->handle(
+		$response = $middleware->handle(
 			new Message("apples", "Ok"),
 			function(Message $message): Response {
 				return Response::ack;
 			}
 		);
+
+		$this->assertEquals(
+			Response::deadletter,
+			$response
+		);
 	}
 
-	public function test_handle_invalid_message_throws_message_validation_exception(): void
+	public function test_handle_invalid_message(): void
 	{
 		$middleware = new ValidateMessages(
 			new JsonSchemaValidator([
@@ -65,12 +69,16 @@ class ValidateMessagesTest extends TestCase
 			])
 		);
 
-		$this->expectException(MessageValidationException::class);
-		$middleware->handle(
+		$response = $middleware->handle(
 			new Message("fruits", \json_encode(["name" => "kiwis", "published_at" => date("c")])),
 			function(Message $message): Response {
 				return Response::ack;
 			}
+		);
+
+		$this->assertEquals(
+			Response::deadletter,
+			$response
 		);
 	}
 

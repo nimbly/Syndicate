@@ -13,9 +13,11 @@ class JsonSchemaValidator implements ValidatorInterface
 
 	/**
 	 * @param array<string,string> $schemas A key/value pair array of topic names to JSON schemas.
+	 * @param bool $ignore_missing_schemas If a schema cannot be found for a Message topic, should validation be ignored? Defaults to `false`.
 	 */
 	public function __construct(
 		protected array $schemas = [],
+		protected bool $ignore_missing_schemas = false
 	)
 	{
 		$this->validator = new Validator;
@@ -29,6 +31,11 @@ class JsonSchemaValidator implements ValidatorInterface
 	public function validate(Message $message): bool
 	{
 		if( !isset($this->schemas[$message->getTopic()]) ){
+
+			if( $this->ignore_missing_schemas ){
+				return true;
+			}
+
 			throw new MessageValidationException(
 				\sprintf(
 					"No schema defined for message topic \"%s\".",

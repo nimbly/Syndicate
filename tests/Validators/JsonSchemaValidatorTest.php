@@ -10,7 +10,7 @@ use Nimbly\Syndicate\Validators\JsonSchemaValidator;
  */
 class JsonSchemaValidatorTest extends TestCase
 {
-	public function test_missing_schema_throws_message_validation_exception(): void
+	public function test_missing_schema_throws_message_validation_exception_by_default(): void
 	{
 		$validator = new JsonSchemaValidator([
 			"fruits" => \json_encode([
@@ -32,6 +32,17 @@ class JsonSchemaValidatorTest extends TestCase
 
 		$this->expectException(MessageValidationException::class);
 		$validator->validate(new Message("vegetables", "Ok"));
+	}
+
+	public function test_missing_schema_returns_true_if_ignore_missing(): void
+	{
+		$validator = new JsonSchemaValidator(
+			schemas: [],
+			ignore_missing_schemas: true
+		);
+
+		$result = $validator->validate(new Message("vegetables", "Ok"));
+		$this->assertTrue($result);
 	}
 
 	public function test_failed_validation_throws_message_validation_exception(): void
