@@ -119,6 +119,29 @@ class MockPubSubTest extends TestCase
 		$this->assertCount(1, $mock->getMessages("veggies"));
 	}
 
+	public function test_loop_exits_when_shutdown(): void
+	{
+		$mock = new Mock(
+			messages: [
+				"fruits" => [
+					new Message("fruits", "apples"),
+					new Message("fruits", "oranges"),
+					new Message("fruits", "pears"),
+				]
+			],
+			subscriptions: [
+				"fruits" => function(Message $message): Response {
+					return Response::ack;
+				}
+			]
+		);
+
+		$mock->shutdown();
+		$mock->loop();
+
+		$this->assertCount(2, $mock->getMessages("fruits"));
+	}
+
 	public function test_shutdown(): void
 	{
 		$mock = new Mock;
