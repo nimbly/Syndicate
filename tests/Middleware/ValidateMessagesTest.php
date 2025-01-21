@@ -12,7 +12,7 @@ use Nimbly\Syndicate\Validators\JsonSchemaValidator;
  */
 class ValidateMessagesTest extends TestCase
 {
-	public function test_handle_missing_schema_throws_message_validation_exception(): void
+	public function test_handle_missing_schema(): void
 	{
 		$middleware = new ValidateMessages(
 			new JsonSchemaValidator([
@@ -47,7 +47,7 @@ class ValidateMessagesTest extends TestCase
 		);
 	}
 
-	public function test_handle_invalid_message_throws_message_validation_exception(): void
+	public function test_handle_invalid_message(): void
 	{
 		$middleware = new ValidateMessages(
 			new JsonSchemaValidator([

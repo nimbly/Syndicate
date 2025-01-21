@@ -213,6 +213,28 @@ class RedisPubSubTest extends TestCase
 		$mockConsumer->shouldHaveReceived("current");
 	}
 
+	public function test_loop_no_callback_for_channel_throws_consumer_exception(): void
+	{
+		$mock = Mockery::mock(Client::class);
+		$mockConsumer = Mockery::mock(Consumer::class)->shouldAllowMockingProtectedMethods();
+
+		$mock->shouldReceive("pubSubLoop")
+		->andReturn($mockConsumer);
+
+		$mockConsumer->shouldReceive("valid")
+			->andReturn(true);
+
+		$mockConsumer->shouldReceive("current")
+			->andReturn(
+				(object) ["kind" => "message", "channel" => "fruits", "payload" => "Ok"]
+			);
+
+		$consumer = new Redis($mock);
+
+		$this->expectException(ConsumerException::class);
+		$consumer->loop();
+	}
+
 	public function test_loop_redis_connection_exception_throws_connection_exception(): void
 	{
 
@@ -239,7 +261,7 @@ class RedisPubSubTest extends TestCase
 		$consumer->loop();
 	}
 
-	public function test_loop_except_throws_consumer_exception(): void
+	public function test_loop_exception_throws_consumer_exception(): void
 	{
 		$mock = Mockery::mock(Client::class);
 		$mockConsumer = Mockery::mock(Consumer::class)->shouldAllowMockingProtectedMethods();

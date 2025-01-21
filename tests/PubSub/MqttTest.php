@@ -213,6 +213,25 @@ class MqttTest extends TestCase
 		$mock->shouldHaveReceived("disconnect");
 	}
 
+	public function test_disconnect_failure_throws_connection_exception(): void
+	{
+		$mock = Mockery::mock(MqttClient::class);
+
+		$mock->shouldReceive("isConnected")
+			->andReturn(false, true);
+		$mock->shouldReceive("connect");
+		$mock->shouldReceive("loop");
+		$mock->shouldReceive("disconnect")
+			->andThrows(new Exception("Failure"));
+
+		$consumer = new Mqtt($mock);
+
+		$this->expectException(ConnectionException::class);
+		$consumer->loop();
+
+		$mock->shouldHaveReceived("disconnect");
+	}
+
 	public function test_loop_connecting_to_broker_exception_throws_connection_exception(): void
 	{
 		$mock = Mockery::mock(MqttClient::class);
