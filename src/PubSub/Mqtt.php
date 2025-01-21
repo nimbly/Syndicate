@@ -220,8 +220,6 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 	 */
 	public function __destruct()
 	{
-		if( $this->client->isConnected() ){
-			$this->client->disconnect();
-		}
+		$this->disconnect();
 	}
 }
