@@ -9,6 +9,7 @@ use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use Nimbly\Syndicate\Response;
 use Predis\Connection\ConnectionException as RedisConnectionException;
 use Predis\Connection\NodeConnectionInterface;
 
@@ -197,45 +198,67 @@ class RedisPubSubTest extends TestCase
 
 		$mockConsumer->shouldReceive("subscribe");
 		$mockConsumer->shouldReceive("rewind");
-		$mockConsumer->shouldReceive("valid");
-		$mockConsumer->shouldReceive("getValue")
-		->andReturn([
-			(object) ["message", "test", "Ok"]
-		]);
+		$mockConsumer->shouldReceive("valid")
+			->andReturn(true, false);
+
+		$mockConsumer->shouldReceive("current")
+			->andReturn(
+				(object) ["kind" => "message", "channel" => "test", "payload" => "Ok"]
+			);
 
 		$consumer = new Redis($mock);
-		$consumer->subscribe("test", fn($msg) => $msg->payload);
+		$consumer->subscribe("test", fn($msg) => Response::ack);
 		$consumer->loop();
 
-		$mockConsumer->shouldHaveReceived("subscribe");
-		$mockConsumer->shouldHaveReceived("rewind");
-		$mockConsumer->shouldHaveReceived("valid");
-		//$mockConsumer->shouldHaveReceived("getValue");
+		$mockConsumer->shouldHaveReceived("current");
 	}
 
-	// There is no way to mock Predis's loop functionality as it employs
-	// an iterable on the Consumer instance that reads from the socket in
-	// a "foreach" loop.
-	//
-	// public function test_loop_failure_throws_exception(): void
-	// {
-	// 	$mock = Mockery::mock(Client::class);
-	// 	$mockConsumer = Mockery::mock(Consumer::class)->shouldAllowMockingProtectedMethods();
+	public function test_loop_redis_connection_exception_throws_connection_exception(): void
+	{
 
-	// 	$mock->shouldReceive("pubSubLoop")
-	// 		->andReturns($mockConsumer);
+		$mock = Mockery::mock(Client::class);
+		$mockConsumer = Mockery::mock(Consumer::class)->shouldAllowMockingProtectedMethods();
 
-	// 	$mockConsumer->shouldReceive("subscribe");
-	// 	$mockConsumer->shouldReceive("rewind");
-	// 	$mockConsumer->shouldReceive("valid");
-	// 	$mockConsumer->shouldReceive("getValue")
-	// 		->andThrows(new Exception("Failure"));
+		$mock->shouldReceive("pubSubLoop")
+			->andReturns($mockConsumer);
 
-	// 	$consumer = new Redis($mock);
+		$mockConsumer->shouldReceive("subscribe");
+		$mockConsumer->shouldReceive("rewind");
+		$mockConsumer->shouldReceive("valid")
+	 		->andReturn(true);
+		$mockConsumer->shouldReceive("current")
+			->andThrow(
+				new RedisConnectionException(
+					Mockery::mock(NodeConnectionInterface::class)
+				)
+			);
 
-	// 	$this->expectException(ConsumerException::class);
-	// 	$consumer->loop();
-	// }
+		$consumer = new Redis($mock);
+
+		$this->expectException(ConnectionException::class);
+		$consumer->loop();
+	}
+
+	public function test_loop_except_throws_consumer_exception(): void
+	{
+		$mock = Mockery::mock(Client::class);
+		$mockConsumer = Mockery::mock(Consumer::class)->shouldAllowMockingProtectedMethods();
+
+		$mock->shouldReceive("pubSubLoop")
+			->andReturns($mockConsumer);
+
+		$mockConsumer->shouldReceive("subscribe");
+		$mockConsumer->shouldReceive("rewind");
+		$mockConsumer->shouldReceive("valid")
+	 		->andReturn(true);
+		$mockConsumer->shouldReceive("current")
+			->andThrows(new Exception("Failure"));
+
+		$consumer = new Redis($mock);
+
+		$this->expectException(ConsumerException::class);
+		$consumer->loop();
+	}
 
 	public function test_shutdown_integration(): void
 	{

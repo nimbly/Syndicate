@@ -110,10 +110,13 @@ class Redis implements PublisherInterface, LoopConsumerInterface
 
 			$loop = $this->getLoop();
 
-			/**
-			 * @var object{kind:string,channel:string,payload:string} $msg
-			 */
-			foreach( $loop as $msg ){
+			while( $loop->valid() ) {
+
+				/**
+				 * @var object{kind:string,channel:string,payload:string} $msg
+				 */
+				$msg = $loop->current();
+
 				if( $msg->kind === "message" ){
 					$callback = $this->subscriptions[$msg->channel] ?? null;
 
