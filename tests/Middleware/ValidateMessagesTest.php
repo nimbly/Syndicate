@@ -34,12 +34,16 @@ class ValidateMessagesTest extends TestCase
 			])
 		);
 
-		$this->expectException(MessageValidationException::class);
-		$middleware->handle(
+		$response = $middleware->handle(
 			new Message("apples", "Ok"),
 			function(Message $message): Response {
 				return Response::ack;
 			}
+		);
+
+		$this->assertEquals(
+			Response::deadletter,
+			$response
 		);
 	}
 
@@ -65,12 +69,16 @@ class ValidateMessagesTest extends TestCase
 			])
 		);
 
-		$this->expectException(MessageValidationException::class);
-		$middleware->handle(
+		$response = $middleware->handle(
 			new Message("fruits", \json_encode(["name" => "kiwis", "published_at" => date("c")])),
 			function(Message $message): Response {
 				return Response::ack;
 			}
+		);
+
+		$this->assertEquals(
+			Response::deadletter,
+			$response
 		);
 	}
 

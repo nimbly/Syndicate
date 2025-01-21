@@ -1,0 +1,16 @@
+{
+	"type": "object",
+	"properties": {
+		"name": {
+			"type": "string",
+			"enum": ["apples", "bananas", "kiwis", "oranges", "mangoes", "mangos"]
+		},
+
+		"published_at": {
+			"type": "string",
+			"format": "date-time"
+		}
+	},
+	"required": ["name", "published_at"],
+	"additionalProperties": false
+}

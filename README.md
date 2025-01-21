@@ -5,7 +5,7 @@
 [![Codecov branch](https://img.shields.io/codecov/c/github/nimbly/syndicate/master?style=flat-square)](https://app.codecov.io/github/nimbly/Syndicate)
 [![License](https://img.shields.io/github/license/nimbly/Syndicate.svg?style=flat-square)](https://packagist.org/packages/nimbly/Syndicate)
 
-`Syndicate` is a powerful framework able to both publish and consume messages - ideal for your event driven application or as a job processor. It supports common queues and PubSub integrations with an `Application` layer that can be used to route incoming messages to any handler of your choosing with full dependency injection using a PSR-11 Container instance.
+Syndicate is a powerful framework able to both publish and consume messages - ideal for your event driven application or as a job processor. It supports common queues and PubSub integrations with an `Application` layer that can be used to route incoming messages to any handler of your choosing with full dependency injection using a PSR-11 Container instance.
 
 ## Requirements
 
@@ -46,7 +46,7 @@
 | Google         | Y         | Y        | `google/cloud-pubsub:^2.0` |
 | Webhook        | Y         | N        | n/a |
 
-**NOTE:** Consumers denoted with **\*** indicate they do not support `ack`ing, `nack`ing, or `deadletter`ing messages. Additionally, the `predis/predis` library currently does not play well with interrupts and gracefully stopping its internal pubsub loop. If using this integration, you should set the `signals` option to an empty array. See the **Consumer** section below for more details.
+**NOTE:** Consumers denoted with **\*** indicate are known as "loop consumers" and they do not support `ack`ing, `nack`ing due to the nature of pubsub. Additionally, the `predis/predis` library currently does not play well with interrupts and gracefully stopping its internal pubsub loop. If using this integration, you should set the `signals` option to an empty array. See the **Consumer** section below for more details.
 
 Is there an integration you would like to see supported? Let us know in [Github Discussions](https://github.com/nimbly/Syndicate/discussions) or open a Pull Request!
 
@@ -112,7 +112,7 @@ $application->listen(
 
 ## Application: In Depth
 
-The quick start above only scratches the surface of what `Syndicate` can do. Let's look at more detailed examples of all its options and features.
+The quick start above only scratches the surface of what Syndicate can do. Let's look at more detailed examples of all its options and features.
 
 ```php
 $application = new Application(
@@ -127,6 +127,11 @@ $application = new Application(
 	),
 	container: $container,
 	logger: $logger,
+	middleware: [
+		new ValidateMessages(
+			new JsonSchemaValidator(["topic" => $schema])
+		)
+	],
 	signals: [SIGINT, SIGTERM, SIGHUP]
 )
 ```
@@ -145,34 +150,27 @@ $consumer = new Sqs(
 ```
 
 #### A note on the LoopConsumerInterface
-`LoopConsumerInterface` integrations behave a little differently than the other integrations in that the libraries that back them already have their own looping solution for consuming messages.
+`LoopConsumerInterface` integrations (`PubSub\Mqtt` and `PubSub\Redis`) behave a little differently than the other integrations in that the libraries that back them already have their own looping solution for consuming messages.
 
-These integrations do not support `ack`ing or `nack`ing of messages due to the nature of pubsub. `deadletter`ing messages with these integrations is not currently supported natively by `Syndicate`. Any return value from handlers will be ignored by these integrations.
-
-Setting up a deadletter for these integrations *could* be achieved by defining a default handler option in the `Router` that publishes to another location.
+These integrations do not support `ack`ing or `nack`ing of messages due to the nature of pubsub. `deadletter`ing from handlers is possible by adding the `Nimbly\Syndicate\Middleware\DeadletterMessage` middleware and returning `Response::deadletter` from your handlers. Any other return value from your handlers will be completely ignored by these integrations.
 
 ```php
-// Create a Redis queue publisher instance as our deadletter.
-$deadletter = new Redis(new Client);
-
 $application = new Application(
 	consumer: new Mqtt(new MqttClient("localhost")),
+	middleware: [
+		new DeadletterMessage(
+			new DeadletterPublisher(
+				publisher: $redis,
+				topic: "deadletter"
+			)
+		)
+	],
 	router: new Router(
 		handlers: [
 			App\Consumer\Handlers\UsersHandler::class
 		],
-		default: function(Message $message) use ($deadletter): void {
-			$deadletter->publish(
-				new Message(
-					topic: "deadletter",
-
-					// Use the original topic and original payload.
-					payload: \json_encode([
-						"topic" => $message->getTopic(),
-						"payload" => \json_decode($message->getPayload())
-					])
-				)
-			);
+		default: function(Message $message): Response {
+			return Response::deadletter;
 		}
 	)
 );
@@ -263,7 +261,37 @@ In this example, both the `Message` and the `EmailService` dependecies are injec
 
 ### Logger
 
-The `logger` parameter allows you to pass a `Psr\Log\LoggerInterface` instance to the application. `Syndicate` will use this logger instance to log messages to give you better visibility into your application.
+The `logger` parameter allows you to pass a `Psr\Log\LoggerInterface` instance to the application. Syndicate will use this logger instance to log messages to give you better visibility into your application.
+
+### Middleware
+
+The `middleware` parameter allows you to pass an array of `Nimbly\Syndicate\MiddlewareInterface` instances or class-strings that represent an implementation of `Nimbly\Syndicate\MiddlewareInterface`.
+
+The middleware chain supports dual pass (both the incoming consumer `Message` instance and whatever value the handler returned.)
+
+```php
+class MyMiddleware implements MiddlewareInterface
+{
+	public function handle(Message $message, callable $next): mixed
+	{
+		Log::debug(
+			"Received message",
+			["topic" => $message->getTopic(), "payload" => $message->getPayload()]
+		);
+
+		$response = $next($message);
+
+		if( $response === Response::deadletter ){
+			Log::warning(
+				"Deadletter message",
+				["topic" => $message->getTopic(), "payload" => $message->getPayload()]
+			);
+		}
+
+		return $response;
+	}
+}
+```
 
 ### Signals
 
@@ -318,7 +346,7 @@ The `deadletter_options` parameter is a set of options that will be passed to th
 
 A handler is your code that will receive the  `Nimbly\Syndicate\Message` instance and process it. The handler can be any `callable` type but typically is a class method.
 
-`Syndicate` will call your handlers with full dependency resolution and injection as long as a PSR-11 Container instance was provided. Both the constructor and the method to be called will have dependencies automatically resolved and injected for you.
+Syndicate will call your handlers with full dependency resolution and injection as long as a PSR-11 Container instance was provided. Both the constructor and the method to be called will have dependencies automatically resolved and injected for you.
 
 **NOTE:** The `Nimbly\Syndicate\Message` instance can *always* be resolved with or without a conatiner.
 
@@ -405,7 +433,7 @@ In this example, the `Origin` header will match as long as it ends with `/Syndic
 
 ### Message
 
-`Syndicate` will pass a `Nimbly\Syndicate\Message` instance to your handler. This `Message` instance contains the topic, payload, headers, and attributes of the message that was consumed. The payload is returned exactly as it was consumed: no parsing of the data is done.
+Syndicate will pass a `Nimbly\Syndicate\Message` instance to your handler. This `Message` instance contains the topic, payload, headers, and attributes of the message that was consumed. The payload is returned exactly as it was consumed: no parsing of the data is done.
 
 **NOTE:** Not all consumers support headers or attributes.
 
@@ -434,7 +462,7 @@ Possible response enum values:
 
 * `Response::ack` - Acknowledge the message (removes the message from the source)
 * `Response::nack` - Do not acknowledge the message (the message will be made availble again for processing after a short time, also known as releasing the message)
-* `Response::deadletter` - Move the message to a separate deadletter location, provided in the `Application` constructor
+* `Response::deadletter` - Move the message to a separate deadletter location, provided in the `Application` constructor. If you are using a `LoopConsumerInterface` instance, be sure to include the `DeadletterMiddleware`.
 
 **NOTE:** If no response value is returned by the handler (eg, `null` or `void`), or the response value is not one of `Response::nack` or `Response::deadletter` it is assumed the message should be `ack`ed. Best practice is to be explicit and always return a `Response` enum value.
 
@@ -467,17 +495,19 @@ public function onUserRegistered(Message $message, EmailService $email): Respons
 
 ## Schema validation
 
-A good practice is to validate your messages before publishing or at least within your unit tests. `Syndicate` offers a `ValidatorPublisher` publisher class wrapper that can assist in this: each message will be validated against your validator before being published.
+A good practice is to validate your messages before publishing or at least within your unit tests. Syndicate offers a `ValidatorPublisher` publisher class-wrapper that can assist in this: each message will be validated against your validator before being published. Currently, only a `JsonSchemaValidator` is available.
+
+If the message failes validation, a `MessageValidationException` will be thrown.
 
 ### JSON Schema validator
 
-You pass in the actual publisher instance and a key/value pair array of topics and a JSON schema that messages in that topic must validate against.
+You pass in the actual publisher instance and a key/value pair array of topics to a JSON schema that messages in that topic/location must validate against.
 
 ```php
 $publisher = new ValidatorPublisher(
 	new JsonSchemaValidator([
-		"fruits" => \file_get_contents("schemas/fruits.json"),
-		"veggies" => \file_get_contents("schemas/veggies.json")
+		"fruits" => \file_get_contents(__DIR__ . "/schemas/fruits.json"),
+		"veggies" => \file_get_contents(__DIR__ . "/schemas/veggies.json")
 	]),
 	new Mqtt(new MqttClient("localhost"))
 );
@@ -487,15 +517,28 @@ $publisher->publish(new Message("veggies", \json_encode($payload)));
 
 In the example above, the `Mqtt` publisher will be used to publish messages and the `Message` instance being published will be validated against the `veggies` JSON schema.
 
-If validation fails when publishing, a `MessageValidationException` is thrown.
+## ValidateMessages middleware
+
+Syndicate ships with a middleware to aid in validating incoming consumed messages. You must supply the `ValidatorInterface` instance to use for validating messages.
+
+If validation failes, the message will attempted to be deadlettered.
+
+ ```php
+$middleware = new ValidateMessage(
+	new JsonSchemaValidator([
+		"fruits" => \file_get_contents(__DIR__ . "/schemas/fruits.json"),
+		"veggies" => \file_get_contents(__DIR__ . "/schemas/veggies.json")
+	])
+);
+```
 
 ## Custom router
 
-Although using the `#[Consume]` attribute is the fastest and easiest way to get your message handlers registered with the application router, you may want to implement your own custom  routing solution. `Syndicate` provides a `Nimbly\Syndicate\RouterInterface` for you to implement.
+Although using the `#[Consume]` attribute is the fastest and easiest way to get your message handlers registered with the application router, you may want to implement your own custom routing solution. Syndicate provides a `Nimbly\Syndicate\RouterInterface` for you to implement.
 
 ## Custom publishers and consumers
 
-If you find that `Syndicate` does not support a particular publisher or consumer, we'd love to see a [Github Issues](https://github.com/nimbly/Syndicate/issues) opened or a message posted in [Github Discussions](https://github.com/nimbly/Syndicate/discussions).
+If you find that Syndicate does not support a particular publisher or consumer, we'd love to see a [Github Issues](https://github.com/nimbly/Syndicate/issues) opened or a message posted in [Github Discussions](https://github.com/nimbly/Syndicate/discussions).
 
 Alternatively, you can create your own implementation using the `Nimbly\Syndicate\PublisherInterface` and/or the `Nimbly\Syndicate\ConsumerInterface`.
 
