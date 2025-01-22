@@ -1,15 +1,19 @@
 <?php
 
-use Google\Cloud\PubSub\Message as PubSubMessage;
+namespace Nimbly\Syndicate\Tests\PubSub;
+
+use Mockery;
+use Exception;
+use Nimbly\Syndicate\Message;
+use Google\Cloud\PubSub\Topic;
+use PHPUnit\Framework\TestCase;
+use Nimbly\Syndicate\PubSub\Google;
 use Google\Cloud\PubSub\PubSubClient;
 use Google\Cloud\PubSub\Subscription;
-use Google\Cloud\PubSub\Topic;
-use Nimbly\Syndicate\Message;
-use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
+use Google\Cloud\PubSub\Message as PubSubMessage;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
-use Nimbly\Syndicate\PubSub\Google;
 
 /**
  * @covers Nimbly\Syndicate\PubSub\Google

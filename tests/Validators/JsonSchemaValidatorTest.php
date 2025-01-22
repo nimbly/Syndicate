@@ -1,5 +1,7 @@
 <?php
 
+namespace Nimbly\Syndicate\Tests\Validators;
+
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\MessageValidationException;

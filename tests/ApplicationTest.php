@@ -1,21 +1,27 @@
 <?php
 
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+namespace Nimbly\Syndicate\Tests;
+
+use Mockery;
+use DateTime;
+use ReflectionClass;
 use Nimbly\Carton\Container;
-use Nimbly\Syndicate\Application;
-use Nimbly\Syndicate\DeadletterPublisher;
-use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\MiddlewareInterface;
-use Nimbly\Syndicate\PubSub\Mock as PubSubMock;
-use Nimbly\Syndicate\Queue\Mock;
-use Nimbly\Syndicate\Response;
 use Nimbly\Syndicate\Router;
+use Psr\Log\LoggerInterface;
+use Nimbly\Syndicate\Message;
+use UnexpectedValueException;
+use Nimbly\Syndicate\Response;
+use PHPUnit\Framework\TestCase;
+use Nimbly\Syndicate\Queue\Mock;
+use Nimbly\Syndicate\Application;
 use Nimbly\Syndicate\RouterInterface;
 use Nimbly\Syndicate\RoutingException;
+use Nimbly\Syndicate\DeadletterPublisher;
+use Nimbly\Syndicate\MiddlewareInterface;
+use Nimbly\Syndicate\PubSub\Mock as PubSubMock;
 use Nimbly\Syndicate\Tests\Fixtures\TestHandler;
 use Nimbly\Syndicate\Tests\Fixtures\TestMiddleware;
-use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
 /**
  * @covers Nimbly\Syndicate\Application
@@ -326,7 +332,7 @@ class ApplicationTest extends TestCase
 		$reflectionMethod->invoke(
 			$application,
 			[
-				Nimbly\Syndicate\PubSub\Mock::class
+				\Nimbly\Syndicate\PubSub\Mock::class
 			]
 		);
 	}

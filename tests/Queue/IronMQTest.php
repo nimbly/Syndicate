@@ -1,14 +1,18 @@
 <?php
 
-use IronCore\HttpException;
+namespace Nimbly\Syndicate\Tests\Queue;
+
+use Mockery;
+use Exception;
 use IronMQ\IronMQ;
+use IronCore\HttpException;
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
+use Nimbly\Syndicate\Queue\Iron;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Nimbly\Syndicate\ConnectionException;
-use Nimbly\Syndicate\Queue\Iron;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
 /**
  * @covers Nimbly\Syndicate\Queue\Iron

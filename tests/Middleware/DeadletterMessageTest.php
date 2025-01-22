@@ -1,5 +1,7 @@
 <?php
 
+namespace Nimbly\Syndicate\Tests\Middleware;
+
 use Nimbly\Syndicate\DeadletterPublisher;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;

@@ -1,5 +1,10 @@
 <?php
 
+namespace Nimbly\Syndicate\Tests\Queue;
+
+use Mockery;
+use Exception;
+use ReflectionObject;
 use Nimbly\Capsule\Response;
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;

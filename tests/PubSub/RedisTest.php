@@ -1,22 +1,27 @@
 <?php
 
+namespace Nimbly\Syndicate\Tests\PubSub;
+
+use Mockery;
+use Exception;
 use Predis\Client;
+use ReflectionClass;
 use Predis\PubSub\Consumer;
 use Nimbly\Syndicate\Message;
+use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\PubSub\Redis;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\ConnectionException;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
-use Nimbly\Syndicate\Response;
-use Predis\Connection\ConnectionException as RedisConnectionException;
 use Predis\Connection\NodeConnectionInterface;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use Predis\Connection\ConnectionException as RedisConnectionException;
 
 /**
  * @covers Nimbly\Syndicate\PubSub\Redis
  */
-class RedisPubSubTest extends TestCase
+class RedisTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;
 

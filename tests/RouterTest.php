@@ -1,11 +1,15 @@
 <?php
 
+namespace Nimbly\Syndicate\Tests;
+
+use ReflectionClass;
 use Nimbly\Syndicate\Router;
 use Nimbly\Syndicate\Consume;
 use Nimbly\Syndicate\Message;
+use UnexpectedValueException;
 use Nimbly\Syndicate\Response;
-use Nimbly\Syndicate\RoutingException;
 use PHPUnit\Framework\TestCase;
+use Nimbly\Syndicate\RoutingException;
 use Nimbly\Syndicate\Tests\Fixtures\TestHandler;
 
 /**
