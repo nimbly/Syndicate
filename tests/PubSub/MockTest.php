@@ -1,5 +1,7 @@
 <?php
 
+namespace Nimbly\Syndicate\Tests\PubSub;
+
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
@@ -9,7 +11,7 @@ use Nimbly\Syndicate\PublisherException;
 /**
  * @covers Nimbly\Syndicate\PubSub\Mock
  */
-class MockPubSubTest extends TestCase
+class MockTest extends TestCase
 {
 	public function test_publish(): void
 	{

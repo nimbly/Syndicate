@@ -1,5 +1,9 @@
 <?php
 
+namespace Nimbly\Syndicate\Tests\Queue;
+
+use Mockery;
+use Exception;
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
 use PhpAmqpLib\Channel\AMQPChannel;

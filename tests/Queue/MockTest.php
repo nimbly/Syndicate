@@ -1,7 +1,8 @@
 <?php
 
+namespace Nimbly\Syndicate\Tests\Queue;
+
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Queue\Mock;
 use Nimbly\Syndicate\ConsumerException;
@@ -10,7 +11,7 @@ use Nimbly\Syndicate\PublisherException;
 /**
  * @covers Nimbly\Syndicate\Queue\Mock
  */
-class MockQueueTest extends TestCase
+class MockTest extends TestCase
 {
 	public function test_publish(): void
 	{

@@ -1,5 +1,7 @@
 <?php
 
+namespace Nimbly\Syndicate\Tests;
+
 use Nimbly\Syndicate\DeadletterPublisher;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Queue\Mock;

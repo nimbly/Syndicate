@@ -1,13 +1,18 @@
 <?php
 
+namespace Nimbly\Syndicate\Tests\PubSub;
+
+use Closure;
+use Mockery;
+use Exception;
 use Nimbly\Syndicate\Message;
 use PhpMqtt\Client\MqttClient;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\PubSub\Mqtt;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Nimbly\Syndicate\ConnectionException;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use PhpMqtt\Client\Exceptions\ConnectingToBrokerFailedException;
 
 /**
@@ -166,10 +171,11 @@ class MqttTest extends TestCase
 		$mock = Mockery::mock(MqttClient::class);
 
 		$mock->shouldReceive("isConnected")
-			->andReturn(false);
+			->andReturn(false, true);
 		$mock->shouldReceive("connect");
 		$mock->shouldReceive("subscribe")
 			->andThrow(new Exception("Failure"));
+		$mock->shouldReceive("disconnect");
 
 		$consumer = new Mqtt($mock);
 
@@ -222,7 +228,7 @@ class MqttTest extends TestCase
 		$mock->shouldReceive("connect");
 		$mock->shouldReceive("loop");
 		$mock->shouldReceive("disconnect")
-			->andThrows(new Exception("Failure"));
+			->andThrows(new ConnectingToBrokerFailedException(0, "Failure"));
 
 		$consumer = new Mqtt($mock);
 
@@ -257,6 +263,7 @@ class MqttTest extends TestCase
 		$mock->shouldReceive("connect");
 		$mock->shouldReceive("loop")
 			->andThrow(new Exception("Failure"));
+		$mock->shouldReceive("disconnect");
 
 		$consumer = new Mqtt($mock);
 
@@ -298,12 +305,12 @@ class MqttTest extends TestCase
 		$consumer->shutdown();
 	}
 
-	public function test_shutdown_failure_throws_consumer_exception(): void
+	public function test_shutdown_general_failure_throws_consumer_exception(): void
 	{
 		$mock = Mockery::mock(MqttClient::class);
 
 		$mock->shouldReceive("isConnected")
-			->andReturn(true);
+			->andReturn(true, true);
 
 		$mock->shouldReceive("disconnect");
 

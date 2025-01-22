@@ -1,5 +1,7 @@
 <?php
 
+namespace Nimbly\Syndicate\Tests;
+
 use Nimbly\Syndicate\Consume;
 use PHPUnit\Framework\TestCase;
 

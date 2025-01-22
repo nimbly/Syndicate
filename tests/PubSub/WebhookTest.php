@@ -1,17 +1,21 @@
 <?php
 
+namespace Nimbly\Syndicate\Tests\PubSub;
+
+use Mockery;
+use Exception;
+use ReflectionClass;
 use Nimbly\Capsule\Request;
 use Nimbly\Shuttle\Shuttle;
 use Nimbly\Capsule\Response;
 use Nimbly\Syndicate\Message;
-use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\PubSub\Webhook;
-use Nimbly\Shuttle\Handler\MockHandler;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
-use Nimbly\Syndicate\ConnectionException;
-use Nimbly\Syndicate\PublisherException;
-
 use function PHPSTORM_META\map;
+use PHPUnit\Framework\TestCase;
+
+use Nimbly\Syndicate\PubSub\Webhook;
+use Nimbly\Syndicate\PublisherException;
+use Nimbly\Syndicate\ConnectionException;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
 /**
  * @covers Nimbly\Syndicate\PubSub\Webhook

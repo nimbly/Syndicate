@@ -1,12 +1,15 @@
 <?php
 
+namespace Nimbly\Syndicate\Tests\PubSub;
+
+use Mockery;
+use Exception;
 use Aws\Result;
 use Aws\Sns\SnsClient;
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\PubSub\Sns;
 use Aws\Exception\CredentialsException;
-use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;

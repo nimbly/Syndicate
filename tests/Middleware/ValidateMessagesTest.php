@@ -1,8 +1,9 @@
 <?php
 
+namespace Nimbly\Syndicate\Tests\Middleware;
+
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\MessageValidationException;
 use Nimbly\Syndicate\Middleware\ValidateMessages;
 use Nimbly\Syndicate\Response;
 use Nimbly\Syndicate\Validators\JsonSchemaValidator;

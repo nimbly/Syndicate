@@ -1,5 +1,9 @@
 <?php
 
+namespace Nimbly\Syndicate\Tests\Queue;
+
+use Mockery;
+use Exception;
 use Predis\Client;
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
@@ -14,7 +18,7 @@ use Predis\Connection\ConnectionException as RedisConnectionException;
 /**
  * @covers Nimbly\Syndicate\Queue\Redis
  */
-class RedisQueueTest extends TestCase
+class RedisTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;
 

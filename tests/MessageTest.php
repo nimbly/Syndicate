@@ -1,5 +1,7 @@
 <?php
 
+namespace Nimbly\Syndicate\Tests;
+
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
 
