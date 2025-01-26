@@ -1,19 +1,19 @@
 <?php
 
-namespace Nimbly\Syndicate\Tests;
+namespace Nimbly\Syndicate\Tests\Router;
 
 use ReflectionClass;
-use Nimbly\Syndicate\Router;
-use Nimbly\Syndicate\Consume;
+use Nimbly\Syndicate\Router\Router;
+use Nimbly\Syndicate\Router\Consume;
 use Nimbly\Syndicate\Message;
 use UnexpectedValueException;
 use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\RoutingException;
+use Nimbly\Syndicate\Router\RoutingException;
 use Nimbly\Syndicate\Tests\Fixtures\TestHandler;
 
 /**
- * @covers Nimbly\Syndicate\Router
+ * @covers Nimbly\Syndicate\Router\Router
  */
 class RouterTest extends TestCase
 {

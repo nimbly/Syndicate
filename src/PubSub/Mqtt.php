@@ -9,10 +9,11 @@ use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
 use Nimbly\Syndicate\ConnectionException;
-use Nimbly\Syndicate\LoopConsumerInterface;
+use Nimbly\Syndicate\SubscriberException;
+use Nimbly\Syndicate\SubscriberInterface;
 use PhpMqtt\Client\Exceptions\ConnectingToBrokerFailedException;
 
-class Mqtt implements PublisherInterface, LoopConsumerInterface
+class Mqtt implements PublisherInterface, SubscriberInterface
 {
 	/**
 	 * @param MqttClient $client
@@ -104,7 +105,7 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 				);
 			}
 			catch( Throwable $exception ){
-				throw new ConsumerException(
+				throw new SubscriberException(
 					message: "Failed to subscribe to topic.",
 					previous: $exception
 				);
@@ -139,7 +140,7 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new ConsumerException(
+			throw new SubscriberException(
 				message: "Failed to consume message.",
 				previous: $exception
 			);
@@ -164,8 +165,8 @@ class Mqtt implements PublisherInterface, LoopConsumerInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new ConsumerException(
-				message: "Failed to shutdown consumer.",
+			throw new SubscriberException(
+				message: "Failed to shutdown MQTT.",
 				previous: $exception
 			);
 		}

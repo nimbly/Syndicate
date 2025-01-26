@@ -25,7 +25,7 @@ use Monolog\Handler\ErrorLogHandler;
 use Nimbly\Syndicate\DeadletterPublisher;
 use Nimbly\Syndicate\Examples\Handlers\ExampleHandler;
 use Nimbly\Syndicate\Middleware\ValidateMessages;
-use Nimbly\Syndicate\Validators\JsonSchemaValidator;
+use Nimbly\Syndicate\Validator\JsonSchemaValidator;
 
 require_once __DIR__ . "/../vendor/autoload.php";
 

@@ -1,18 +1,18 @@
 <?php
 
-namespace Nimbly\Syndicate\Tests;
+namespace Nimbly\Syndicate\Tests\Filters;
 
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Queue\Mock;
-use Nimbly\Syndicate\ValidatorPublisher;
-use Nimbly\Syndicate\MessageValidationException;
-use Nimbly\Syndicate\Validators\JsonSchemaValidator;
+use Nimbly\Syndicate\Filter\ValidatorFilter;
+use Nimbly\Syndicate\Validator\JsonSchemaValidator;
+use Nimbly\Syndicate\Validator\MessageValidationException;
 
 /**
- * @covers Nimbly\Syndicate\ValidatorPublisher
+ * @covers Nimbly\Syndicate\Filter\ValidatorFilter
  */
-class ValidatorPublisherTest extends TestCase
+class ValidatorFilterTest extends TestCase
 {
 	public function test_missing_schema_throws_message_validation_exception(): void
 	{
@@ -34,7 +34,7 @@ class ValidatorPublisherTest extends TestCase
 			]
 		]);
 
-		$publisher = new ValidatorPublisher($validator, new Mock);
+		$publisher = new ValidatorFilter($validator, new Mock);
 
 		$this->expectException(MessageValidationException::class);
 		$publisher->publish(new Message("vegetables", "Ok"));
@@ -60,7 +60,7 @@ class ValidatorPublisherTest extends TestCase
 			])
 		]);
 
-		$publisher = new ValidatorPublisher($validator, new Mock);
+		$publisher = new ValidatorFilter($validator, new Mock);
 
 		$this->expectException(MessageValidationException::class);
 		$publisher->publish(new Message("fruits", \json_encode(["name" => "peaches", "published_at" => date("c")])));
@@ -87,7 +87,7 @@ class ValidatorPublisherTest extends TestCase
 		]);
 
 		$mockPublisher = new Mock;
-		$publisher = new ValidatorPublisher($validator, $mockPublisher);
+		$publisher = new ValidatorFilter($validator, $mockPublisher);
 		$message = new Message("fruits", \json_encode(["name" => "apples", "published_at" => date("c")]));
 
 		$publisher->publish($message);

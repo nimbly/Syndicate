@@ -1,6 +1,8 @@
 <?php
 
-namespace Nimbly\Syndicate;
+namespace Nimbly\Syndicate\Validator;
+
+use Nimbly\Syndicate\Message;
 
 interface ValidatorInterface
 {

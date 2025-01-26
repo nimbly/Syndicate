@@ -1,8 +1,16 @@
 <?php
 
-namespace Nimbly\Syndicate;
+namespace Nimbly\Syndicate\Filter;
 
-class DeadletterPublisher implements PublisherInterface
+use Nimbly\Syndicate\Message;
+use Nimbly\Syndicate\PublisherInterface;
+
+/**
+ * This filter publishes your Message to a deadletter using the publisher you
+ * specify but uses the provided topic in the constructor instead of the Message's
+ * topic.
+ */
+class DeadletterFilter implements PublisherInterface
 {
 	/**
 	 * @param PublisherInterface $publisher The publisher instance to publish deadletter messages to.

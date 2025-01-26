@@ -1,12 +1,12 @@
 <?php
 
-namespace Nimbly\Syndicate\Tests;
+namespace Nimbly\Syndicate\Tests\Router;
 
-use Nimbly\Syndicate\Consume;
+use Nimbly\Syndicate\Router\Consume;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers Nimbly\Syndicate\Consume
+ * @covers Nimbly\Syndicate\Router\Consume
  */
 class ConsumeAttributeTest extends TestCase
 {

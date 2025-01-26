@@ -1,8 +1,9 @@
 <?php
 
-namespace Nimbly\Syndicate;
+namespace Nimbly\Syndicate\Validator;
 
 use Exception;
+use Nimbly\Syndicate\Message;
 use Opis\JsonSchema\Errors\ValidationError;
 
 /**
@@ -30,7 +31,9 @@ class MessageValidationException extends Exception
 	}
 
 	/**
-	 * Get the Opis ValidationError,
+	 * Get the Opis ValidationError instance.
+	 *
+	 * This instance contains details on what and where the Message failed validation.
 	 *
 	 * @return ValidationError|null
 	 */

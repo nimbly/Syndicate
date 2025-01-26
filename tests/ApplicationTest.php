@@ -6,7 +6,6 @@ use Mockery;
 use DateTime;
 use ReflectionClass;
 use Nimbly\Carton\Container;
-use Nimbly\Syndicate\Router;
 use Psr\Log\LoggerInterface;
 use Nimbly\Syndicate\Message;
 use UnexpectedValueException;
@@ -14,13 +13,14 @@ use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Queue\Mock;
 use Nimbly\Syndicate\Application;
-use Nimbly\Syndicate\RouterInterface;
-use Nimbly\Syndicate\RoutingException;
-use Nimbly\Syndicate\DeadletterPublisher;
-use Nimbly\Syndicate\MiddlewareInterface;
+use Nimbly\Syndicate\Router\Router;
+use Nimbly\Syndicate\Router\RouterInterface;
+use Nimbly\Syndicate\Router\RoutingException;
+use Nimbly\Syndicate\Filter\DeadletterFilter;
 use Nimbly\Syndicate\PubSub\Mock as PubSubMock;
 use Nimbly\Syndicate\Tests\Fixtures\TestHandler;
 use Nimbly\Syndicate\Tests\Fixtures\TestMiddleware;
+use Nimbly\Syndicate\Middleware\MiddlewareInterface;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
 /**
@@ -204,7 +204,7 @@ class ApplicationTest extends TestCase
 					};
 				}
 			},
-			deadletter: new DeadletterPublisher($mock, "deadletter")
+			deadletter: new DeadletterFilter($mock, "deadletter")
 		);
 
 		$application->listen("test_topic");

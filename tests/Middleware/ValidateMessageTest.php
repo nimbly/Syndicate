@@ -4,18 +4,18 @@ namespace Nimbly\Syndicate\Tests\Middleware;
 
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\Middleware\ValidateMessages;
+use Nimbly\Syndicate\Middleware\ValidateMessage;
 use Nimbly\Syndicate\Response;
-use Nimbly\Syndicate\Validators\JsonSchemaValidator;
+use Nimbly\Syndicate\Validator\JsonSchemaValidator;
 
 /**
- * @covers Nimbly\Syndicate\Middleware\ValidateMessages
+ * @covers Nimbly\Syndicate\Middleware\ValidateMessage
  */
-class ValidateMessagesTest extends TestCase
+class ValidateMessageTest extends TestCase
 {
-	public function test_handle_missing_schema(): void
+	public function test_handle_missing_schema_returns_response_deadletter(): void
 	{
-		$middleware = new ValidateMessages(
+		$middleware = new ValidateMessage(
 			new JsonSchemaValidator([
 				"fruits" => \json_encode([
 					"type" => "object",
@@ -42,15 +42,12 @@ class ValidateMessagesTest extends TestCase
 			}
 		);
 
-		$this->assertEquals(
-			Response::deadletter,
-			$response
-		);
+		$this->assertEquals(Response::deadletter, $response);
 	}
 
-	public function test_handle_invalid_message(): void
+	public function test_handle_invalid_message_returns_response_deadletter(): void
 	{
-		$middleware = new ValidateMessages(
+		$middleware = new ValidateMessage(
 			new JsonSchemaValidator([
 				"fruits" => \json_encode([
 					"type" => "object",
@@ -77,15 +74,12 @@ class ValidateMessagesTest extends TestCase
 			}
 		);
 
-		$this->assertEquals(
-			Response::deadletter,
-			$response
-		);
+		$this->assertEquals(Response::deadletter, $response);
 	}
 
-	public function test_handle_calls_next(): void
+	public function test_handle_successful_validation_calls_next(): void
 	{
-		$middleware = new ValidateMessages(
+		$middleware = new ValidateMessage(
 			new JsonSchemaValidator([
 				"fruits" => \json_encode([
 					"type" => "object",
@@ -112,9 +106,6 @@ class ValidateMessagesTest extends TestCase
 			}
 		);
 
-		$this->assertEquals(
-			Response::ack,
-			$response
-		);
+		$this->assertEquals(Response::ack, $response);
 	}
 }

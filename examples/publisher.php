@@ -24,7 +24,7 @@ use Predis\Client;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Queue\Redis;
 use Nimbly\Syndicate\ValidatorPublisher;
-use Nimbly\Syndicate\Validators\JsonSchemaValidator;
+use Nimbly\Syndicate\Validator\JsonSchemaValidator;
 
 require __DIR__ . "/../vendor/autoload.php";
 

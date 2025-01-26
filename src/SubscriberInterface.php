@@ -2,7 +2,10 @@
 
 namespace Nimbly\Syndicate;
 
-interface LoopConsumerInterface
+/**
+ * Subscribers are integrations that require subscriptions to be declared: a topic name and a callback.
+ */
+interface SubscriberInterface
 {
 	/**
 	 * Subscribe a topic(s) to a callback.
@@ -11,7 +14,7 @@ interface LoopConsumerInterface
 	 * @param callable $callback The callback function to trigger when a message from topic is received.
 	 * @param array<string,mixed> $options Key/value pairs of options. This is dependent on the implementation being used.
 	 * @throws ConnectionException
-	 * @throws ConsumerException
+	 * @throws SubscriberException
 	 * @return void
 	 */
 	public function subscribe(string|array $topics, callable $callback, array $options = []): void;
@@ -21,7 +24,7 @@ interface LoopConsumerInterface
 	 *
 	 * @param array<string,mixed> $options Key/value pairs of options. This is dependent on the implementation being used.
 	 * @throws ConnectionException
-	 * @throws ConsumerException
+	 * @throws SubscriberException
 	 * @return void
 	 */
 	public function loop(array $options = []): void;

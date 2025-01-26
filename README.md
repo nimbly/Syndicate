@@ -138,7 +138,7 @@ $application = new Application(
 
 ### Consumer
 
-The `consumer` parameter is any instance of `Nimbly\Syndicate\ConsumerInterface` or `Nimbly\Syndicate\LoopConsumerInterface` - the source where messages should be pulled from.
+The `consumer` parameter is any instance of `Nimbly\Syndicate\ConsumerInterface` or `Nimbly\Syndicate\SubscriberInterface` - the source where messages should be pulled from.
 
 ```php
 $consumer = new Sqs(
@@ -149,8 +149,8 @@ $consumer = new Sqs(
 );
 ```
 
-#### A note on the LoopConsumerInterface
-`LoopConsumerInterface` integrations (`PubSub\Mqtt` and `PubSub\Redis`) behave a little differently than the other integrations in that the libraries that back them already have their own looping solution for consuming messages.
+#### A note on the SubscriberInterface
+`SubscriberInterface` integrations (`PubSub\Mqtt` and `PubSub\Redis`) behave a little differently than the other integrations in that the libraries that back them already have their own looping solution for consuming messages.
 
 These integrations do not support `ack`ing or `nack`ing of messages due to the nature of pubsub. `deadletter`ing from handlers is possible by adding the `Nimbly\Syndicate\Middleware\DeadletterMessage` middleware and returning `Response::deadletter` from your handlers. Any other return value from your handlers will be completely ignored by these integrations.
 
@@ -265,7 +265,7 @@ The `logger` parameter allows you to pass a `Psr\Log\LoggerInterface` instance t
 
 ### Middleware
 
-The `middleware` parameter allows you to pass an array of `Nimbly\Syndicate\MiddlewareInterface` instances or class-strings that represent an implementation of `Nimbly\Syndicate\MiddlewareInterface`.
+The `middleware` parameter allows you to pass an array of `Nimbly\Syndicate\Middleware\MiddlewareInterface` instances or class-strings that represent an implementation of `Nimbly\Syndicate\Middleware\MiddlewareInterface`.
 
 The middleware chain supports dual pass (both the incoming consumer `Message` instance and whatever value the handler returned.)
 
@@ -315,7 +315,7 @@ $application->listen(
 );
 ```
 
-For consumers that implement the `LoopConsumerInterface` (curently `PubSub\Redis` and `PubSub\Mqtt`), you can pass in an array of `location` strings representing `topics` to subscribe to or a comma seperated list of topic names.
+For consumers that implement the `SubscriberInterface` (curently `PubSub\Redis` and `PubSub\Mqtt`), you can pass in an array of `location` strings representing `topics` to subscribe to or a comma seperated list of topic names.
 
 ```php
 $application->listen(
@@ -462,7 +462,7 @@ Possible response enum values:
 
 * `Response::ack` - Acknowledge the message (removes the message from the source)
 * `Response::nack` - Do not acknowledge the message (the message will be made availble again for processing after a short time, also known as releasing the message)
-* `Response::deadletter` - Move the message to a separate deadletter location, provided in the `Application` constructor. If you are using a `LoopConsumerInterface` instance, be sure to include the `DeadletterMiddleware`.
+* `Response::deadletter` - Move the message to a separate deadletter location, provided in the `Application` constructor. If you are using a `SubscriberInterface` instance, be sure to include the `DeadletterMiddleware`.
 
 **NOTE:** If no response value is returned by the handler (eg, `null` or `void`), or the response value is not one of `Response::nack` or `Response::deadletter` it is assumed the message should be `ack`ed. Best practice is to be explicit and always return a `Response` enum value.
 

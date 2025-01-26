@@ -3,11 +3,11 @@
 namespace Nimbly\Syndicate\PubSub;
 
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\LoopConsumerInterface;
+use Nimbly\Syndicate\SubscriberInterface;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
 
-class Mock implements PublisherInterface, LoopConsumerInterface
+class Mock implements PublisherInterface, SubscriberInterface
 {
 	protected bool $isShutdown = false;
 

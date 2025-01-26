@@ -1,25 +1,22 @@
 <?php
 
-namespace Nimbly\Syndicate\Tests;
+namespace Nimbly\Syndicate\Tests\Filters;
 
-use Nimbly\Syndicate\DeadletterPublisher;
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\Queue\Mock;
 use PHPUnit\Framework\TestCase;
+use Nimbly\Syndicate\Queue\Mock;
+use Nimbly\Syndicate\Filter\DeadletterFilter;
 
 /**
- * @covers Nimbly\Syndicate\DeadletterPublisher
+ * @covers Nimbly\Syndicate\Filter\DeadletterFilter
  */
-class DeadletterPublisherTest extends TestCase
+class DeadletterFilterTest extends TestCase
 {
 	public function test_publish_returns_receipt(): void
 	{
 		$mock = new Mock;
 
-		$deadletter = new DeadletterPublisher(
-			$mock,
-			"deadletter"
-		);
+		$deadletter = new DeadletterFilter($mock, "deadletter");
 
 		$receipt = $deadletter->publish(
 			new Message("test", "payload", ["attr1" => "val1"], ["hdr1" => "val1"])
@@ -32,11 +29,7 @@ class DeadletterPublisherTest extends TestCase
 	{
 		$mock = new Mock;
 
-		$deadletter = new DeadletterPublisher(
-			$mock,
-			"deadletter"
-		);
-
+		$deadletter = new DeadletterFilter($mock, "deadletter");
 		$deadletter->publish(
 			new Message("test", "payload", ["attr1" => "val1"], ["hdr1" => "val1"])
 		);

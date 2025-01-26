@@ -3,12 +3,12 @@
 namespace Nimbly\Syndicate\Tests;
 
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\MessageValidationException;
+use Nimbly\Syndicate\Validator\MessageValidationException;
 use Opis\JsonSchema\Validator;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers Nimbly\Syndicate\MessageValidationException
+ * @covers Nimbly\Syndicate\Validator\MessageValidationException
  */
 class MessageValidationExceptionTest extends TestCase
 {

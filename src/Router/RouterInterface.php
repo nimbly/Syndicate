@@ -1,6 +1,8 @@
 <?php
 
-namespace Nimbly\Syndicate;
+namespace Nimbly\Syndicate\Router;
+
+use Nimbly\Syndicate\Message;
 
 interface RouterInterface
 {

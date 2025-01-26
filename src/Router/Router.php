@@ -1,10 +1,9 @@
 <?php
 
-namespace Nimbly\Syndicate;
+namespace Nimbly\Syndicate\Router;
 
 use Flow\JSONPath\JSONPath;
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\RouterInterface;
 use ReflectionClass;
 use UnexpectedValueException;
 

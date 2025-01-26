@@ -2,8 +2,15 @@
 
 namespace Nimbly\Syndicate;
 
+/**
+ * A Message instance represents a message that should be published or a message
+ * that was consumed. No parsing of the message payload is done and is up to you
+ * to parse/decode as needed.
+ */
 class Message
 {
+	protected mixed $parsed_payload = null;
+
 	/**
 	 * @param string $topic The topic or queue name/URL to publish this message to.
 	 * @param string $payload The payload (or body) of the message.
@@ -69,5 +76,26 @@ class Message
 	public function getReference(): mixed
 	{
 		return $this->reference;
+	}
+
+	/**
+	 * Sets the parsed payload of the message.
+	 *
+	 * @param mixed $parsed_payload
+	 * @return void
+	 */
+	public function setParsedPayload(mixed $parsed_payload): void
+	{
+		$this->parsed_payload = $parsed_payload;
+	}
+
+	/**
+	 * Get the parsed payload of the message.
+	 *
+	 * @return mixed
+	 */
+	public function getParsedPayload(): mixed
+	{
+		return $this->parsed_payload;
 	}
 }

@@ -2,7 +2,7 @@
 
 namespace Nimbly\Syndicate\Tests\Fixtures;
 
-use Nimbly\Syndicate\Consume;
+use Nimbly\Syndicate\Router\Consume;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;
 

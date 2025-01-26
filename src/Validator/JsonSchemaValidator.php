@@ -1,11 +1,9 @@
 <?php
 
-namespace Nimbly\Syndicate\Validators;
+namespace Nimbly\Syndicate\Validator;
 
 use Nimbly\Syndicate\Message;
 use Opis\JsonSchema\Validator;
-use Nimbly\Syndicate\ValidatorInterface;
-use Nimbly\Syndicate\MessageValidationException;
 
 class JsonSchemaValidator implements ValidatorInterface
 {

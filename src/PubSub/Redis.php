@@ -10,10 +10,10 @@ use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\PublisherInterface;
 use Nimbly\Syndicate\ConnectionException;
-use Nimbly\Syndicate\LoopConsumerInterface;
+use Nimbly\Syndicate\SubscriberInterface;
 use Predis\Connection\ConnectionException as RedisConnectionException;
 
-class Redis implements PublisherInterface, LoopConsumerInterface
+class Redis implements PublisherInterface, SubscriberInterface
 {
 	protected ?Consumer $loop = null;
 
