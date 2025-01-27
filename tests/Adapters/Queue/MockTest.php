@@ -1,6 +1,6 @@
 <?php
 
-namespace Nimbly\Syndicate\Tests\Queue;
+namespace Nimbly\Syndicate\Tests\Adapters\Queue;
 
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;

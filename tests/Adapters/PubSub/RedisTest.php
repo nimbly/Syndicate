@@ -1,6 +1,6 @@
 <?php
 
-namespace Nimbly\Syndicate\Tests\PubSub;
+namespace Nimbly\Syndicate\Tests\Adapters\PubSub;
 
 use Mockery;
 use Exception;
@@ -10,10 +10,11 @@ use Predis\PubSub\Consumer;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\Adapter\PubSub\Redis;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\ConnectionException;
+use Nimbly\Syndicate\SubscriberException;
+use Nimbly\Syndicate\Adapter\PubSub\Redis;
 use Predis\Connection\NodeConnectionInterface;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Predis\Connection\ConnectionException as RedisConnectionException;
@@ -189,7 +190,7 @@ class RedisTest extends TestCase
 
 		$consumer = new Redis($mock);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(SubscriberException::class);
 		$consumer->subscribe("test", "strtolower");
 	}
 
@@ -324,7 +325,7 @@ class RedisTest extends TestCase
 		$consumer->shutdown();
 	}
 
-	public function test_shutdown_failure_throws_consumer_exception(): void
+	public function test_shutdown_failure_throws_subscriber_exception(): void
 	{
 		$mock = Mockery::mock(Client::class);
 		$mockConsumer = Mockery::mock(Consumer::class)->shouldAllowMockingProtectedMethods();
@@ -337,7 +338,7 @@ class RedisTest extends TestCase
 
 		$consumer = new Redis($mock);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(SubscriberException::class);
 		$consumer->shutdown();
 	}
 }

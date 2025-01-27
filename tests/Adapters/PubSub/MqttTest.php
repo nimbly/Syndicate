@@ -1,6 +1,6 @@
 <?php
 
-namespace Nimbly\Syndicate\Tests\PubSub;
+namespace Nimbly\Syndicate\Tests\Adapters\PubSub;
 
 use Closure;
 use Mockery;
@@ -8,10 +8,11 @@ use Exception;
 use Nimbly\Syndicate\Message;
 use PhpMqtt\Client\MqttClient;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\Adapter\PubSub\Mqtt;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
+use Nimbly\Syndicate\Adapter\PubSub\Mqtt;
 use Nimbly\Syndicate\ConnectionException;
+use Nimbly\Syndicate\SubscriberException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use PhpMqtt\Client\Exceptions\ConnectingToBrokerFailedException;
 
@@ -166,7 +167,7 @@ class MqttTest extends TestCase
 		$consumer->subscribe("test", "strtolower");
 	}
 
-	public function test_subscribe_failure_throws_consumer_exception(): void
+	public function test_subscribe_failure_throws_subscriber_exception(): void
 	{
 		$mock = Mockery::mock(MqttClient::class);
 
@@ -179,7 +180,7 @@ class MqttTest extends TestCase
 
 		$consumer = new Mqtt($mock);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(SubscriberException::class);
 		$consumer->subscribe("test", "strtolower");
 	}
 
@@ -225,17 +226,13 @@ class MqttTest extends TestCase
 
 		$mock->shouldReceive("isConnected")
 			->andReturn(false, true);
-		$mock->shouldReceive("connect");
-		$mock->shouldReceive("loop");
 		$mock->shouldReceive("disconnect")
-			->andThrows(new ConnectingToBrokerFailedException(0, "Failure"));
+			->andThrows(new Exception("Failure"));
 
 		$consumer = new Mqtt($mock);
 
 		$this->expectException(ConnectionException::class);
-		$consumer->loop();
-
-		$mock->shouldHaveReceived("disconnect");
+		$consumer->__destruct();
 	}
 
 	public function test_loop_connecting_to_broker_exception_throws_connection_exception(): void
@@ -305,7 +302,7 @@ class MqttTest extends TestCase
 		$consumer->shutdown();
 	}
 
-	public function test_shutdown_general_failure_throws_consumer_exception(): void
+	public function test_shutdown_general_failure_throws_subscriber_exception(): void
 	{
 		$mock = Mockery::mock(MqttClient::class);
 
@@ -319,7 +316,7 @@ class MqttTest extends TestCase
 
 		$consumer = new Mqtt($mock);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(SubscriberException::class);
 		$consumer->shutdown();
 	}
 }
