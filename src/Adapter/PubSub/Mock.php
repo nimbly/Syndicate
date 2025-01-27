@@ -1,6 +1,6 @@
 <?php
 
-namespace Nimbly\Syndicate\PubSub;
+namespace Nimbly\Syndicate\Adapter\PubSub;
 
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\SubscriberInterface;

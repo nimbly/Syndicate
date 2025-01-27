@@ -7,7 +7,7 @@ use Exception;
 use Aws\Result;
 use Aws\Sqs\SqsClient;
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\Queue\Sqs;
+use Nimbly\Syndicate\Adapter\Queue\Sqs;
 use PHPUnit\Framework\TestCase;
 use Aws\Exception\CredentialsException;
 use Nimbly\Syndicate\ConsumerException;
@@ -16,7 +16,7 @@ use Nimbly\Syndicate\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
 /**
- * @covers Nimbly\Syndicate\Queue\Sqs
+ * @covers Nimbly\Syndicate\Adapter\Queue\Sqs
  */
 class SqsTest extends TestCase
 {

@@ -8,7 +8,7 @@ use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Message\AMQPMessage;
-use Nimbly\Syndicate\Queue\RabbitMQ;
+use Nimbly\Syndicate\Adapter\Queue\RabbitMQ;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\ConnectionException;
@@ -17,7 +17,7 @@ use PhpAmqpLib\Exception\AMQPConnectionClosedException;
 use PhpAmqpLib\Exception\AMQPConnectionBlockedException;
 
 /**
- * @covers Nimbly\Syndicate\Queue\RabbitMQ
+ * @covers Nimbly\Syndicate\Adapter\Queue\RabbitMQ
  */
 class RabbitMQTest extends TestCase
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Nimbly\Syndicate\PubSub;
+namespace Nimbly\Syndicate\Adapter\PubSub;
 
 use Nimbly\Capsule\Request;
 use Nimbly\Syndicate\Message;

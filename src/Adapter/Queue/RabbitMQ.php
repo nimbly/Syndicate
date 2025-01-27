@@ -1,6 +1,6 @@
 <?php
 
-namespace Nimbly\Syndicate\Queue;
+namespace Nimbly\Syndicate\Adapter\Queue;
 
 use Nimbly\Syndicate\ConnectionException;
 use Throwable;

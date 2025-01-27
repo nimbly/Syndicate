@@ -6,11 +6,13 @@ use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\PublisherInterface;
 
 /**
- * This filter publishes your Message to a deadletter using the publisher you
- * specify but uses the provided topic in the constructor instead of the Message's
- * topic.
+ * This filter redirects messages to the topic you provide in the
+ * filter rather than the topic provided in the Message instance.
+ *
+ * Some use cases are:
+ * 	- Publishing a Message to a deadletter location under a different topic or queue URL/name.
  */
-class DeadletterFilter implements PublisherInterface
+class RedirectFilter implements PublisherInterface
 {
 	/**
 	 * @param PublisherInterface $publisher The publisher instance to publish deadletter messages to.

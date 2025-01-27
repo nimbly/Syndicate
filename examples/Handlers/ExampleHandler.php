@@ -2,9 +2,9 @@
 
 namespace Nimbly\Syndicate\Examples\Handlers;
 
-use Nimbly\Syndicate\Consume;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;
+use Nimbly\Syndicate\Router\Consume;
 
 class ExampleHandler
 {

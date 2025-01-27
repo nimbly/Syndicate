@@ -8,7 +8,7 @@ use Exception;
 use Nimbly\Syndicate\Message;
 use PhpMqtt\Client\MqttClient;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\PubSub\Mqtt;
+use Nimbly\Syndicate\Adapter\PubSub\Mqtt;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\ConnectionException;
@@ -16,7 +16,7 @@ use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use PhpMqtt\Client\Exceptions\ConnectingToBrokerFailedException;
 
 /**
- * @covers Nimbly\Syndicate\PubSub\Mqtt
+ * @covers Nimbly\Syndicate\Adapter\PubSub\Mqtt
  */
 class MqttTest extends TestCase
 {

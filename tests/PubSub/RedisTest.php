@@ -10,7 +10,7 @@ use Predis\PubSub\Consumer;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\PubSub\Redis;
+use Nimbly\Syndicate\Adapter\PubSub\Redis;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\ConnectionException;
@@ -19,7 +19,7 @@ use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Predis\Connection\ConnectionException as RedisConnectionException;
 
 /**
- * @covers Nimbly\Syndicate\PubSub\Redis
+ * @covers Nimbly\Syndicate\Adapter\PubSub\Redis
  */
 class RedisTest extends TestCase
 {

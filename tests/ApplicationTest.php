@@ -11,17 +11,17 @@ use Nimbly\Syndicate\Message;
 use UnexpectedValueException;
 use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\Queue\Mock;
 use Nimbly\Syndicate\Application;
 use Nimbly\Syndicate\Router\Router;
+use Nimbly\Syndicate\Adapter\Queue\Mock;
+use Nimbly\Syndicate\Filter\RedirectFilter;
 use Nimbly\Syndicate\Router\RouterInterface;
 use Nimbly\Syndicate\Router\RoutingException;
-use Nimbly\Syndicate\Filter\DeadletterFilter;
-use Nimbly\Syndicate\PubSub\Mock as PubSubMock;
 use Nimbly\Syndicate\Tests\Fixtures\TestHandler;
 use Nimbly\Syndicate\Tests\Fixtures\TestMiddleware;
 use Nimbly\Syndicate\Middleware\MiddlewareInterface;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use Nimbly\Syndicate\Adapter\PubSub\Mock as PubSubMock;
 
 /**
  * @covers Nimbly\Syndicate\Application
@@ -204,7 +204,7 @@ class ApplicationTest extends TestCase
 					};
 				}
 			},
-			deadletter: new DeadletterFilter($mock, "deadletter")
+			deadletter: new RedirectFilter($mock, "deadletter")
 		);
 
 		$application->listen("test_topic");
@@ -332,7 +332,7 @@ class ApplicationTest extends TestCase
 		$reflectionMethod->invoke(
 			$application,
 			[
-				\Nimbly\Syndicate\PubSub\Mock::class
+				\Nimbly\Syndicate\Adapter\PubSub\Mock::class
 			]
 		);
 	}

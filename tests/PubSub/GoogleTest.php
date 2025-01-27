@@ -7,7 +7,7 @@ use Exception;
 use Nimbly\Syndicate\Message;
 use Google\Cloud\PubSub\Topic;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\PubSub\Google;
+use Nimbly\Syndicate\Adapter\PubSub\Google;
 use Google\Cloud\PubSub\PubSubClient;
 use Google\Cloud\PubSub\Subscription;
 use Nimbly\Syndicate\ConsumerException;
@@ -16,7 +16,7 @@ use Google\Cloud\PubSub\Message as PubSubMessage;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
 /**
- * @covers Nimbly\Syndicate\PubSub\Google
+ * @covers Nimbly\Syndicate\Adapter\PubSub\Google
  */
 class GoogleTest extends TestCase
 {

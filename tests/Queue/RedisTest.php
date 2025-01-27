@@ -7,7 +7,7 @@ use Exception;
 use Predis\Client;
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\Queue\Redis;
+use Nimbly\Syndicate\Adapter\Queue\Redis;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\ConnectionException;
@@ -16,7 +16,7 @@ use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Predis\Connection\ConnectionException as RedisConnectionException;
 
 /**
- * @covers Nimbly\Syndicate\Queue\Redis
+ * @covers Nimbly\Syndicate\Adapter\Queue\Redis
  */
 class RedisTest extends TestCase
 {

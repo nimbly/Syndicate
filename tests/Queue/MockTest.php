@@ -4,12 +4,12 @@ namespace Nimbly\Syndicate\Tests\Queue;
 
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\Queue\Mock;
+use Nimbly\Syndicate\Adapter\Queue\Mock;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 
 /**
- * @covers Nimbly\Syndicate\Queue\Mock
+ * @covers Nimbly\Syndicate\Adapter\Queue\Mock
  */
 class MockTest extends TestCase
 {

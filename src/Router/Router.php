@@ -124,8 +124,6 @@ class Router implements RouterInterface
 			$patterns = [$patterns];
 		}
 
-		$result = false;
-
 		foreach( $patterns as $pattern ){
 			$match = \preg_match(
 				\sprintf("/^%s$/", $this->buildRegex($pattern)),
@@ -136,10 +134,12 @@ class Router implements RouterInterface
 				throw new UnexpectedValueException("Regex is invalid.");
 			}
 
-			$result = $result || (bool) $match;
+			if( $match ){
+				return true;
+			}
 		}
 
-		return $result;
+		return false;
 	}
 
 	/**

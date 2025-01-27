@@ -12,13 +12,13 @@ use Nimbly\Syndicate\Message;
 use function PHPSTORM_META\map;
 use PHPUnit\Framework\TestCase;
 
-use Nimbly\Syndicate\PubSub\Webhook;
+use Nimbly\Syndicate\Adapter\PubSub\Webhook;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
 /**
- * @covers Nimbly\Syndicate\PubSub\Webhook
+ * @covers Nimbly\Syndicate\Adapter\PubSub\Webhook
  */
 class WebhookTest extends TestCase
 {

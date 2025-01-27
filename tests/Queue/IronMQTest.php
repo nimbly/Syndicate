@@ -8,14 +8,14 @@ use IronMQ\IronMQ;
 use IronCore\HttpException;
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\Queue\Iron;
+use Nimbly\Syndicate\Adapter\Queue\Iron;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
 /**
- * @covers Nimbly\Syndicate\Queue\Iron
+ * @covers Nimbly\Syndicate\Adapter\Queue\Iron
  */
 class IronMQTest extends TestCase
 {

@@ -4,19 +4,19 @@ namespace Nimbly\Syndicate\Tests\Filters;
 
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\Queue\Mock;
-use Nimbly\Syndicate\Filter\DeadletterFilter;
+use Nimbly\Syndicate\Adapter\Queue\Mock;
+use Nimbly\Syndicate\Filter\RedirectFilter;
 
 /**
- * @covers Nimbly\Syndicate\Filter\DeadletterFilter
+ * @covers Nimbly\Syndicate\Filter\RedirectFilter
  */
-class DeadletterFilterTest extends TestCase
+class RedirectFilterTest extends TestCase
 {
 	public function test_publish_returns_receipt(): void
 	{
 		$mock = new Mock;
 
-		$deadletter = new DeadletterFilter($mock, "deadletter");
+		$deadletter = new RedirectFilter($mock, "deadletter");
 
 		$receipt = $deadletter->publish(
 			new Message("test", "payload", ["attr1" => "val1"], ["hdr1" => "val1"])
@@ -29,7 +29,7 @@ class DeadletterFilterTest extends TestCase
 	{
 		$mock = new Mock;
 
-		$deadletter = new DeadletterFilter($mock, "deadletter");
+		$deadletter = new RedirectFilter($mock, "deadletter");
 		$deadletter->publish(
 			new Message("test", "payload", ["attr1" => "val1"], ["hdr1" => "val1"])
 		);

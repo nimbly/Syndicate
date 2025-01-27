@@ -46,7 +46,7 @@ Syndicate is a powerful framework able to both publish and consume messages - id
 | Google         | Y         | Y        | `google/cloud-pubsub:^2.0` |
 | Webhook        | Y         | N        | n/a |
 
-**NOTE:** Consumers denoted with **\*** indicate are known as "loop consumers" and they do not support `ack`ing, `nack`ing due to the nature of pubsub. Additionally, the `predis/predis` library currently does not play well with interrupts and gracefully stopping its internal pubsub loop. If using this integration, you should set the `signals` option to an empty array. See the **Consumer** section below for more details.
+**NOTE:** Consumers denoted with **\*** indicate are subscriber based and  do not support `ack`ing, `nack`ing due to the nature of pubsub. Additionally, the `predis/predis` library currently does not play well with interrupts and gracefully stopping its internal pubsub loop. If using this integration, you should set the `signals` option to an empty array. See the **Consumer** section below for more details.
 
 Is there an integration you would like to see supported? Let us know in [Github Discussions](https://github.com/nimbly/Syndicate/discussions) or open a Pull Request!
 
@@ -77,9 +77,11 @@ $message = new Message(
 $publisher->publish($message);
 ```
 
+You can also add any number of publishing filters for things like validating your messages against a JSON schema or redirecting messags to another topic. See **Publishing filters** section for more information.
+
 ## Application: Quick Start
 
-Create a consumer instance by selecting your integration.
+Create a consumer instance by selecting your adapter.
 
 ```php
 $consumer = new Sqs(
@@ -149,8 +151,8 @@ $consumer = new Sqs(
 );
 ```
 
-#### A note on the SubscriberInterface
-`SubscriberInterface` integrations (`PubSub\Mqtt` and `PubSub\Redis`) behave a little differently than the other integrations in that the libraries that back them already have their own looping solution for consuming messages.
+#### A note on SubscriberInterface adapters
+`SubscriberInterface` adapters (`PubSub\Mqtt` and `PubSub\Redis`) behave a little differently than the other adapters in that the libraries that back them already have their own looping solution for consuming messages.
 
 These integrations do not support `ack`ing or `nack`ing of messages due to the nature of pubsub. `deadletter`ing from handlers is possible by adding the `Nimbly\Syndicate\Middleware\DeadletterMessage` middleware and returning `Response::deadletter` from your handlers. Any other return value from your handlers will be completely ignored by these integrations.
 
@@ -159,7 +161,7 @@ $application = new Application(
 	consumer: new Mqtt(new MqttClient("localhost")),
 	middleware: [
 		new DeadletterMessage(
-			new DeadletterPublisher(
+			new RedirectFilter(
 				publisher: $redis,
 				topic: "deadletter"
 			)
@@ -178,7 +180,7 @@ $application = new Application(
 
 ### Router
 
-The `router` parameter is an instance of `Nimbly\Syndicate\Router`. This router relies on your handlers using the `Nimbly\Syndicate\Consume` attribute. Simply add a `#[Consume]` attribute with your routing criteria before your class methods on your handlers (please see **Handlers** and **Consume Attribute** sections for more details). Finally, pass these class names off to the `Router` instance.
+The `router` parameter is an instance of `Nimbly\Syndicate\Router\Router`. This router relies on your handlers using the `Nimbly\Syndicate\Router\Consume` attribute. Simply add a `#[Consume]` attribute with your routing criteria before your class methods on your handlers (please see **Handlers** and **Consume Attribute** sections for more details). Finally, pass these class names off to the `Router` instance.
 
 ```php
 $router = new Router(
@@ -211,20 +213,19 @@ $router = new Router(
 
 ### Deadletter
 
-The `deadletter` parameter allows you to define a deadletter location: a place to put messages that cannot be routed or processed for whatever reason. The `deadletter` is simply a `PublisherInterface` instance - however, a helper is provided with the `DeadletterPublisher` class.
+The `deadletter` parameter allows you to define a deadletter location: a place to put messages that cannot be routed or processed for whatever reason. The `deadletter` is simply a `PublisherInterface` instance - however, you will almost certainly need the `RedirectFilter` applied to send to a different topic.
 
 ```php
-$redis = new Nimbly\Syndicate\Queue\Redis(new Client);
+// Use Redis queue as our main consumer.
+$redis = new Nimbly\Syndicate\Adapter\Queue\Redis(new Client);
 
-$deadletter = new DeadletterPublisher(
-	$redis,
-	"deadletter"
-);
+// Redirect all messages to the "deadletter" topic in Redis.
+$deadletter = new RedirectFilter($redis, "deadletter");
 ```
 
 In this example, we would like to use a Redis queue for our deadletters and to push them into the `deadletter` queue.
 
-The `deadletter` implementation is used any time a message could not be routed and no default handler was provided *or* if you explicitly return `Response::deadletter` from your message handler.
+The `deadletter` implementation is used any time a message could not be routed and no default handler was provided *or* if you explicitly return `Response::deadletter` (see **Response** section for more information) from your message handler.
 
 ### Container
 
@@ -315,6 +316,10 @@ $application->listen(
 );
 ```
 
+### Location
+
+The `location` parameter is the topic name, queue name, or queue URL you will be listening on. This parameter value is dependent on which consumer implementation you are using.
+
 For consumers that implement the `SubscriberInterface` (curently `PubSub\Redis` and `PubSub\Mqtt`), you can pass in an array of `location` strings representing `topics` to subscribe to or a comma seperated list of topic names.
 
 ```php
@@ -322,10 +327,6 @@ $application->listen(
 	location: ["users", "orders"],
 );
 ```
-
-### Location
-
-The `location` parameter is the topic name, queue name, or queue URL you will be listening on. This parameter value is dependent on which consumer implementation you are using.
 
 ### Max Messages
 

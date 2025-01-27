@@ -1,6 +1,6 @@
 <?php
 
-namespace Nimbly\Syndicate\PubSub;
+namespace Nimbly\Syndicate\Adapter\PubSub;
 
 use Throwable;
 use Nimbly\Syndicate\Message;

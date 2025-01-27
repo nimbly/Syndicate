@@ -22,8 +22,8 @@
 
 use Predis\Client;
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\Queue\Redis;
-use Nimbly\Syndicate\ValidatorPublisher;
+use Nimbly\Syndicate\Adapter\Queue\Redis;
+use Nimbly\Syndicate\Filter\ValidatorFilter;
 use Nimbly\Syndicate\Validator\JsonSchemaValidator;
 
 require __DIR__ . "/../vendor/autoload.php";
@@ -32,7 +32,7 @@ require __DIR__ . "/../vendor/autoload.php";
  * Use the fruits.json schema to validate all messages
  * published to the "fruits" topic.
  */
-$publisher = new ValidatorPublisher(
+$publisher = new ValidatorFilter(
 	validator: new JsonSchemaValidator([
 		"fruits" => \file_get_contents(__DIR__ . "/schemas/fruits.json")
 	]),

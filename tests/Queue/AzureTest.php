@@ -8,7 +8,7 @@ use ReflectionObject;
 use Nimbly\Capsule\Response;
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\Queue\Azure;
+use Nimbly\Syndicate\Adapter\Queue\Azure;
 use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\PublisherException;
 use Nimbly\Syndicate\ConnectionException;
@@ -21,7 +21,7 @@ use MicrosoftAzure\Storage\Queue\Models\ListMessagesOptions;
 use MicrosoftAzure\Storage\Common\Exceptions\ServiceException;
 
 /**
- * @covers Nimbly\Syndicate\Queue\Azure
+ * @covers Nimbly\Syndicate\Adapter\Queue\Azure
  */
 class AzureTest extends TestCase
 {

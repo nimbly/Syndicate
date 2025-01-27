@@ -20,7 +20,7 @@ use Predis\Client;
 use Monolog\Logger;
 use Nimbly\Syndicate\Router;
 use Nimbly\Syndicate\Application;
-use Nimbly\Syndicate\Queue\Redis;
+use Nimbly\Syndicate\Adapter\Queue\Redis;
 use Monolog\Handler\ErrorLogHandler;
 use Nimbly\Syndicate\DeadletterPublisher;
 use Nimbly\Syndicate\Examples\Handlers\ExampleHandler;

@@ -5,11 +5,11 @@ namespace Nimbly\Syndicate\Tests\PubSub;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\PubSub\Mock;
+use Nimbly\Syndicate\Adapter\PubSub\Mock;
 use Nimbly\Syndicate\PublisherException;
 
 /**
- * @covers Nimbly\Syndicate\PubSub\Mock
+ * @covers Nimbly\Syndicate\Adapter\PubSub\Mock
  */
 class MockTest extends TestCase
 {

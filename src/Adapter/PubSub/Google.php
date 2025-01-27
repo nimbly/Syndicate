@@ -1,6 +1,6 @@
 <?php
 
-namespace Nimbly\Syndicate\PubSub;
+namespace Nimbly\Syndicate\Adapter\PubSub;
 
 use Google\Cloud\PubSub\Message as GoogleMessage;
 use Throwable;
