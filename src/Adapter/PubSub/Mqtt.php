@@ -140,7 +140,7 @@ class Mqtt implements PublisherInterface, SubscriberInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new SubscriberException(
+			throw new ConsumerException(
 				message: "Failed to consume message.",
 				previous: $exception
 			);
@@ -166,7 +166,7 @@ class Mqtt implements PublisherInterface, SubscriberInterface
 		}
 		catch( Throwable $exception ){
 			throw new SubscriberException(
-				message: "Failed to shutdown MQTT.",
+				message: "Failed to shutdown subscriber.",
 				previous: $exception
 			);
 		}
