@@ -4,7 +4,6 @@ namespace Nimbly\Syndicate\Validator;
 
 use Exception;
 use Nimbly\Syndicate\Message;
-use Opis\JsonSchema\Errors\ValidationError;
 
 /**
  * This exception is thrown when a Message has failed validation when
@@ -14,8 +13,8 @@ class MessageValidationException extends Exception
 {
 	public function __construct(
 		string $message,
-		protected Message $failedMessage,
-		protected ?ValidationError $validationError = null)
+		protected Message $failedMessage
+	)
 	{
 		parent::__construct($message);
 	}
@@ -28,17 +27,5 @@ class MessageValidationException extends Exception
 	public function getFailedMessage(): Message
 	{
 		return $this->failedMessage;
-	}
-
-	/**
-	 * Get the Opis ValidationError instance.
-	 *
-	 * This instance contains details on what and where the Message failed validation.
-	 *
-	 * @return ValidationError|null
-	 */
-	public function getValidationError(): ?ValidationError
-	{
-		return $this->validationError;
 	}
 }

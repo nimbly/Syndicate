@@ -59,4 +59,13 @@ class MessageTest extends TestCase
 			$message->getReference()
 		);
 	}
+
+	public function test_set_parsed_payload(): void
+	{
+		$payload = ["id" => "6f7383c4-e34b-4ba6-b1da-b5600f492098", "name" => "John Doe"];
+		$message = new Message("test", \json_encode($payload));
+		$message->setParsedPayload($payload);
+
+		$this->assertEquals($payload, $message->getParsedPayload());
+	}
 }

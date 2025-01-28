@@ -3,18 +3,18 @@
 namespace Nimbly\Syndicate\Tests\Middleware;
 
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\Middleware\ParseJsonPayload;
+use Nimbly\Syndicate\Middleware\ParseJsonMessage;
 use PHPUnit\Framework\TestCase;
 use UnexpectedValueException;
 
 /**
- * @covers Nimbly\Syndicate\Middleware\ParseJsonPayload
+ * @covers Nimbly\Syndicate\Middleware\ParseJsonMessage
  */
-class ParseJsonPayloadTest extends TestCase
+class ParseJsonMessageTest extends TestCase
 {
 	public function test_invalid_json_throws_unexpected_value_exception(): void
 	{
-		$middleware = new ParseJsonPayload;
+		$middleware = new ParseJsonMessage;
 
 		$this->expectException(UnexpectedValueException::class);
 		$middleware->handle(
@@ -25,7 +25,7 @@ class ParseJsonPayloadTest extends TestCase
 
 	public function test_message_contains_parsed_payload(): void
 	{
-		$middleware = new ParseJsonPayload;
+		$middleware = new ParseJsonMessage;
 
 		$payload = ["status" => "ok", "published_at" => "2025-01-25T17:25:23Z"];
 
@@ -42,7 +42,7 @@ class ParseJsonPayloadTest extends TestCase
 
 	public function test_associative_array_parsing(): void
 	{
-		$middleware = new ParseJsonPayload(associative: true);
+		$middleware = new ParseJsonMessage(associative: true);
 
 		$payload = ["status" => "ok", "published_at" => "2025-01-25T17:25:23Z"];
 

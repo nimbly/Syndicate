@@ -74,7 +74,7 @@ class Router implements RouterInterface
 	{
 		foreach( $this->routes as $handler => $route ){
 			if( $this->matchString($message->getTopic(), $route->getTopic()) &&
-				$this->matchJson($message->getPayload(), $route->getPayload()) &&
+				$this->matchJson($message->getParsedPayload() ?: $message->getPayload(), $route->getPayload()) &&
 				$this->matchKeyValuePairs($message->getHeaders(), $route->getHeaders()) &&
 				$this->matchKeyValuePairs($message->getAttributes(), $route->getAttributes())) {
 				return $handler;
@@ -111,7 +111,7 @@ class Router implements RouterInterface
 	 * If more than one pattern is provided, the results are OR'ed.
 	 *
 	 * @param string $string
-	 * @param string|array<string> $patterns
+	 * @param string|array<string> $patterns Match *any* of the patterns.
 	 * @return boolean
 	 */
 	protected function matchString(string $string, string|array $patterns): bool
@@ -146,20 +146,22 @@ class Router implements RouterInterface
 	 * Match a JSON string against an array of JSON paths and
 	 * patterns.
 	 *
-	 * @param string $json
+	 * @param string|array|object $data
 	 * @param array<string,string|array<string>> $patterns
 	 * @return boolean
 	 */
-	protected function matchJson(string $json, array $patterns): bool
+	protected function matchJson(string|array|object $data, array $patterns): bool
 	{
 		if( empty($patterns) ){
 			return true;
 		}
 
-		$data = \json_decode($json, true);
+		if( \is_string($data) ){
+			$data = \json_decode($data, true);
 
-		if( \json_last_error() !== JSON_ERROR_NONE ){
-			throw new UnexpectedValueException("Payload was not able to be JSON decoded.");
+			if( \json_last_error() !== JSON_ERROR_NONE ){
+				throw new UnexpectedValueException("Payload was not able to be JSON decoded.");
+			}
 		}
 
 		$json = new JSONPath($data);

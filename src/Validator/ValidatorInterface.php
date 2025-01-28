@@ -11,7 +11,7 @@ interface ValidatorInterface
 	 *
 	 * @param Message $message The message instance to validate.
 	 * @throws MessageValidationException
-	 * @return boolean Always returns `true`. If message is not valid, a `MessageValidationException` will be thrown.
+	 * @return boolean Should always returns `true`. If message is not valid, a `MessageValidationException` should be thrown.
 	 */
 	public function validate(Message $message): bool;
 }

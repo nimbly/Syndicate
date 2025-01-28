@@ -49,7 +49,7 @@ class JsonSchemaValidator implements ValidatorInterface
 		);
 
 		if( $result->hasError() ){
-			throw new MessageValidationException(
+			throw new JsonSchemaValidationException(
 				"Message failed JSON schema validation.",
 				$message,
 				$result->error()

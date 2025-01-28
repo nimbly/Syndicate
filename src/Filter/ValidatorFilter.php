@@ -35,7 +35,12 @@ class ValidatorFilter implements PublisherInterface
 	 */
 	public function publish(Message $message, array $options = []): ?string
 	{
-		$this->validator->validate($message);
+		if( $this->validator->validate($message) === false ){
+			throw new MessageValidationException(
+				"Message failed validation.",
+				$message
+			);
+		}
 
 		return $this->publisher->publish($message, $options);
 	}

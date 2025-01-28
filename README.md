@@ -27,7 +27,7 @@ Syndicate is a powerful framework able to both publish and consume messages - id
 
 ### Queues
 
-| Integration    | Publish   | Consume  | Library |
+| Adapter        | Publish   | Consume  | Library |
 | -------------- | --------- | -------- | ------- |
 | Redis          | Y         | Y        | `predis/predis:^2.0` |
 | Azure          | Y         | Y        | `microsoft/azure-storage-queue:^1.3` |
@@ -38,7 +38,7 @@ Syndicate is a powerful framework able to both publish and consume messages - id
 
 ### PubSubs
 
-| Integration    | Publish   | Consume  | Library |
+| Adapter        | Publish   | Consume  | Library |
 | -------------- | --------- | -------- | ------- |
 | Redis          | Y         | Y*       | `predis/predis:^2.0` |
 | SNS            | Y         | N        | `aws/aws-sdk-php:^3.336` |
@@ -46,7 +46,7 @@ Syndicate is a powerful framework able to both publish and consume messages - id
 | Google         | Y         | Y        | `google/cloud-pubsub:^2.0` |
 | Webhook        | Y         | N        | n/a |
 
-**NOTE:** Consumers denoted with **\*** indicate are subscriber based and  do not support `ack`ing, `nack`ing due to the nature of pubsub. Additionally, the `predis/predis` library currently does not play well with interrupts and gracefully stopping its internal pubsub loop. If using this integration, you should set the `signals` option to an empty array. See the **Consumer** section below for more details.
+**NOTE:** Consumers denoted with **\*** indicate subscriber based adapters and do not support `ack`ing or `nack`ing due to the nature of pubsub. Additionally, the `predis/predis` library currently does not play well with interrupts and gracefully stopping its internal pubsub loop. If using this adapter, you should set the `signals` option to an empty array. See the **Consumer** section below for more details.
 
 Is there an integration you would like to see supported? Let us know in [Github Discussions](https://github.com/nimbly/Syndicate/discussions) or open a Pull Request!
 
@@ -62,7 +62,7 @@ composer require nimbly/syndicate
 
 A publisher sends (aka publishes) messages to a known location like a queue or to a PubSub topic.
 
-Select an integration you would like to publish messages to. In this example, we will be publishing messags to an SNS topic.
+Select an adapter you would like to publish messages to. In this example, we will be publishing messags to an SNS topic.
 
 ```php
 $publisher = new Sns(
@@ -70,7 +70,7 @@ $publisher = new Sns(
 );
 
 $message = new Message(
-	topic: "arn:aws:sns:us-west-2:010393102219:orders",
+	topic: "arn:aws:sns:us-west-2:123456789012:orders",
 	payload: \json_encode($order)
 );
 
@@ -123,7 +123,7 @@ $application = new Application(
 		App\Consumer\Handlers\UsersHandler::class,
 		App\Consumer\Handlers\OrdersHandler::class,
 	]),
-	deadletter: new DeadletterPublisher(
+	deadletter: new RedirectFilter(
 		$consumer,
 		"https://sqs.us-west-2.amazonaws.com/123456789012/deadletter",
 	),
@@ -154,7 +154,7 @@ $consumer = new Sqs(
 #### A note on SubscriberInterface adapters
 `SubscriberInterface` adapters (`PubSub\Mqtt` and `PubSub\Redis`) behave a little differently than the other adapters in that the libraries that back them already have their own looping solution for consuming messages.
 
-These integrations do not support `ack`ing or `nack`ing of messages due to the nature of pubsub. `deadletter`ing from handlers is possible by adding the `Nimbly\Syndicate\Middleware\DeadletterMessage` middleware and returning `Response::deadletter` from your handlers. Any other return value from your handlers will be completely ignored by these integrations.
+These adapters do not support `ack`ing or `nack`ing of messages due to the nature of pubsub. `deadletter`ing from handlers is possible by adding the `Nimbly\Syndicate\Middleware\DeadletterMessage` middleware and returning `Response::deadletter` from your handlers. Any other return value from your handlers will be completely ignored by these adapters.
 
 ```php
 $application = new Application(
@@ -355,7 +355,7 @@ Syndicate will call your handlers with full dependency resolution and injection 
 namespace App\Consumer\Handlers;
 
 use App\Services\EmailService;
-use Nimbly\Syndicate\Consume;
+use Nimbly\Syndicate\Router\Consume;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;
 
@@ -393,7 +393,7 @@ class UsersHandler
 
 ### Consume Attribute
 
-The `#[Consume]` attribute allows you to add routing criteria/filters to your handlers. The criteria supported are:
+The `Nimbly\Syndicate\Router\Consume` attribute allows you to add routing criteria/filters to your handlers. The criteria supported are:
 
 * `topic` The topic name or an array of names.
 * `payload` An array of key/value pair of JSON Path statements to a string or array of strings to match.
@@ -496,16 +496,16 @@ public function onUserRegistered(Message $message, EmailService $email): Respons
 
 ## Schema validation
 
-A good practice is to validate your messages before publishing or at least within your unit tests. Syndicate offers a `ValidatorPublisher` publisher class-wrapper that can assist in this: each message will be validated against your validator before being published. Currently, only a `JsonSchemaValidator` is available.
+A good practice is to validate your messages before publishing or at least within your unit tests. Syndicate offers a `ValidatorFilter` publisher that can assist in this: each message will be validated against your validator before being published. Currently, only a `JsonSchemaValidator` is available.
 
-If the message failes validation, a `MessageValidationException` will be thrown.
+If the message fails validation, a `MessageValidationException` will be thrown.
 
 ### JSON Schema validator
 
 You pass in the actual publisher instance and a key/value pair array of topics to a JSON schema that messages in that topic/location must validate against.
 
 ```php
-$publisher = new ValidatorPublisher(
+$publisher = new ValidatorFilter(
 	new JsonSchemaValidator([
 		"fruits" => \file_get_contents(__DIR__ . "/schemas/fruits.json"),
 		"veggies" => \file_get_contents(__DIR__ . "/schemas/veggies.json")
@@ -518,11 +518,34 @@ $publisher->publish(new Message("veggies", \json_encode($payload)));
 
 In the example above, the `Mqtt` publisher will be used to publish messages and the `Message` instance being published will be validated against the `veggies` JSON schema.
 
-## ValidateMessages middleware
+### AsyncAPI validator
 
-Syndicate ships with a middleware to aid in validating incoming consumed messages. You must supply the `ValidatorInterface` instance to use for validating messages.
+As soon as a good [AsyncAPI](https://www.asyncapi.com/) validator for PHP is available, we will be sure to add it.
 
-If validation failes, the message will attempted to be deadlettered.
+```php
+$validator = new AsyncAPIValidator($schema);
+$validator->validate($message);
+```
+
+## Middleware
+
+All middleware should implement `Nimbly\Syndicate\Middleware\MiddlewareInterface`. The middleware chain supports dual pass: both the incoming consumer `Message` instance and whatever value the handler returned.
+
+Middleware is applied globally to all incoming messages and outgoing responses from your handler and is processed in the order you have defined in the `Application` constructor.
+
+Below are some prebuilt middleware that you may to add to your application.
+
+### ParseJsonMessage
+
+This middleware will JSON decode your Message payload and make the result available on the message via `getParsedBody` method.
+
+If the payload cannot be JSON decoded, an `UnexpectedValueException` is thrown.
+
+### ValidateMessage
+
+This middleware will validate *incoming* consumed messages. You must supply the `ValidatorInterface` instance to use for validating messages.
+
+If validation fails, the message will attempted to be deadlettered.
 
  ```php
 $middleware = new ValidateMessage(
@@ -531,6 +554,16 @@ $middleware = new ValidateMessage(
 		"veggies" => \file_get_contents(__DIR__ . "/schemas/veggies.json")
 	])
 );
+```
+
+### DeadletterMessage
+
+This middleware is a shim to add deadletter support for `SubscriberInterface` based adapters (typically pubsub integrations.) With this middleware active, you can return `Response::deadletter` from your handlers and this middleware will publish them to your deadletter for you.
+
+```php
+$middleware = new DeadletterMessage(
+	new RedirectFilter($publisher, "deadletter")
+)
 ```
 
 ## Custom router

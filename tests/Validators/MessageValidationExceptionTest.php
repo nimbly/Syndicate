@@ -4,7 +4,6 @@ namespace Nimbly\Syndicate\Tests;
 
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Validator\MessageValidationException;
-use Opis\JsonSchema\Validator;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -21,42 +20,6 @@ class MessageValidationExceptionTest extends TestCase
 		$this->assertSame(
 			$message,
 			$exception->getFailedMessage()
-		);
-	}
-
-	public function test_get_validation_error(): void
-	{
-		$message = new Message("test", "Ok");
-
-		$schema = [
-			"type" => "object",
-			"properties" => [
-				"name" => [
-					"type" => "string",
-					"enum" => ["apples", "bananas"]
-				],
-
-				"published_at" => [
-					"type" => "string",
-					"format" => "date-time"
-				]
-			],
-			"required" => ["name", "published_at"],
-		];
-
-		$data = (object) [
-			"name" => "kiwis",
-			"published_at" => date("c")
-		];
-
-		$validator = new Validator;
-		$result = $validator->validate($data, \json_encode($schema));
-
-		$exception = new MessageValidationException("Fail", $message, $result->error());
-
-		$this->assertSame(
-			$result->error(),
-			$exception->getValidationError()
 		);
 	}
 }

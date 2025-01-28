@@ -25,7 +25,7 @@ class RedirectFilterTest extends TestCase
 		$this->assertNotNull($receipt);
 	}
 
-	public function test_publish_copies_original_messag(): void
+	public function test_publish_redirects_to_given_topic(): void
 	{
 		$mock = new Mock;
 
@@ -34,23 +34,35 @@ class RedirectFilterTest extends TestCase
 			new Message("test", "payload", ["attr1" => "val1"], ["hdr1" => "val1"])
 		);
 
-		$messages = $mock->consume("deadletter", 10);
+		$messages = $mock->getMessages("deadletter");
 
 		$this->assertCount(1, $messages);
+	}
+
+	public function test_publish_copies_original_message(): void
+	{
+		$mock = new Mock;
+
+		$deadletter = new RedirectFilter($mock, "deadletter");
+		$deadletter->publish(
+			new Message("test", "payload", ["attr1" => "val1"], ["hdr1" => "val1"])
+		);
+
+		$message = $mock->getMessages("deadletter")[0];
 
 		$this->assertEquals(
 			"payload",
-			$messages[0]->getPayload()
+			$message->getPayload()
 		);
 
 		$this->assertEquals(
 			["attr1" => "val1"],
-			$messages[0]->getAttributes()
+			$message->getAttributes()
 		);
 
 		$this->assertEquals(
 			["hdr1" => "val1"],
-			$messages[0]->getHeaders()
+			$message->getHeaders()
 		);
 	}
 }
