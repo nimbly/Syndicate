@@ -50,7 +50,7 @@ Namespace: `Nimbly\Syndicate\Adapter\PubSub`
 | Google         | Y         | Y        | `google/cloud-pubsub:^2.0` |
 | Webhook        | Y         | N        |  |
 
-**NOTE:** Consumers denoted with **\*** indicate subscriber based adapters and do not support `ack`ing or `nack`ing due to the nature of pubsub. Additionally, the `predis/predis` library currently does not play well with interrupts and gracefully stopping its internal pubsub loop. If using this adapter, you should set the `signals` option to an empty array. See the [**Subscriber**](#subscribr) section below for more details.
+**NOTE:** Consumers denoted with **\*** indicate subscriber based adapters and do not support `ack`ing or `nack`ing due to the nature of pubsub. Additionally, the `predis/predis` library currently does not play well with interrupts and gracefully stopping its internal pubsub loop. If using this adapter, you should set the `signals` option to an empty array. See the [**Subscribers**](#subscribers) section below for more details.
 
 Is there an integration you would like to see supported? Let us know in [Github Discussions](https://github.com/nimbly/Syndicate/discussions) or open a Pull Request!
 
@@ -103,7 +103,7 @@ $message = new Message(
 $publisher->publish($message);
 ```
 
-You can also add any number of publishing filters for things like validating your messages against a JSON schema or redirecting messags to another topic. See [**Filters**](##Filters) section for more information.
+You can also add any number of publishing filters for things like validating your messages against a JSON schema or redirecting messags to another topic. See [**Filters**](#filters) section for more information.
 
 ## Application: Quick Start
 
@@ -212,13 +212,13 @@ $consumer = new Sqs(
 
 ### Subscribers
 
-A variation of Consumers, the Subscriber adapters use a *slightly* different technique to get their messages consumed and are *typically* pubsub. However, the `Application` can still use them to route messages to your handlers. One noticeable difference is that when starting the `Application`, you can provide an array of topics to consume from, rather than a single queue URL or name.
+A variation of Consumers, Subscriber adapters use a *slightly* different technique to get their messages consumed and are *typically* pubsub. However, the `Application` can still use them to route messages to your handlers. One noticeable difference is that when starting the `Application`, you can provide an array of topics to consume from, rather than a single queue URL or name.
 
 **NOTE:** These adapters do not support `ack`ing or `nack`ing of messages due to the nature of pubsub. `deadletter`ing from handlers is possible by adding the `Nimbly\Syndicate\Middleware\DeadletterMessage` middleware and returning `Response::deadletter` from your handlers. Any other return value from your handlers will be completely ignored by these adapters.
 
 ## Routing
 
-In order to dispatch consumed messages to the matching handler, a `Nimbly\Syndicate\Router\Router` is needed. This router relies on your handlers using the `Nimbly\Syndicate\Router\Consume` attribute to define routing criteria. Simply add a `#[Consume]` attribute with your routing criteria before your class methods on your handlers. Please see [**Handlers**](##Handlers) and [**Consume Attribute**](##Consume) sections for more details.
+In order to dispatch consumed messages to the matching handler, a `Nimbly\Syndicate\Router\Router` is needed. This router relies on your handlers using the `Nimbly\Syndicate\Router\Consume` attribute to define routing criteria. Simply add a `#[Consume]` attribute with your routing criteria before your class methods on your handlers. Please see [**Handlers**](#handlers) and [**Consume Attribute**](#consume-attribute) sections for more details.
 
 ```php
 $router = new Router(
