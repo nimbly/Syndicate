@@ -9,14 +9,13 @@ namespace Nimbly\Syndicate;
  */
 class Message
 {
-	protected mixed $parsed_payload = null;
-
 	/**
 	 * @param string $topic The topic or queue name/URL to publish this message to.
 	 * @param string $payload The payload (or body) of the message.
 	 * @param array<string,mixed> $attributes A key/value pair of attributes to be sent with message. Most implementations do not support attributes.
 	 * @param array<string,mixed> $headers A key/value pair of headers to be sent with message. Most implementations do not support headers.
 	 * @param mixed $reference A reference to the original source message. This is populated when pulling messages off source.
+	 * @param mixed $parsed_payload The parsed payload.
 	 */
 	public function __construct(
 		protected string $topic,
@@ -24,6 +23,7 @@ class Message
 		protected array $attributes = [],
 		protected array $headers = [],
 		protected mixed $reference = null,
+		protected mixed $parsed_payload = null,
 	)
 	{
 	}

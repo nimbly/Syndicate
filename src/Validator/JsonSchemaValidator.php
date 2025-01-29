@@ -63,7 +63,8 @@ class JsonSchemaValidator implements ValidatorInterface
 	}
 
 	/**
-	 * Build the error context for more info.
+	 * Build the error context. This provides detailed information about
+	 * exactly where and why the schema contract was broken.
 	 *
 	 * @param ValidationError $validationError
 	 * @return array{message:string,path:string,data:mixed}
@@ -76,7 +77,7 @@ class JsonSchemaValidator implements ValidatorInterface
 			$error = $error->subErrors()[0];
 		}
 
-		$actual = $error->data()->value();
+		$data = $error->data()->value();
 		$path = $error->data()->fullPath();
 
 		$message = $error->message();
@@ -96,7 +97,7 @@ class JsonSchemaValidator implements ValidatorInterface
 		return [
 			"message" => $message,
 			"path" => "$." . \implode(".", $path),
-			"data" => $actual,
+			"data" => $data,
 		];
 	}
 }

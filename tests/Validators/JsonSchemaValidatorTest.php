@@ -95,7 +95,7 @@ class JsonSchemaValidatorTest extends TestCase
 
 			$validator->validate(new Message("fruits", \json_encode(["name" => "kiwis", "published_at" => date("c")])));
 		}
-		catch( MessageValidationException $exception)
+		catch( MessageValidationException $exception )
 		{}
 
 		$this->assertNotEmpty(
@@ -110,6 +110,39 @@ class JsonSchemaValidatorTest extends TestCase
 		$this->assertEquals(
 			"$.name",
 			$exception->getContext()["path"]
+		);
+	}
+
+	public function test_failed_validation_message_includes_multiple_args(): void
+	{
+		$validator = new JsonSchemaValidator([
+			"fruits" => \json_encode([
+				"type" => "object",
+				"properties" => [
+					"name" => [
+						"type" => "string",
+						"maxLength" => 4
+					],
+
+					"published_at" => [
+						"type" => "string",
+						"format" => "date-time"
+					]
+				],
+				"required" => ["name", "published_at"],
+			])
+		]);
+
+		try {
+
+			$validator->validate(new Message("fruits", \json_encode(["name" => "pineapples", "published_at" => date("c")])));
+		}
+		catch( MessageValidationException $exception )
+		{}
+
+		$this->assertEquals(
+			"Maximum string length is 4, found 10",
+			$exception->getContext()["message"]
 		);
 	}
 

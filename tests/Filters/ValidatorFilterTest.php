@@ -8,6 +8,7 @@ use Nimbly\Syndicate\Adapter\Queue\Mock;
 use Nimbly\Syndicate\Filter\ValidatorFilter;
 use Nimbly\Syndicate\Validator\JsonSchemaValidator;
 use Nimbly\Syndicate\Validator\MessageValidationException;
+use Nimbly\Syndicate\Validator\ValidatorInterface;
 
 /**
  * @covers Nimbly\Syndicate\Filter\ValidatorFilter
@@ -61,6 +62,21 @@ class ValidatorFilterTest extends TestCase
 		]);
 
 		$publisher = new ValidatorFilter($validator, new Mock);
+
+		$this->expectException(MessageValidationException::class);
+		$publisher->publish(new Message("fruits", \json_encode(["name" => "peaches", "published_at" => date("c")])));
+	}
+
+	public function test_validator_returns_false_throws_message_validation_exception(): void
+	{
+		$publisher = new ValidatorFilter(
+			new class implements ValidatorInterface {
+				public function validate(Message $message): bool {
+					return false;
+				}
+			},
+			new Mock
+		);
 
 		$this->expectException(MessageValidationException::class);
 		$publisher->publish(new Message("fruits", \json_encode(["name" => "peaches", "published_at" => date("c")])));
