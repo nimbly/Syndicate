@@ -2,6 +2,11 @@
 
 namespace Nimbly\Syndicate;
 
+/**
+ * A Message instance represents a message that should be published or a message
+ * that was consumed. No parsing of the message payload is done and is up to you
+ * to parse/decode as needed.
+ */
 class Message
 {
 	/**
@@ -10,6 +15,7 @@ class Message
 	 * @param array<string,mixed> $attributes A key/value pair of attributes to be sent with message. Most implementations do not support attributes.
 	 * @param array<string,mixed> $headers A key/value pair of headers to be sent with message. Most implementations do not support headers.
 	 * @param mixed $reference A reference to the original source message. This is populated when pulling messages off source.
+	 * @param mixed $parsed_payload The parsed payload.
 	 */
 	public function __construct(
 		protected string $topic,
@@ -17,6 +23,7 @@ class Message
 		protected array $attributes = [],
 		protected array $headers = [],
 		protected mixed $reference = null,
+		protected mixed $parsed_payload = null,
 	)
 	{
 	}
@@ -69,5 +76,26 @@ class Message
 	public function getReference(): mixed
 	{
 		return $this->reference;
+	}
+
+	/**
+	 * Sets the parsed payload of the message.
+	 *
+	 * @param mixed $parsed_payload
+	 * @return void
+	 */
+	public function setParsedPayload(mixed $parsed_payload): void
+	{
+		$this->parsed_payload = $parsed_payload;
+	}
+
+	/**
+	 * Get the parsed payload of the message.
+	 *
+	 * @return mixed
+	 */
+	public function getParsedPayload(): mixed
+	{
+		return $this->parsed_payload;
 	}
 }

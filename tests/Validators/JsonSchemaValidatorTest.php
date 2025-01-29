@@ -4,11 +4,11 @@ namespace Nimbly\Syndicate\Tests\Validators;
 
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\MessageValidationException;
-use Nimbly\Syndicate\Validators\JsonSchemaValidator;
+use Nimbly\Syndicate\Validator\MessageValidationException;
+use Nimbly\Syndicate\Validator\JsonSchemaValidator;
 
 /**
- * @covers Nimbly\Syndicate\Validators\JsonSchemaValidator
+ * @covers Nimbly\Syndicate\Validator\JsonSchemaValidator
  */
 class JsonSchemaValidatorTest extends TestCase
 {
@@ -69,6 +69,81 @@ class JsonSchemaValidatorTest extends TestCase
 
 		$this->expectException(MessageValidationException::class);
 		$validator->validate(new Message("fruits", \json_encode(["name" => "kiwis", "published_at" => date("c")])));
+	}
+
+	public function test_failed_validation_includes_context(): void
+	{
+		$validator = new JsonSchemaValidator([
+			"fruits" => \json_encode([
+				"type" => "object",
+				"properties" => [
+					"name" => [
+						"type" => "string",
+						"enum" => ["apples", "bananas"]
+					],
+
+					"published_at" => [
+						"type" => "string",
+						"format" => "date-time"
+					]
+				],
+				"required" => ["name", "published_at"],
+			])
+		]);
+
+		try {
+
+			$validator->validate(new Message("fruits", \json_encode(["name" => "kiwis", "published_at" => date("c")])));
+		}
+		catch( MessageValidationException $exception )
+		{}
+
+		$this->assertNotEmpty(
+			$exception->getContext()["message"]
+		);
+
+		$this->assertEquals(
+			"kiwis",
+			$exception->getContext()["data"]
+		);
+
+		$this->assertEquals(
+			"$.name",
+			$exception->getContext()["path"]
+		);
+	}
+
+	public function test_failed_validation_message_includes_multiple_args(): void
+	{
+		$validator = new JsonSchemaValidator([
+			"fruits" => \json_encode([
+				"type" => "object",
+				"properties" => [
+					"name" => [
+						"type" => "string",
+						"maxLength" => 4
+					],
+
+					"published_at" => [
+						"type" => "string",
+						"format" => "date-time"
+					]
+				],
+				"required" => ["name", "published_at"],
+			])
+		]);
+
+		try {
+
+			$validator->validate(new Message("fruits", \json_encode(["name" => "pineapples", "published_at" => date("c")])));
+		}
+		catch( MessageValidationException $exception )
+		{}
+
+		$this->assertEquals(
+			"Maximum string length is 4, found 10",
+			$exception->getContext()["message"]
+		);
 	}
 
 	public function test_message_passes(): void

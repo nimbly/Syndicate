@@ -2,11 +2,11 @@
 
 namespace Nimbly\Syndicate\Tests\Middleware;
 
-use Nimbly\Syndicate\DeadletterPublisher;
+use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;
-use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\Queue\Mock;
+use Nimbly\Syndicate\Adapter\Queue\Mock;
+use Nimbly\Syndicate\Filter\RedirectFilter;
 use Nimbly\Syndicate\Middleware\DeadletterMessage;
 
 /**
@@ -17,7 +17,7 @@ class DeadletterMessageTest extends TestCase
 	public function test_deadletter_response(): void
 	{
 		$mock = new Mock;
-		$publisher = new DeadletterPublisher($mock, "deadletter");
+		$publisher = new RedirectFilter($mock, "deadletter");
 
 		$middleware = new DeadletterMessage($publisher);
 		$response = $middleware->handle(
@@ -28,16 +28,13 @@ class DeadletterMessageTest extends TestCase
 		);
 
 		$this->assertCount(1, $mock->getMessages("deadletter"));
-		$this->assertEquals(
-			Response::ack,
-			$response
-		);
+		$this->assertEquals(Response::ack, $response);
 	}
 
 	public function test_other_response(): void
 	{
 		$mock = new Mock;
-		$publisher = new DeadletterPublisher($mock, "deadletter");
+		$publisher = new RedirectFilter($mock, "deadletter");
 
 		$middleware = new DeadletterMessage($publisher);
 		$response = $middleware->handle(
@@ -48,9 +45,6 @@ class DeadletterMessageTest extends TestCase
 		);
 
 		$this->assertCount(0, $mock->getMessages("deadletter"));
-		$this->assertEquals(
-			Response::ack,
-			$response
-		);
+		$this->assertEquals(Response::ack, $response);
 	}
 }
