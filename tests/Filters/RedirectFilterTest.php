@@ -16,9 +16,9 @@ class RedirectFilterTest extends TestCase
 	{
 		$mock = new Mock;
 
-		$deadletter = new RedirectFilter($mock, "deadletter");
+		$filter = new RedirectFilter($mock, "deadletter");
 
-		$receipt = $deadletter->publish(
+		$receipt = $filter->publish(
 			new Message("test", "payload", ["attr1" => "val1"], ["hdr1" => "val1"])
 		);
 
@@ -29,8 +29,8 @@ class RedirectFilterTest extends TestCase
 	{
 		$mock = new Mock;
 
-		$deadletter = new RedirectFilter($mock, "deadletter");
-		$deadletter->publish(
+		$filter = new RedirectFilter($mock, "deadletter");
+		$filter->publish(
 			new Message("test", "payload", ["attr1" => "val1"], ["hdr1" => "val1"])
 		);
 
@@ -43,8 +43,8 @@ class RedirectFilterTest extends TestCase
 	{
 		$mock = new Mock;
 
-		$deadletter = new RedirectFilter($mock, "deadletter");
-		$deadletter->publish(
+		$filter = new RedirectFilter($mock, "deadletter");
+		$filter->publish(
 			new Message("test", "payload", ["attr1" => "val1"], ["hdr1" => "val1"])
 		);
 
