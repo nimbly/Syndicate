@@ -3,14 +3,14 @@
 namespace Nimbly\Syndicate\Middleware;
 
 use Nimbly\Syndicate\Message;
-use UnexpectedValueException;
+use Nimbly\Syndicate\Response;
 
 /**
  * This middleware will automatically parse your message payloads as JSON
  * and set the parsed payload on the Message. The parsed payload can be
  * retrieved via the `getParsedPayload()` method on the `Message` instance.
  *
- * If the payload cannot be parsed, an `UnexpectedValueException` is thrown.
+ * If the payload cannot be parsed, the message will attempted to be deadlettered.
  */
 class ParseJsonMessage implements MiddlewareInterface
 {
@@ -31,7 +31,7 @@ class ParseJsonMessage implements MiddlewareInterface
 		$parsed_payload = \json_decode($message->getPayload(), $this->associative);
 
 		if( \json_last_error() !== JSON_ERROR_NONE ){
-			throw new UnexpectedValueException("Payload is not valid JSON.");
+			return Response::deadletter;
 		}
 
 		$message->setParsedPayload($parsed_payload);

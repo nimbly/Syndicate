@@ -4,6 +4,7 @@ namespace Nimbly\Syndicate\Tests\Middleware;
 
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Middleware\ParseJsonMessage;
+use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
 use UnexpectedValueException;
 
@@ -16,10 +17,14 @@ class ParseJsonMessageTest extends TestCase
 	{
 		$middleware = new ParseJsonMessage;
 
-		$this->expectException(UnexpectedValueException::class);
-		$middleware->handle(
+		$response = $middleware->handle(
 			new Message("test", "not-json"),
 			fn() => null,
+		);
+
+		$this->assertEquals(
+			Response::deadletter,
+			$response
 		);
 	}
 

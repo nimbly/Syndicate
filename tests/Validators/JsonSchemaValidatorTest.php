@@ -71,6 +71,48 @@ class JsonSchemaValidatorTest extends TestCase
 		$validator->validate(new Message("fruits", \json_encode(["name" => "kiwis", "published_at" => date("c")])));
 	}
 
+	public function test_failed_validation_includes_context(): void
+	{
+		$validator = new JsonSchemaValidator([
+			"fruits" => \json_encode([
+				"type" => "object",
+				"properties" => [
+					"name" => [
+						"type" => "string",
+						"enum" => ["apples", "bananas"]
+					],
+
+					"published_at" => [
+						"type" => "string",
+						"format" => "date-time"
+					]
+				],
+				"required" => ["name", "published_at"],
+			])
+		]);
+
+		try {
+
+			$validator->validate(new Message("fruits", \json_encode(["name" => "kiwis", "published_at" => date("c")])));
+		}
+		catch( MessageValidationException $exception)
+		{}
+
+		$this->assertNotEmpty(
+			$exception->getContext()["message"]
+		);
+
+		$this->assertEquals(
+			"kiwis",
+			$exception->getContext()["data"]
+		);
+
+		$this->assertEquals(
+			"$.name",
+			$exception->getContext()["path"]
+		);
+	}
+
 	public function test_message_passes(): void
 	{
 		$validator = new JsonSchemaValidator([

@@ -22,4 +22,16 @@ class MessageValidationExceptionTest extends TestCase
 			$exception->getFailedMessage()
 		);
 	}
+
+	public function test_get_context(): void
+	{
+		$message = new Message("test", "Ok");
+
+		$exception = new MessageValidationException("Fail", $message, ["message" => "Schema error", "data" => "Foo", "path" => "$.path"]);
+
+		$this->assertEquals(
+			["message" => "Schema error", "data" => "Foo", "path" => "$.path"],
+			$exception->getContext()
+		);
+	}
 }

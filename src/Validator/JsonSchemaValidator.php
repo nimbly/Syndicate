@@ -3,6 +3,7 @@
 namespace Nimbly\Syndicate\Validator;
 
 use Nimbly\Syndicate\Message;
+use Opis\JsonSchema\Errors\ValidationError;
 use Opis\JsonSchema\Validator;
 
 class JsonSchemaValidator implements ValidatorInterface
@@ -19,7 +20,6 @@ class JsonSchemaValidator implements ValidatorInterface
 	)
 	{
 		$this->validator = new Validator;
-		$this->validator->setStopAtFirstError(false);
 	}
 
 	/**
@@ -49,13 +49,54 @@ class JsonSchemaValidator implements ValidatorInterface
 		);
 
 		if( $result->hasError() ){
-			throw new JsonSchemaValidationException(
+			/**
+			 * @psalm-suppress PossiblyNullArgument
+			 */
+			throw new MessageValidationException(
 				"Message failed JSON schema validation.",
 				$message,
-				$result->error()
+				$this->buildContext($result->error())
 			);
 		}
 
 		return true;
+	}
+
+	/**
+	 * Build the error context for more info.
+	 *
+	 * @param ValidationError $validationError
+	 * @return array{message:string,path:string,data:mixed}
+	 */
+	private function buildContext(ValidationError $validationError): array
+	{
+		$error = $validationError;
+
+		while( $error->subErrors() ){
+			$error = $error->subErrors()[0];
+		}
+
+		$actual = $error->data()->value();
+		$path = $error->data()->fullPath();
+
+		$message = $error->message();
+		$args = $error->args();
+
+		foreach( $args as $key => $value ){
+			if( \is_array($value) ){
+				$value = \implode(", ", $value);
+			}
+
+			/**
+			 * @var string $message
+			 */
+			$message = \str_replace("{{$key}}", $value, $message);
+		}
+
+		return [
+			"message" => $message,
+			"path" => "$." . \implode(".", $path),
+			"data" => $actual,
+		];
 	}
 }

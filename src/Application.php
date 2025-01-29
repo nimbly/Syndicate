@@ -5,6 +5,7 @@ namespace Nimbly\Syndicate;
 use Nimbly\Resolve\Resolve;
 use Psr\Log\LoggerInterface;
 use UnexpectedValueException;
+use Nimbly\Syndicate\Router\Router;
 use Psr\Container\ContainerInterface;
 use Nimbly\Syndicate\Router\RouterInterface;
 use Nimbly\Syndicate\Router\RoutingException;
@@ -25,7 +26,7 @@ class Application
 
 	/**
 	 * @param ConsumerInterface|SubscriberInterface $consumer The consumer to pull messages from.
-	 * @param RouterInterface $router A router instance that will aid resolving Messages received into callables.
+	 * @param RouterInterface $router An array of class-strings representing your handlers or a full `RouterInterface` instance that will aid resolving Messages received into callables.
 	 * @param PublisherInterface|null $deadletter A deadletter publisher instance if you would like to use one.
 	 * @param ContainerInterface|null $container An optional container instance to be used when invoking the handler.
 	 * @param LoggerInterface|null $logger A LoggerInterface implementation for additional logging and context.
