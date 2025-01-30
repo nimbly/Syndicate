@@ -5,7 +5,6 @@ namespace Nimbly\Syndicate;
 use Nimbly\Resolve\Resolve;
 use Psr\Log\LoggerInterface;
 use UnexpectedValueException;
-use Nimbly\Syndicate\Router\Router;
 use Psr\Container\ContainerInterface;
 use Nimbly\Syndicate\Router\RouterInterface;
 use Nimbly\Syndicate\Router\RoutingException;
