@@ -561,7 +561,7 @@ This middleware is a shim to add deadletter support for `SubscriberInterface` ba
 ```php
 $middleware = new DeadletterMessage(
 	new RedirectFilter($publisher, "deadletter")
-)
+);
 ```
 
 #### Custom Middleware
@@ -648,7 +648,7 @@ A good practice is to validate your messages before publishing or at least withi
 
 If the message fails validation, a `MessageValidationException` will be thrown.
 
-### JSON Schema validator
+### JSON Schema
 
 Syndicate ships with a `JsonSchemaValidator` that can be used to validate messages against a JSON schema. This validator can be used with the built-in `ValidateMessage` middleware or the `ValidatorFilter` publisher filter.
 

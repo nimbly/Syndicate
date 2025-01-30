@@ -102,7 +102,8 @@ class Application
 					"location" => $location,
 					"max_messages" => $max_messages,
 					"nack_timeout" => $nack_timeout,
-					"polling_timeout" => $polling_timeout
+					"polling_timeout" => $polling_timeout,
+					"deadletter_options" => $deadletter_options,
 				]
 			);
 
