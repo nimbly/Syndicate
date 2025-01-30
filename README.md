@@ -100,7 +100,7 @@ Select an adapter you would like to publish messages to. In this example, we wil
 
 ```php
 $publisher = new Sns(
-	client: new SnsClient(["region" => "us-west-2", "version" => "latest"]),
+	client: new SnsClient(["region" => "us-west-2", "version" => "latest"])
 );
 
 $message = new Message(
@@ -133,8 +133,8 @@ $application = new Application(
 	consumer: $consumer,
 	router: new Router([
 		App\Consumer\Handlers\UsersHandler::class,
-		App\Consumer\Handlers\OrdersHandler::class,
-	]),
+		App\Consumer\Handlers\OrdersHandler::class
+	])
 );
 ```
 
@@ -142,7 +142,7 @@ To start consuming messages, call the `listen` method on the application instanc
 
 ```php
 $application->listen(
-	location: "https://sqs.us-west-2.amazonaws.com/123456789012/MyQueue",
+	location: "https://sqs.us-west-2.amazonaws.com/123456789012/MyQueue"
 );
 ```
 
@@ -275,7 +275,7 @@ The `Router` class also supports an optional `default` handler. This is any `cal
 $router = new Router(
 	handlers: [
 		App\Consumer\Handlers\UsersHandler::class,
-		App\Consumer\Handlers\OrdersHandler::class,
+		App\Consumer\Handlers\OrdersHandler::class
 	],
 	default: function(Message $message): Response {
 		// do something with message that could not be routed
@@ -375,7 +375,7 @@ Here is an example where the topic must match exactly `users` **AND** the messag
 ```php
 #[Consume(
 	topic: "users",
-	payload: ["$.type" => "UserCreated", "$.body.role" => ["user", "admin"]],
+	payload: ["$.type" => "UserCreated", "$.body.role" => ["user", "admin"]]
 )]
 ```
 
@@ -384,7 +384,7 @@ Here is an example where the topic must start with `users/` **AND** the payload 
 ```php
 #[Consume(
 	topic: ["users/*"],
-	payload: ["$.type" => ["User*", "Admin*"], "$.body.role" => ["user", "admin"]],
+	payload: ["$.type" => ["User*", "Admin*"], "$.body.role" => ["user", "admin"]]
 )]
 ```
 
@@ -446,11 +446,11 @@ $application = new Application(
 	consumer: $consumer,
 	router: new Router([
 		App\Consumer\Handlers\UsersHandler::class,
-		App\Consumer\Handlers\OrdersHandler::class,
+		App\Consumer\Handlers\OrdersHandler::class
 	]),
 	deadletter: new RedirectFilter(
 		$consumer,
-		"https://sqs.us-west-2.amazonaws.com/123456789012/deadletter",
+		"https://sqs.us-west-2.amazonaws.com/123456789012/deadletter"
 	),
 	container: $container,
 	logger: $logger,
@@ -623,7 +623,7 @@ For consumers that implement the `SubscriberInterface` (curently `PubSub\Redis` 
 
 ```php
 $application->listen(
-	location: ["users", "orders", "returns"],
+	location: ["users", "orders", "returns"]
 );
 ```
 
