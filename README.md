@@ -63,12 +63,14 @@ composer require nimbly/syndicate
 ```
 
 ## Table of contents
-* Quick Start
+* [Quick Start](#quick-start)
 	* [Publisher](#publisher-quick-start)
 	* [Application](#application-quick-start)
 * [Publishers](#publishers)
 	* [Messages](#messages)
 	* [Filters](#filters)
+		* [RedirectFilter](#redirectfilter)
+		* [ValidatorFilter](#validatorfilter)
 * [Consumers](#consumers)
 	* [Subscribers](#subscribers)
 * [Routing](#routing)
@@ -80,15 +82,21 @@ composer require nimbly/syndicate
 	* [Deadletter](#deadletter)
 	* [Logging](#logging)
 	* [Middleware](#middleware)
+		* [ParseJsonMessage](#parsejsonmessage)
+		* [ValidateMessage](#validatemessage)
+		* [DeadletterMessage](#deadlettermessage)
+	* [Signals](#signals)
 	* [Starting the application](#starting-the-application)
 * [Validators](#validators)
 	* [JSON Schema](#json-schema)
 
-## Publisher: Quick Start
+## Quick Start
+
+### Publisher Quick Start
 
 A publisher sends (aka publishes) messages to a known location like a queue or to a PubSub topic.
 
-Select an adapter you would like to publish messages to. In this example, we will be publishing messags to an SNS topic.
+Select an adapter you would like to publish messages to. In this example, we will be publishing messages to an SNS topic.
 
 ```php
 $publisher = new Sns(
@@ -103,9 +111,9 @@ $message = new Message(
 $publisher->publish($message);
 ```
 
-You can also add any number of publishing filters for things like validating your messages against a JSON schema or redirecting messags to another topic. See [**Filters**](#filters) section for more information.
+You can also add any number of publishing filters for things like validating your messages against a JSON schema or redirecting messages to another topic. See [**Filters**](#filters) section for more information.
 
-## Application: Quick Start
+### Application Quick Start
 
 Create a consumer instance by selecting your adapter.
 
@@ -118,7 +126,7 @@ $consumer = new Sqs(
 );
 ```
 
-Create an `Application` instance with your consumer and a `Router` instance with the class names of where your handlers are. The classes you use for your handlers should have methods tagged with the `#[Consume]` attribute. (See [**Handlers**](#handlers) and [**Consume Attribute**](#consume-attribute) sections for more details.)
+Create an `Application` instance with your consumer and a `Router` instance with the class names of where your handlers are. The classes you use for your handlers should have methods tagged with the `#[Consume]` attribute. See [**Handlers**](#handlers) and [**Consume Attribute**](#consume-attribute) sections for more details.
 
 ```php
 $application = new Application(
@@ -154,6 +162,8 @@ Please refer to the [**Supported integrations**](#supported-integrations) for de
 $publisher = new Sns(
 	new SnsClient($aws_config)
 );
+
+$publisher->publish($message);
 ```
 
 ### Messages
@@ -172,20 +182,18 @@ If your integration supports it, the `Message` instance can also contain `header
 $message = new Message(
 	topic: "users",
 	payload: \json_encode($user),
-	headers: [
-		"Header1" => "Value1"
-	],
-	attributes: [
-		"id" => 123456789
-	]
+	headers: ["Header1" => "Value1"],
+	attributes: ["message_id" => (string) Uuid::uuid4()]
 );
+
+$publisher->publish($message);
 ```
 
 ### Filters
 
 Namespace: `Nimbly\Syndicate\Filter`
 
-Filters allow you to modify or interact with a message before it gets published. These filters will wrap around your actual publisher to provide additional functionality. You can stack as many filters on top of each other as you would like.
+Filters allow you to modify or interact with a message *before* it gets published. These filters will wrap around your actual publisher to provide additional functionality. You can stack as many filters on top of each other as you would like.
 
 ```php
 $publisher = new ValidateMessage(
@@ -196,6 +204,38 @@ $publisher = new ValidateMessage(
 		new SnsClient($aws_config)
 	)
 );
+```
+
+#### RedirectFilter
+
+Typically, a `Message` will be published to its defined topic. The `RedirectFilter` allows you to over ride or redirect that `Message` to a completely different topic.
+
+```php
+$publisher = new RedirectMessage(
+	new Sqs(
+		new SqsClient($aws_config)
+	),
+	"https://sqs.us-west-2.amazonaws.com/123456789012/deadletter"
+);
+
+/**
+ * Despite this message being intended for the "fruits" topic, it
+ * will actually be published to https://sqs.us-west-2.amazonaws.com/123456789012/deadletter.
+ */
+$publisher->publish(new Message("fruits", "banana"));
+```
+
+#### ValidatorFilter
+
+The `ValidatorFilter` will validate all messages *before* being published. If the message does not validate, a `MessageValidationException` is thrown.
+
+```php
+$publisher = new ValidatorFilter(
+	new JsonSchemaValidator(["fruits" => $fruits_schema]),
+	new Sns(new SnsClient($aws_config))
+);
+
+$publisher->publish($message);
 ```
 
 ## Consumers
@@ -420,7 +460,7 @@ $application = new Application(
 		)
 	],
 	signals: [SIGINT, SIGTERM, SIGHUP]
-)
+);
 ```
 
 ### Deadletter
@@ -437,7 +477,7 @@ $deadletter = new RedirectFilter($redis, "deadletter");
 
 In this example, we would like to use a Redis queue for our deadletters and to push them into the `deadletter` queue.
 
-The `deadletter` implementation is used any time a message could not be routed and no default handler was provided *or* if you explicitly return `Response::deadletter` (see [**Response**](#response) section for more information) from your message handler.
+The `deadletter` implementation is used any time a message could not be routed and no default handler was provided *or* if you explicitly return `Response::deadletter` from your message handler. See [**Response**](#response) section for more information.
 
 ### Container
 
@@ -553,7 +593,7 @@ class MyMiddleware implements MiddlewareInterface
 }
 ```
 
-### Signals
+#### Signals
 
 The `signals` parameter is an array of PHP interrupt signal constants (eg, `SIGINT`, `SIGTERM`, etc) that you would like your application to respond to and gracefully shutdown the application. I.e. once all messages in flight have been processed by your handlers, the application will terminate. It defaults to `[SIGINT, SIGTERM]` which are common interrupts for both command line (Ctrl-C) and container orchestration systems like Kubernetes or ECS.
 
