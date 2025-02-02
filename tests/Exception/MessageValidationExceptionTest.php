@@ -1,6 +1,6 @@
 <?php
 
-namespace Nimbly\Syndicate\Tests;
+namespace Nimbly\Syndicate\Tests\Exception;
 
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Exception\MessageValidationException;

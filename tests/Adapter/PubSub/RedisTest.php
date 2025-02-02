@@ -1,6 +1,6 @@
 <?php
 
-namespace Nimbly\Syndicate\Tests\Adapters\PubSub;
+namespace Nimbly\Syndicate\Tests\Adapter\PubSub;
 
 use Mockery;
 use Exception;
@@ -340,5 +340,21 @@ class RedisTest extends TestCase
 
 		$this->expectException(ConnectionException::class);
 		$consumer->shutdown();
+	}
+
+	public function test_get_loop_failure_throws_consume_exception(): void
+	{
+		$mock = Mockery::mock(Client::class);
+		$mock->shouldReceive("pubSubLoop")
+			->andReturn(null);
+
+		$consumer = new Redis($mock);
+
+		$reflectionClass = new ReflectionClass($consumer);
+		$reflectionMethod = $reflectionClass->getMethod("getLoop");
+		$reflectionMethod->setAccessible(true);
+
+		$this->expectException(ConsumeException::class);
+		$reflectionMethod->invoke($consumer);
 	}
 }

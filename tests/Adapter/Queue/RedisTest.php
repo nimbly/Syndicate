@@ -1,6 +1,6 @@
 <?php
 
-namespace Nimbly\Syndicate\Tests\Adapters\Queue;
+namespace Nimbly\Syndicate\Tests\Adapter\Queue;
 
 use Mockery;
 use Exception;

@@ -80,20 +80,23 @@ class JsonSchemaValidator implements ValidatorInterface
 
 		$data = $error->data()->value();
 		$path = $error->data()->fullPath();
-
 		$message = $error->message();
-		$args = $error->args();
 
-		foreach( $args as $key => $value ){
+		$search = $replace = [];
+
+		foreach( $error->args() as $key => $value ){
 			if( \is_array($value) ){
 				$value = \implode(", ", $value);
 			}
 
-			/**
-			 * @var string $message
-			 */
-			$message = \str_replace("{{$key}}", $value, $message);
+			$search[] = "{{$key}}";
+			$replace[] = $value;
 		}
+
+		/**
+		 * @var string $message
+		 */
+		$message = \str_replace($search, $replace, $message);
 
 		return [
 			"message" => $message,

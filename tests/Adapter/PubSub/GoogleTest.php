@@ -1,6 +1,6 @@
 <?php
 
-namespace Nimbly\Syndicate\Tests\Adapters\PubSub;
+namespace Nimbly\Syndicate\Tests\Adapter\PubSub;
 
 use Mockery;
 use Exception;

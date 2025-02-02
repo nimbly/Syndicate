@@ -1,6 +1,6 @@
 <?php
 
-namespace Nimbly\Syndicate\Tests\Filters;
+namespace Nimbly\Syndicate\Tests\Filter;
 
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;

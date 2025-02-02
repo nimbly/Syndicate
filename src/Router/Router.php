@@ -134,7 +134,10 @@ class Router implements RouterInterface
 			);
 
 			if( $match === false ){
-				throw new UnexpectedValueException("Regex is invalid.");
+				throw new UnexpectedValueException(
+					"Regex is invalid. Please notify maintainers of Syndicate ".
+					"with a stack trace and routing criteria."
+				);
 			}
 
 			if( $match ){

@@ -1,6 +1,6 @@
 <?php
 
-namespace Nimbly\Syndicate\Tests\Validators;
+namespace Nimbly\Syndicate\Tests\Validator;
 
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
@@ -121,7 +121,7 @@ class JsonSchemaValidatorTest extends TestCase
 				"properties" => [
 					"name" => [
 						"type" => "string",
-						"maxLength" => 4
+						"maxLength" => 16
 					],
 
 					"published_at" => [
@@ -129,19 +129,20 @@ class JsonSchemaValidatorTest extends TestCase
 						"format" => "date-time"
 					]
 				],
+				"additionalProperties" => false,
 				"required" => ["name", "published_at"],
 			])
 		]);
 
 		try {
 
-			$validator->validate(new Message("fruits", \json_encode(["name" => "pineapples", "published_at" => date("c")])));
+			$validator->validate(new Message("fruits", \json_encode(["name" => "pineapples", "type" =>"tropical", "color" => "green", "published_at" => date("c")])));
 		}
 		catch( MessageValidationException $exception )
 		{}
 
 		$this->assertEquals(
-			"Maximum string length is 4, found 10",
+			"Additional object properties are not allowed: type, color",
 			$exception->getContext()["message"]
 		);
 	}

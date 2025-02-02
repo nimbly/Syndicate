@@ -1,6 +1,6 @@
 <?php
 
-namespace Nimbly\Syndicate\Tests\Adapters\PubSub;
+namespace Nimbly\Syndicate\Tests\Adapter\PubSub;
 
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;
