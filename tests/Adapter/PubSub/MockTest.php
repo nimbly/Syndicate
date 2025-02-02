@@ -151,4 +151,34 @@ class MockTest extends TestCase
 
 		$this->assertTrue($mock->getIsShutdown());
 	}
+
+	public function test_flush_all_messages(): void
+	{
+		$mock = new Mock;
+		$mock->publish(new Message("fruits", "ok"));
+		$mock->publish(new Message("fruits", "ok"));
+
+		$this->assertCount(2, $mock->getMessages("fruits"));
+
+		$mock->flushMessages();
+
+		$this->assertCount(0, $mock->getMessages("fruits"));
+	}
+
+	public function test_flush_topic_messages(): void
+	{
+		$mock = new Mock;
+		$mock->publish(new Message("fruits", "ok"));
+		$mock->publish(new Message("fruits", "ok"));
+		$mock->publish(new Message("veggies", "ok"));
+		$mock->publish(new Message("veggies", "ok"));
+
+		$this->assertCount(2, $mock->getMessages("fruits"));
+		$this->assertCount(2, $mock->getMessages("veggies"));
+
+		$mock->flushMessages("fruits");
+
+		$this->assertCount(0, $mock->getMessages("fruits"));
+		$this->assertCount(2, $mock->getMessages("veggies"));
+	}
 }

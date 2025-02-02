@@ -93,6 +93,22 @@ class Mock implements PublisherInterface, SubscriberInterface
 	}
 
 	/**
+	 * Flush messages for a given topic or all topics.
+	 *
+	 * @param string|null $topic The topic to flush messages for. If `null` flush all topics.
+	 * @return void
+	 */
+	public function flushMessages(?string $topic = null): void
+	{
+		if( $topic === null ){
+			$this->messages = [];
+		}
+		else {
+			$this->messages[$topic] = [];
+		}
+	}
+
+	/**
 	 * Get the subscription (callback) for a topic.
 	 *
 	 * @param string $topic The topic name.
