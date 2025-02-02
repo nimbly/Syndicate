@@ -9,9 +9,9 @@ use Nimbly\Capsule\Response;
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Adapter\Queue\Azure;
-use Nimbly\Syndicate\ConsumerException;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\ConnectionException;
+use Nimbly\Syndicate\Exception\ConsumeException;
+use Nimbly\Syndicate\Exception\PublishException;
+use Nimbly\Syndicate\Exception\ConnectionException;
 use MicrosoftAzure\Storage\Queue\QueueRestProxy;
 use MicrosoftAzure\Storage\Common\Internal\Resources;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
@@ -79,7 +79,7 @@ class AzureTest extends TestCase
 		$publisher->publish($message);
 	}
 
-	public function test_publish_failure_throws_publisher_exception(): void
+	public function test_publish_failure_throws_publish_exception(): void
 	{
 		$message = new Message("azure", "Ok");
 
@@ -90,7 +90,7 @@ class AzureTest extends TestCase
 
 		$publisher = new Azure($client);
 
-		$this->expectException(PublisherException::class);
+		$this->expectException(PublishException::class);
 		$publisher->publish($message);
 	}
 
@@ -181,7 +181,7 @@ class AzureTest extends TestCase
 		$publisher->consume("azure");
 	}
 
-	public function test_consume_failure_throws_consumer_exception(): void
+	public function test_consume_failure_throws_consume_exception(): void
 	{
 		$client = Mockery::mock(QueueRestProxy::class);
 
@@ -193,7 +193,7 @@ class AzureTest extends TestCase
 		 */
 		$publisher = new Azure($client);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(ConsumeException::class);
 		$publisher->consume("azure");
 	}
 
@@ -275,7 +275,7 @@ class AzureTest extends TestCase
 		$publisher->ack($message);
 	}
 
-	public function test_ack_failure_throws_consumer_exception(): void
+	public function test_ack_failure_throws_consume_exception(): void
 	{
 		$message = new Message(
 			topic: "azure",
@@ -292,7 +292,7 @@ class AzureTest extends TestCase
 		 */
 		$publisher = new Azure($client);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(ConsumeException::class);
 		$publisher->ack($message);
 	}
 
@@ -353,7 +353,7 @@ class AzureTest extends TestCase
 		$publisher->nack($message);
 	}
 
-	public function test_nack_failure_throws_consumer_exception(): void
+	public function test_nack_failure_throws_consume_exception(): void
 	{
 		$message = new Message(
 			topic: "azure",
@@ -377,7 +377,7 @@ class AzureTest extends TestCase
 		 */
 		$publisher = new Azure($client);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(ConsumeException::class);
 		$publisher->nack($message);
 	}
 }

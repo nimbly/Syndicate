@@ -4,12 +4,12 @@ namespace Nimbly\Syndicate\Adapter\Queue;
 
 use IronCore\HttpException;
 use IronMQ\IronMQ;
-use Nimbly\Syndicate\ConnectionException;
-use Nimbly\Syndicate\ConsumerException;
-use Nimbly\Syndicate\ConsumerInterface;
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\PublisherInterface;
+use Nimbly\Syndicate\Adapter\ConsumerInterface;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
+use Nimbly\Syndicate\Exception\ConnectionException;
+use Nimbly\Syndicate\Exception\ConsumeException;
+use Nimbly\Syndicate\Exception\PublishException;
 use Throwable;
 
 class Iron implements PublisherInterface, ConsumerInterface
@@ -42,7 +42,7 @@ class Iron implements PublisherInterface, ConsumerInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new PublisherException(
+			throw new PublishException(
 				message: "Failed to publish message.",
 				previous: $exception
 			);
@@ -76,7 +76,7 @@ class Iron implements PublisherInterface, ConsumerInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new ConsumerException(
+			throw new ConsumeException(
 				message: "Failed to consume message.",
 				previous: $exception
 			);
@@ -116,7 +116,7 @@ class Iron implements PublisherInterface, ConsumerInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new ConsumerException(
+			throw new ConsumeException(
 				message: "Failed to ack message.",
 				previous: $exception
 			);
@@ -146,7 +146,7 @@ class Iron implements PublisherInterface, ConsumerInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new ConsumerException(
+			throw new ConsumeException(
 				message: "Failed to nack message.",
 				previous: $exception
 			);

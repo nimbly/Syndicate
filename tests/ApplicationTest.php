@@ -16,7 +16,7 @@ use Nimbly\Syndicate\Router\Router;
 use Nimbly\Syndicate\Adapter\Queue\Mock;
 use Nimbly\Syndicate\Filter\RedirectFilter;
 use Nimbly\Syndicate\Router\RouterInterface;
-use Nimbly\Syndicate\Router\RoutingException;
+use Nimbly\Syndicate\Exception\RoutingException;
 use Nimbly\Syndicate\Tests\Fixtures\TestHandler;
 use Nimbly\Syndicate\Tests\Fixtures\TestMiddleware;
 use Nimbly\Syndicate\Middleware\MiddlewareInterface;

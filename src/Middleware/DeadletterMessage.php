@@ -3,8 +3,8 @@
 namespace Nimbly\Syndicate\Middleware;
 
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\PublisherInterface;
 use Nimbly\Syndicate\Response;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
 
 /**
  * This middleware can be added to your `Application` instance and allows you

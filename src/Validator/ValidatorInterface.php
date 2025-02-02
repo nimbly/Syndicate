@@ -3,6 +3,7 @@
 namespace Nimbly\Syndicate\Validator;
 
 use Nimbly\Syndicate\Message;
+use Nimbly\Syndicate\Exception\MessageValidationException;
 
 interface ValidatorInterface
 {

@@ -10,8 +10,8 @@ use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Adapter\PubSub\Sns;
 use Aws\Exception\CredentialsException;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\ConnectionException;
+use Nimbly\Syndicate\Exception\PublishException;
+use Nimbly\Syndicate\Exception\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
 /**
@@ -86,7 +86,7 @@ class SnsTest extends TestCase
 		$publisher->publish($message);
 	}
 
-	public function test_publish_failure_throws_publisher_exception(): void
+	public function test_publish_failure_throws_publish_exception(): void
 	{
 		$mock = Mockery::mock(SnsClient::class);
 
@@ -97,7 +97,7 @@ class SnsTest extends TestCase
 
 		$publisher = new Sns($mock);
 
-		$this->expectException(PublisherException::class);
+		$this->expectException(PublishException::class);
 		$publisher->publish($message);
 	}
 }

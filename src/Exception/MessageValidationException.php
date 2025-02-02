@@ -1,12 +1,12 @@
 <?php
 
-namespace Nimbly\Syndicate\Validator;
+namespace Nimbly\Syndicate\Exception;
 
 use Exception;
 use Nimbly\Syndicate\Message;
 
 /**
- * This exception is thrown when a Message has failed validation.
+ * This exception is thrown when a message has failed validation.
  */
 class MessageValidationException extends Exception
 {

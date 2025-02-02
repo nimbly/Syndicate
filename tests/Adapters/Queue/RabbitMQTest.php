@@ -9,9 +9,9 @@ use PHPUnit\Framework\TestCase;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Message\AMQPMessage;
 use Nimbly\Syndicate\Adapter\Queue\RabbitMQ;
-use Nimbly\Syndicate\ConsumerException;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\ConnectionException;
+use Nimbly\Syndicate\Exception\ConsumeException;
+use Nimbly\Syndicate\Exception\PublishException;
+use Nimbly\Syndicate\Exception\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use PhpAmqpLib\Exception\AMQPConnectionClosedException;
 use PhpAmqpLib\Exception\AMQPConnectionBlockedException;
@@ -70,7 +70,7 @@ class RabbitMQTest extends TestCase
 		$publisher->publish(new Message("message", "Ok"));
 	}
 
-	public function test_publish_failure_throws_publisher_exception(): void
+	public function test_publish_failure_throws_publish_exception(): void
 	{
 		$mock = Mockery::mock(AMQPChannel::class);
 
@@ -80,7 +80,7 @@ class RabbitMQTest extends TestCase
 
 		$publisher = new RabbitMQ($mock);
 
-		$this->expectException(PublisherException::class);
+		$this->expectException(PublishException::class);
 		$publisher->publish(new Message("message", "Ok"));
 	}
 
@@ -155,7 +155,7 @@ class RabbitMQTest extends TestCase
 		$publisher->consume("rabbitmq");
 	}
 
-	public function test_consume_failure_throws_consumer_exception(): void
+	public function test_consume_failure_throws_consume_exception(): void
 	{
 		$mock = Mockery::mock(AMQPChannel::class);
 
@@ -165,7 +165,7 @@ class RabbitMQTest extends TestCase
 
 		$publisher = new RabbitMQ($mock);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(ConsumeException::class);
 		$publisher->consume("rabbitmq");
 	}
 
@@ -237,7 +237,7 @@ class RabbitMQTest extends TestCase
 		$consumer->ack($message);
 	}
 
-	public function test_ack_failure_throws_consumer_exception(): void
+	public function test_ack_failure_throws_consume_exception(): void
 	{
 		$mock = Mockery::spy(AMQPChannel::class);
 
@@ -257,7 +257,7 @@ class RabbitMQTest extends TestCase
 
 		$consumer = new RabbitMQ($mock);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(ConsumeException::class);
 		$consumer->ack($message);
 	}
 
@@ -305,7 +305,7 @@ class RabbitMQTest extends TestCase
 		$consumer->nack($message);
 	}
 
-	public function test_nack_failure_throws_consumer_exception(): void
+	public function test_nack_failure_throws_consume_exception(): void
 	{
 		$mock = Mockery::spy(AMQPChannel::class);
 
@@ -325,7 +325,7 @@ class RabbitMQTest extends TestCase
 
 		$consumer = new RabbitMQ($mock);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(ConsumeException::class);
 		$consumer->nack($message);
 	}
 }

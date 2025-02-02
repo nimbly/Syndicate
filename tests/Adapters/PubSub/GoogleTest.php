@@ -10,8 +10,8 @@ use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Adapter\PubSub\Google;
 use Google\Cloud\PubSub\PubSubClient;
 use Google\Cloud\PubSub\Subscription;
-use Nimbly\Syndicate\ConsumerException;
-use Nimbly\Syndicate\PublisherException;
+use Nimbly\Syndicate\Exception\ConsumeException;
+use Nimbly\Syndicate\Exception\PublishException;
 use Google\Cloud\PubSub\Message as PubSubMessage;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
@@ -78,7 +78,7 @@ class GoogleTest extends TestCase
 		);
 	}
 
-	public function test_publish_failure_throws_publisher_exception(): void
+	public function test_publish_failure_throws_publish_exception(): void
 	{
 		$mock = Mockery::mock(PubSubClient::class);
 		$mockTopic = Mockery::mock(Topic::class);
@@ -93,7 +93,7 @@ class GoogleTest extends TestCase
 
 		$google = new Google($mock);
 
-		$this->expectException(PublisherException::class);
+		$this->expectException(PublishException::class);
 		$google->publish($message);
 	}
 
@@ -197,7 +197,7 @@ class GoogleTest extends TestCase
 		);
 	}
 
-	public function test_consume_failure_throws_consumer_exception(): void
+	public function test_consume_failure_throws_consume_exception(): void
 	{
 		$mock = Mockery::mock(PubSubClient::class);
 		$mockSubscription = Mockery::mock(Subscription::class);
@@ -210,7 +210,7 @@ class GoogleTest extends TestCase
 
 		$google = new Google($mock);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(ConsumeException::class);
 		$google->consume("google", 10);
 	}
 
@@ -238,7 +238,7 @@ class GoogleTest extends TestCase
 		);
 	}
 
-	public function test_ack_failure_throws_consumer_exception(): void
+	public function test_ack_failure_throws_consume_exception(): void
 	{
 		$mock = Mockery::mock(PubSubClient::class);
 		$mockSubscription = Mockery::mock(Subscription::class);
@@ -251,7 +251,7 @@ class GoogleTest extends TestCase
 
 		$google = new Google($mock);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(ConsumeException::class);
 		$google->ack(new Message(topic: "google", payload: "Ok"));
 	}
 

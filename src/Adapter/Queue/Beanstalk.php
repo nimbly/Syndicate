@@ -6,11 +6,11 @@ use Throwable;
 use Pheanstalk\Pheanstalk;
 use Nimbly\Syndicate\Message;
 use Pheanstalk\Values\TubeName;
-use Nimbly\Syndicate\ConsumerException;
-use Nimbly\Syndicate\ConsumerInterface;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\PublisherInterface;
-use Nimbly\Syndicate\ConnectionException;
+use Nimbly\Syndicate\Adapter\ConsumerInterface;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
+use Nimbly\Syndicate\Exception\ConnectionException;
+use Nimbly\Syndicate\Exception\ConsumeException;
+use Nimbly\Syndicate\Exception\PublishException;
 use Pheanstalk\Exception\ConnectionException as PheanstalkConnectionException;
 
 class Beanstalk implements PublisherInterface, ConsumerInterface
@@ -53,7 +53,7 @@ class Beanstalk implements PublisherInterface, ConsumerInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new PublisherException(
+			throw new PublishException(
 				message: "Failed to publish message.",
 				previous: $exception
 			);
@@ -90,7 +90,7 @@ class Beanstalk implements PublisherInterface, ConsumerInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new ConsumerException(
+			throw new ConsumeException(
 				message: "Failed to consume message.",
 				previous: $exception
 			);
@@ -127,7 +127,7 @@ class Beanstalk implements PublisherInterface, ConsumerInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new ConsumerException(
+			throw new ConsumeException(
 				message: "Failed to ack message.",
 				previous: $exception
 			);
@@ -154,7 +154,7 @@ class Beanstalk implements PublisherInterface, ConsumerInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new ConsumerException(
+			throw new ConsumeException(
 				message: "Failed to nack message.",
 				previous: $exception
 			);

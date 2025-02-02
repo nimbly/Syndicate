@@ -6,9 +6,9 @@ use Throwable;
 use Aws\Sns\SnsClient;
 use Nimbly\Syndicate\Message;
 use Aws\Exception\CredentialsException;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\PublisherInterface;
-use Nimbly\Syndicate\ConnectionException;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
+use Nimbly\Syndicate\Exception\ConnectionException;
+use Nimbly\Syndicate\Exception\PublishException;
 
 class Sns implements PublisherInterface
 {
@@ -45,7 +45,7 @@ class Sns implements PublisherInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new PublisherException(
+			throw new PublishException(
 				message: "Failed to publish message.",
 				previous: $exception
 			);

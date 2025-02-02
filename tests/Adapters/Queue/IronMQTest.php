@@ -9,9 +9,9 @@ use IronCore\HttpException;
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Adapter\Queue\Iron;
-use Nimbly\Syndicate\ConsumerException;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\ConnectionException;
+use Nimbly\Syndicate\Exception\ConsumeException;
+use Nimbly\Syndicate\Exception\PublishException;
+use Nimbly\Syndicate\Exception\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
 /**
@@ -77,7 +77,7 @@ class IronMQTest extends TestCase
 		$publisher->publish($message);
 	}
 
-	public function test_publish_failure_throws_publisher_exception(): void
+	public function test_publish_failure_throws_publish_exception(): void
 	{
 		$mock = Mockery::mock(IronMQ::class);
 
@@ -88,7 +88,7 @@ class IronMQTest extends TestCase
 
 		$publisher = new Iron($mock);
 
-		$this->expectException(PublisherException::class);
+		$this->expectException(PublishException::class);
 		$publisher->publish($message);
 	}
 
@@ -180,7 +180,7 @@ class IronMQTest extends TestCase
 		$publisher->consume("ironmq");
 	}
 
-	public function test_consume_failure_throws_consumer_exception(): void
+	public function test_consume_failure_throws_consume_exception(): void
 	{
 		$mock = Mockery::mock(IronMQ::class);
 
@@ -189,7 +189,7 @@ class IronMQTest extends TestCase
 
 		$publisher = new Iron($mock);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(ConsumeException::class);
 		$publisher->consume("ironmq");
 	}
 
@@ -231,7 +231,7 @@ class IronMQTest extends TestCase
 		$consumer->ack($message);
 	}
 
-	public function test_ack_failure_throws_consumer_exception(): void
+	public function test_ack_failure_throws_consume_exception(): void
 	{
 		$mock = Mockery::mock(IronMQ::class);
 
@@ -247,7 +247,7 @@ class IronMQTest extends TestCase
 
 		$consumer = new Iron($mock);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(ConsumeException::class);
 		$consumer->ack($message);
 	}
 
@@ -289,7 +289,7 @@ class IronMQTest extends TestCase
 		$consumer->nack($message);
 	}
 
-	public function test_nack_failure_throws_consumer_exception(): void
+	public function test_nack_failure_throws_consume_exception(): void
 	{
 		$mock = Mockery::spy(IronMQ::class);
 
@@ -305,7 +305,7 @@ class IronMQTest extends TestCase
 
 		$consumer = new Iron($mock);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(ConsumeException::class);
 		$consumer->nack($message);
 	}
 }

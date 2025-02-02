@@ -2,11 +2,11 @@
 
 namespace Nimbly\Syndicate\Adapter\Queue;
 
-use Nimbly\Syndicate\ConsumerException;
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\ConsumerInterface;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\PublisherInterface;
+use Nimbly\Syndicate\Exception\ConsumeException;
+use Nimbly\Syndicate\Exception\PublishException;
+use Nimbly\Syndicate\Adapter\ConsumerInterface;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
 
 class Mock implements PublisherInterface, ConsumerInterface
 {
@@ -24,7 +24,7 @@ class Mock implements PublisherInterface, ConsumerInterface
 	public function publish(Message $message, array $options = []): ?string
 	{
 		if( isset($options["exception"]) ){
-			throw new PublisherException("Failed to publish message.");
+			throw new PublishException("Failed to publish message.");
 		}
 
 		$this->messages[$message->getTopic()][] = $message;
@@ -37,7 +37,7 @@ class Mock implements PublisherInterface, ConsumerInterface
 	public function consume(string $topic, int $max_messages = 1, array $options = []): array
 	{
 		if( isset($options["exception"]) ){
-			throw new ConsumerException("Failed to consume messages.");
+			throw new ConsumeException("Failed to consume messages.");
 		}
 
 		if( !\array_key_exists($topic, $this->messages) ){
@@ -74,5 +74,22 @@ class Mock implements PublisherInterface, ConsumerInterface
 	public function getMessages(string $topic): array
 	{
 		return $this->messages[$topic] ?? [];
+	}
+
+	/**
+	 * Flush messages for a given topic or all topics.
+	 *
+	 * @param string|null $topic The topic to flush messages for. If `null` flush all topics.
+	 *
+	 * @return void
+	 */
+	public function flushMessages(?string $topic = null): void
+	{
+		if( $topic === null ){
+			$this->messages = [];
+		}
+		else {
+			$this->messages[$topic] = [];
+		}
 	}
 }

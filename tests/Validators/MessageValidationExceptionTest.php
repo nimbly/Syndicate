@@ -3,11 +3,11 @@
 namespace Nimbly\Syndicate\Tests;
 
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\Validator\MessageValidationException;
+use Nimbly\Syndicate\Exception\MessageValidationException;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers Nimbly\Syndicate\Validator\MessageValidationException
+ * @covers Nimbly\Syndicate\Exception\MessageValidationException
  */
 class MessageValidationExceptionTest extends TestCase
 {

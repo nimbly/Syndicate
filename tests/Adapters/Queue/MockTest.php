@@ -5,8 +5,8 @@ namespace Nimbly\Syndicate\Tests\Adapters\Queue;
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Adapter\Queue\Mock;
-use Nimbly\Syndicate\ConsumerException;
-use Nimbly\Syndicate\PublisherException;
+use Nimbly\Syndicate\Exception\ConsumeException;
+use Nimbly\Syndicate\Exception\PublishException;
 
 /**
  * @covers Nimbly\Syndicate\Adapter\Queue\Mock
@@ -26,11 +26,11 @@ class MockTest extends TestCase
 		$this->assertSame($message, $messages[0]);
 	}
 
-	public function test_publish_failure_throws_publisher_exception(): void
+	public function test_publish_failure_throws_publish_exception(): void
 	{
 		$mock = new Mock;
 
-		$this->expectException(PublisherException::class);
+		$this->expectException(PublishException::class);
 		$mock->publish(new Message("test", "Ok"), ["exception" => true]);
 	}
 
@@ -55,11 +55,11 @@ class MockTest extends TestCase
 		$this->assertCount(0, $messages);
 	}
 
-	public function test_consume_failure_throws_consumer_exception(): void
+	public function test_consume_failure_throws_consume_exception(): void
 	{
 		$mock = new Mock;
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(ConsumeException::class);
 		$mock->consume("test", 10, ["exception" => true]);
 	}
 

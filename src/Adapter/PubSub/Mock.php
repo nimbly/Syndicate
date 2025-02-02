@@ -3,9 +3,9 @@
 namespace Nimbly\Syndicate\Adapter\PubSub;
 
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\SubscriberInterface;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\PublisherInterface;
+use Nimbly\Syndicate\Adapter\SubscriberInterface;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
+use Nimbly\Syndicate\Exception\PublishException;
 
 class Mock implements PublisherInterface, SubscriberInterface
 {
@@ -27,7 +27,7 @@ class Mock implements PublisherInterface, SubscriberInterface
 	public function publish(Message $message, array $options = []): ?string
 	{
 		if( isset($options["exception"]) ){
-			throw new PublisherException("Failed to publish message.");
+			throw new PublishException("Failed to publish message.");
 		}
 
 		$this->messages[$message->getTopic()][] = $message;

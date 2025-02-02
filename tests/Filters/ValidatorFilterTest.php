@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Adapter\Queue\Mock;
 use Nimbly\Syndicate\Filter\ValidatorFilter;
 use Nimbly\Syndicate\Validator\JsonSchemaValidator;
-use Nimbly\Syndicate\Validator\MessageValidationException;
+use Nimbly\Syndicate\Exception\MessageValidationException;
 use Nimbly\Syndicate\Validator\ValidatorInterface;
 
 /**

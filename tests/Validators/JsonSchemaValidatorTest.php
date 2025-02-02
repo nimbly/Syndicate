@@ -4,7 +4,7 @@ namespace Nimbly\Syndicate\Tests\Validators;
 
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\Validator\MessageValidationException;
+use Nimbly\Syndicate\Exception\MessageValidationException;
 use Nimbly\Syndicate\Validator\JsonSchemaValidator;
 
 /**

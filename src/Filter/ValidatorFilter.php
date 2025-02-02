@@ -3,11 +3,11 @@
 namespace Nimbly\Syndicate\Filter;
 
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\PublisherInterface;
-use Nimbly\Syndicate\ConnectionException;
 use Nimbly\Syndicate\Validator\ValidatorInterface;
-use Nimbly\Syndicate\Validator\MessageValidationException;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
+use Nimbly\Syndicate\Exception\PublishException;
+use Nimbly\Syndicate\Exception\ConnectionException;
+use Nimbly\Syndicate\Exception\MessageValidationException;
 
 /**
  * Validate messages before they are published.
@@ -31,7 +31,7 @@ class ValidatorFilter implements PublisherInterface
 	 * @inheritDoc
 	 * @throws MessageValidationException
 	 * @throws ConnectionException
-	 * @throws PublisherException
+	 * @throws PublishException
 	 */
 	public function publish(Message $message, array $options = []): ?string
 	{

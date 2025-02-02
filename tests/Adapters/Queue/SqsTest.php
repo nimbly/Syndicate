@@ -10,9 +10,9 @@ use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Adapter\Queue\Sqs;
 use PHPUnit\Framework\TestCase;
 use Aws\Exception\CredentialsException;
-use Nimbly\Syndicate\ConsumerException;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\ConnectionException;
+use Nimbly\Syndicate\Exception\ConsumeException;
+use Nimbly\Syndicate\Exception\PublishException;
+use Nimbly\Syndicate\Exception\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
 /**
@@ -87,7 +87,7 @@ class SqsTest extends TestCase
 		$sqs->publish($message);
 	}
 
-	public function test_publish_failure_throws_publisher_exception(): void
+	public function test_publish_failure_throws_publish_exception(): void
 	{
 		$mock = Mockery::mock(SqsClient::class);
 
@@ -99,7 +99,7 @@ class SqsTest extends TestCase
 
 		$sqs = new Sqs($mock);
 
-		$this->expectException(PublisherException::class);
+		$this->expectException(PublishException::class);
 		$sqs->publish($message);
 	}
 
@@ -217,7 +217,7 @@ class SqsTest extends TestCase
 
 		$sqs = new Sqs($mock);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(ConsumeException::class);
 		$sqs->consume("queue_url", 10);
 	}
 
@@ -255,7 +255,7 @@ class SqsTest extends TestCase
 		$sqs->ack($message);
 	}
 
-	public function test_ack_failure_throws_consumer_exception(): void
+	public function test_ack_failure_throws_consume_exception(): void
 	{
 		$mock = Mockery::mock(SqsClient::class);
 		$mock->shouldReceive("deleteMessage")
@@ -266,7 +266,7 @@ class SqsTest extends TestCase
 
 		$sqs = new Sqs($mock);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(ConsumeException::class);
 		$sqs->ack($message);
 	}
 
@@ -306,7 +306,7 @@ class SqsTest extends TestCase
 		$sqs->nack($message);
 	}
 
-	public function test_nack_failure_throws_consumer_exception(): void
+	public function test_nack_failure_throws_consume_exception(): void
 	{
 		$mock = Mockery::mock(SqsClient::class);
 
@@ -317,7 +317,7 @@ class SqsTest extends TestCase
 
 		$sqs = new Sqs($mock);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(ConsumeException::class);
 		$sqs->nack($message);
 	}
 }

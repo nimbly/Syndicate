@@ -5,7 +5,7 @@ namespace Nimbly\Syndicate\Middleware;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;
 use Nimbly\Syndicate\Validator\ValidatorInterface;
-use Nimbly\Syndicate\Validator\MessageValidationException;
+use Nimbly\Syndicate\Exception\MessageValidationException;
 
 /**
  * This middleware can be added to your `Application` instance and provides

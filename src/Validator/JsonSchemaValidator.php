@@ -3,8 +3,9 @@
 namespace Nimbly\Syndicate\Validator;
 
 use Nimbly\Syndicate\Message;
-use Opis\JsonSchema\Errors\ValidationError;
 use Opis\JsonSchema\Validator;
+use Opis\JsonSchema\Errors\ValidationError;
+use Nimbly\Syndicate\Exception\MessageValidationException;
 
 class JsonSchemaValidator implements ValidatorInterface
 {

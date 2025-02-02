@@ -2,10 +2,11 @@
 
 namespace Nimbly\Syndicate\Router;
 
+use ReflectionClass;
 use Flow\JSONPath\JSONPath;
 use Nimbly\Syndicate\Message;
-use ReflectionClass;
 use UnexpectedValueException;
+use Nimbly\Syndicate\Exception\RoutingException;
 
 class Router implements RouterInterface
 {
@@ -51,14 +52,16 @@ class Router implements RouterInterface
 					if( count($reflectionAttributes) > 1 ){
 						throw new RoutingException(
 							\sprintf(
-								"Handler %s@%s has more than one Consume attribute.",
+								"Handler %s@%s has more than one #[Consume] attribute. A handler can only have a single #[Consume] attribute.",
 								$reflectionClass->getName(),
 								$reflectionMethod->getName()
 							)
 						);
 					}
 
-					$routes[\sprintf("\%s@%s", $reflectionClass->getName(), $reflectionMethod->getName())] = $reflectionAttributes[0]->newInstance();
+					$handler = \sprintf("\%s@%s", $reflectionClass->getName(), $reflectionMethod->getName());
+
+					$routes[$handler] = $reflectionAttributes[0]->newInstance();
 				}
 
 				return $routes;

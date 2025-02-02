@@ -8,9 +8,9 @@ use Predis\Client;
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Adapter\Queue\Redis;
-use Nimbly\Syndicate\ConsumerException;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\ConnectionException;
+use Nimbly\Syndicate\Exception\ConsumeException;
+use Nimbly\Syndicate\Exception\PublishException;
+use Nimbly\Syndicate\Exception\ConnectionException;
 use Predis\Connection\NodeConnectionInterface;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Predis\Connection\ConnectionException as RedisConnectionException;
@@ -83,7 +83,7 @@ class RedisTest extends TestCase
 		$redis->publish($message);
 	}
 
-	public function test_publish_failure_throws_publisher_exception(): void
+	public function test_publish_failure_throws_publish_exception(): void
 	{
 		$mock = Mockery::mock(Client::class);
 
@@ -94,7 +94,7 @@ class RedisTest extends TestCase
 
 		$redis = new Redis($mock);
 
-		$this->expectException(PublisherException::class);
+		$this->expectException(PublishException::class);
 		$redis->publish($message);
 	}
 
@@ -180,7 +180,7 @@ class RedisTest extends TestCase
 		$redis->consume("redis");
 	}
 
-	public function test_consume_failure_throws_consumer_exception(): void
+	public function test_consume_failure_throws_consume_exception(): void
 	{
 		$mock = Mockery::mock(Client::class);
 
@@ -190,7 +190,7 @@ class RedisTest extends TestCase
 
 		$redis = new Redis($mock);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(ConsumeException::class);
 		$redis->consume("redis");
 	}
 
@@ -244,7 +244,7 @@ class RedisTest extends TestCase
 		$redis->nack($message);
 	}
 
-	public function test_nack_failure_throws_consumer_exception(): void
+	public function test_nack_failure_throws_consume_exception(): void
 	{
 		$mock = Mockery::mock(Client::class);
 
@@ -256,7 +256,7 @@ class RedisTest extends TestCase
 
 		$redis = new Redis($mock);
 
-		$this->expectException(ConsumerException::class);
+		$this->expectException(ConsumeException::class);
 		$redis->nack($message);
 	}
 }

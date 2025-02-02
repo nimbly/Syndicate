@@ -3,7 +3,7 @@
 namespace Nimbly\Syndicate\Filter;
 
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\PublisherInterface;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
 
 /**
  * This filter redirects messages to the topic you provide in the

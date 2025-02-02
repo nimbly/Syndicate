@@ -9,7 +9,7 @@ use Nimbly\Syndicate\Message;
 use UnexpectedValueException;
 use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\Router\RoutingException;
+use Nimbly\Syndicate\Exception\RoutingException;
 use Nimbly\Syndicate\Tests\Fixtures\TestHandler;
 
 /**

@@ -7,9 +7,9 @@ use Nimbly\Syndicate\Message;
 use Nimbly\Capsule\HttpMethod;
 use Nimbly\Capsule\ResponseStatus;
 use Psr\Http\Client\ClientInterface;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\PublisherInterface;
-use Nimbly\Syndicate\ConnectionException;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
+use Nimbly\Syndicate\Exception\ConnectionException;
+use Nimbly\Syndicate\Exception\PublishException;
 use Throwable;
 
 /**
@@ -56,7 +56,7 @@ class Webhook implements PublisherInterface
 		}
 
 		if( $response->getStatusCode() >= ResponseStatus::BAD_REQUEST->value ){
-			throw new PublisherException(
+			throw new PublishException(
 				message: "Failed to publish message.",
 				code: $response->getStatusCode()
 			);

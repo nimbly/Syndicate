@@ -6,12 +6,12 @@ use MicrosoftAzure\Storage\Common\Exceptions\ServiceException;
 use MicrosoftAzure\Storage\Queue\Models\ListMessagesOptions;
 use MicrosoftAzure\Storage\Queue\Models\QueueMessage;
 use MicrosoftAzure\Storage\Queue\QueueRestProxy;
-use Nimbly\Syndicate\ConnectionException;
-use Nimbly\Syndicate\ConsumerException;
-use Nimbly\Syndicate\ConsumerInterface;
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\PublisherInterface;
+use Nimbly\Syndicate\Adapter\ConsumerInterface;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
+use Nimbly\Syndicate\Exception\ConnectionException;
+use Nimbly\Syndicate\Exception\ConsumeException;
+use Nimbly\Syndicate\Exception\PublishException;
 use Throwable;
 
 class Azure implements PublisherInterface, ConsumerInterface
@@ -43,7 +43,7 @@ class Azure implements PublisherInterface, ConsumerInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new PublisherException(
+			throw new PublishException(
 				message: "Failed to publish message.",
 				previous: $exception
 			);
@@ -75,7 +75,7 @@ class Azure implements PublisherInterface, ConsumerInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new ConsumerException(
+			throw new ConsumeException(
 				message: "Failed to consume message.",
 				previous: $exception
 			);
@@ -140,7 +140,7 @@ class Azure implements PublisherInterface, ConsumerInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new ConsumerException(
+			throw new ConsumeException(
 				message: "Failed to ack message.",
 				previous: $exception
 			);
@@ -171,7 +171,7 @@ class Azure implements PublisherInterface, ConsumerInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new ConsumerException(
+			throw new ConsumeException(
 				message: "Failed to nack message.",
 				previous: $exception
 			);

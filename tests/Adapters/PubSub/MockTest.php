@@ -6,7 +6,7 @@ use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Adapter\PubSub\Mock;
-use Nimbly\Syndicate\PublisherException;
+use Nimbly\Syndicate\Exception\PublishException;
 
 /**
  * @covers Nimbly\Syndicate\Adapter\PubSub\Mock
@@ -26,11 +26,11 @@ class MockTest extends TestCase
 		$this->assertSame($message, $messages[0]);
 	}
 
-	public function test_publish_failure_throws_publisher_exception(): void
+	public function test_publish_failure_throws_publish_exception(): void
 	{
 		$mock = new Mock;
 
-		$this->expectException(PublisherException::class);
+		$this->expectException(PublishException::class);
 		$mock->publish(new Message("test", "Ok"), ["exception" => true]);
 	}
 

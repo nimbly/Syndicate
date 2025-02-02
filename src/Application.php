@@ -7,8 +7,15 @@ use Psr\Log\LoggerInterface;
 use UnexpectedValueException;
 use Psr\Container\ContainerInterface;
 use Nimbly\Syndicate\Router\RouterInterface;
-use Nimbly\Syndicate\Router\RoutingException;
+use Nimbly\Syndicate\Adapter\ConsumerInterface;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
+use Nimbly\Syndicate\Exception\ConsumeException;
+use Nimbly\Syndicate\Exception\PublishException;
+use Nimbly\Syndicate\Exception\RoutingException;
+use Nimbly\Syndicate\Adapter\SubscriberInterface;
+use Nimbly\Syndicate\Exception\ConnectionException;
 use Nimbly\Syndicate\Middleware\MiddlewareInterface;
+use Nimbly\Syndicate\Exception\SubscriptionException;
 
 class Application
 {
@@ -62,8 +69,9 @@ class Application
 	 * @param integer $polling_timeout Amount of time in seconds to poll before trying again.
 	 * @param array<string,mixed> $deadletter_options Options to be passed when publishing a message to the deadletter publisher.
 	 * @throws ConnectionException
-	 * @throws ConsumerException
-	 * @throws PublisherException
+	 * @throws ConsumeException
+	 * @throws PublishException
+	 * @throws SubscriptionException
 	 * @return void
 	 */
 	public function listen(string|array $location, int $max_messages = 1, int $nack_timeout = 0, int $polling_timeout = 10, array $deadletter_options = []): void
@@ -156,7 +164,11 @@ class Application
 
 							if( $this->deadletter === null ){
 								$this->consumer->nack($message, $nack_timeout);
-								throw new RoutingException("Cannot route message to deadletter as no deadletter implementation was given.");
+								throw new RoutingException(
+									"Cannot route message to deadletter as no deadletter implementation ".
+									"was given. Either provide a deadletter publisher or add a default ".
+									"handler to the router instance."
+								);
 							}
 
 							$this->deadletter->publish($message, $deadletter_options);

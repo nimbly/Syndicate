@@ -5,12 +5,12 @@ namespace Nimbly\Syndicate\Adapter\PubSub;
 use Throwable;
 use Nimbly\Syndicate\Message;
 use PhpMqtt\Client\MqttClient;
-use Nimbly\Syndicate\ConsumerException;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\PublisherInterface;
-use Nimbly\Syndicate\ConnectionException;
-use Nimbly\Syndicate\SubscriberException;
-use Nimbly\Syndicate\SubscriberInterface;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
+use Nimbly\Syndicate\Adapter\SubscriberInterface;
+use Nimbly\Syndicate\Exception\ConsumeException;
+use Nimbly\Syndicate\Exception\PublishException;
+use Nimbly\Syndicate\Exception\ConnectionException;
+use Nimbly\Syndicate\Exception\SubscriptionException;
 use PhpMqtt\Client\Exceptions\ConnectingToBrokerFailedException;
 
 class Mqtt implements PublisherInterface, SubscriberInterface
@@ -52,7 +52,7 @@ class Mqtt implements PublisherInterface, SubscriberInterface
 			);
 		}
 		catch( Throwable $exception ) {
-			throw new PublisherException(
+			throw new PublishException(
 				message: "Failed to publish message.",
 				previous: $exception
 			);
@@ -105,7 +105,7 @@ class Mqtt implements PublisherInterface, SubscriberInterface
 				);
 			}
 			catch( Throwable $exception ){
-				throw new SubscriberException(
+				throw new SubscriptionException(
 					message: "Failed to subscribe to topic.",
 					previous: $exception
 				);
@@ -140,7 +140,7 @@ class Mqtt implements PublisherInterface, SubscriberInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new ConsumerException(
+			throw new ConsumeException(
 				message: "Failed to consume message.",
 				previous: $exception
 			);
@@ -158,15 +158,9 @@ class Mqtt implements PublisherInterface, SubscriberInterface
 
 			$this->client->interrupt();
 		}
-		catch( ConnectingToBrokerFailedException $exception ){
+		catch( Throwable $exception ){
 			throw new ConnectionException(
 				message: "Connection to MQTT broker failed.",
-				previous: $exception
-			);
-		}
-		catch( Throwable $exception ){
-			throw new SubscriberException(
-				message: "Failed to shutdown subscriber.",
 				previous: $exception
 			);
 		}

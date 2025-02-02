@@ -13,8 +13,8 @@ use function PHPSTORM_META\map;
 use PHPUnit\Framework\TestCase;
 
 use Nimbly\Syndicate\Adapter\PubSub\Webhook;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\ConnectionException;
+use Nimbly\Syndicate\Exception\PublishException;
+use Nimbly\Syndicate\Exception\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
 /**
@@ -52,7 +52,7 @@ class WebhookTest extends TestCase
 		$mockClient->shouldHaveReceived("sendRequest");
 	}
 
-	public function test_publish_with_connection_issue_throws_publisher_exception(): void
+	public function test_publish_with_connection_issue_throws_publish_exception(): void
 	{
 		$mockClient = Mockery::mock(Shuttle::class);
 		$mockClient->shouldReceive("sendRequest")
@@ -65,11 +65,11 @@ class WebhookTest extends TestCase
 			"https://service.com/events"
 		);
 
-		$this->expectException(PublisherException::class);
+		$this->expectException(PublishException::class);
 		$publisher->publish(new Message("test", "Ok"));
 	}
 
-	public function test_publish_with_non_2xx_response_throws_publisher_exception(): void
+	public function test_publish_with_non_2xx_response_throws_publish_exception(): void
 	{
 		$mockClient = Mockery::mock(Shuttle::class);
 		$mockClient->shouldReceive("sendRequest")

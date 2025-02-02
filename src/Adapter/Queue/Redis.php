@@ -4,13 +4,13 @@ namespace Nimbly\Syndicate\Adapter\Queue;
 
 use Throwable;
 use Predis\Client;
-use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\ConsumerException;
-use Nimbly\Syndicate\ConsumerInterface;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\PublisherInterface;
-use Nimbly\Syndicate\ConnectionException;
 use Predis\Connection\ConnectionException as RedisConnectionException;
+use Nimbly\Syndicate\Message;
+use Nimbly\Syndicate\Adapter\ConsumerInterface;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
+use Nimbly\Syndicate\Exception\ConnectionException;
+use Nimbly\Syndicate\Exception\ConsumeException;
+use Nimbly\Syndicate\Exception\PublishException;
 
 class Redis implements PublisherInterface, ConsumerInterface
 {
@@ -41,7 +41,7 @@ class Redis implements PublisherInterface, ConsumerInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new PublisherException(
+			throw new PublishException(
 				message: "Failed to publish message.",
 				previous: $exception
 			);
@@ -72,7 +72,7 @@ class Redis implements PublisherInterface, ConsumerInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new ConsumerException(
+			throw new ConsumeException(
 				message: "Failed to consume message.",
 				previous: $exception
 			);
@@ -110,8 +110,8 @@ class Redis implements PublisherInterface, ConsumerInterface
 
 			$this->publish($message);
 		}
-		catch( PublisherException $exception ){
-			throw new ConsumerException(
+		catch( PublishException $exception ){
+			throw new ConsumeException(
 				message: "Failed to nack message.",
 				previous: $exception
 			);

@@ -6,12 +6,12 @@ use Throwable;
 use Predis\Client;
 use Predis\PubSub\Consumer;
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\ConsumerException;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\PublisherInterface;
-use Nimbly\Syndicate\ConnectionException;
-use Nimbly\Syndicate\SubscriberException;
-use Nimbly\Syndicate\SubscriberInterface;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
+use Nimbly\Syndicate\Adapter\SubscriberInterface;
+use Nimbly\Syndicate\Exception\ConsumeException;
+use Nimbly\Syndicate\Exception\PublishException;
+use Nimbly\Syndicate\Exception\ConnectionException;
+use Nimbly\Syndicate\Exception\SubscriptionException;
 use Predis\Connection\ConnectionException as RedisConnectionException;
 
 class Redis implements PublisherInterface, SubscriberInterface
@@ -48,7 +48,7 @@ class Redis implements PublisherInterface, SubscriberInterface
 			);
 		}
 		catch( Throwable $exception ) {
-			throw new PublisherException(
+			throw new PublishException(
 				message: "Failed to publish message.",
 				previous: $exception
 			);
@@ -84,7 +84,7 @@ class Redis implements PublisherInterface, SubscriberInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new SubscriberException(
+			throw new SubscriptionException(
 				message: "Failed to subscribe to topic.",
 				previous: $exception
 			);
@@ -93,7 +93,7 @@ class Redis implements PublisherInterface, SubscriberInterface
 
 	/**
 	 * @inheritDoc
-	 * @throws ConsumerException
+	 * @throws ConsumeException
 	 */
 	public function loop(array $options = []): void
 	{
@@ -122,7 +122,7 @@ class Redis implements PublisherInterface, SubscriberInterface
 					$callback = $this->subscriptions[$msg->channel] ?? null;
 
 					if( $callback === null ){
-						throw new ConsumerException(
+						throw new ConsumeException(
 							\sprintf(
 								"Message received from channel \"%s\", but no callback defined for it.",
 								$msg->channel
@@ -149,7 +149,7 @@ class Redis implements PublisherInterface, SubscriberInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new ConsumerException(
+			throw new ConsumeException(
 				message: "Failed to consume message.",
 				previous: $exception
 			);
@@ -165,14 +165,8 @@ class Redis implements PublisherInterface, SubscriberInterface
 
 			$this->getLoop()->stop(true);
 		}
-		catch( RedisConnectionException $exception ){
-			throw new ConnectionException(
-				message: "Connection to Redis failed.",
-				previous: $exception
-			);
-		}
 		catch( Throwable $exception ){
-			throw new SubscriberException(
+			throw new ConnectionException(
 				message: "Failed to shutdown subscriber.",
 				previous: $exception
 			);
@@ -183,7 +177,7 @@ class Redis implements PublisherInterface, SubscriberInterface
 	 * Get the Redis consumer loop.
 	 *
 	 * @return Consumer
-	 * @throws ConsumerException
+	 * @throws ConsumeException
 	 */
 	protected function getLoop(): Consumer
 	{
@@ -191,7 +185,7 @@ class Redis implements PublisherInterface, SubscriberInterface
 			$this->loop = $this->client->pubSubLoop();
 
 			if( empty($this->loop) ){
-				throw new ConsumerException("Could not initialize Redis pubsub loop.");
+				throw new ConsumeException("Could not initialize Redis pubsub loop.");
 			}
 		}
 

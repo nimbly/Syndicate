@@ -6,10 +6,10 @@ use Google\Cloud\PubSub\Message as GoogleMessage;
 use Throwable;
 use Nimbly\Syndicate\Message;
 use Google\Cloud\PubSub\PubSubClient;
-use Nimbly\Syndicate\ConsumerException;
-use Nimbly\Syndicate\ConsumerInterface;
-use Nimbly\Syndicate\PublisherException;
-use Nimbly\Syndicate\PublisherInterface;
+use Nimbly\Syndicate\Adapter\ConsumerInterface;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
+use Nimbly\Syndicate\Exception\ConsumeException;
+use Nimbly\Syndicate\Exception\PublishException;
 
 class Google implements PublisherInterface, ConsumerInterface
 {
@@ -39,7 +39,7 @@ class Google implements PublisherInterface, ConsumerInterface
 			);
 		}
 		catch( Throwable $exception ){
-			throw new PublisherException(
+			throw new PublishException(
 				message: "Failed to publish message.",
 				previous: $exception
 			);
@@ -66,7 +66,7 @@ class Google implements PublisherInterface, ConsumerInterface
 			]);
 		}
 		catch( Throwable $exception ) {
-			throw new ConsumerException(
+			throw new ConsumeException(
 				message: "Failed to consume message.",
 				previous: $exception
 			);
@@ -99,7 +99,7 @@ class Google implements PublisherInterface, ConsumerInterface
 			$subscription->acknowledge($message->getReference());
 		}
 		catch( Throwable $exception ){
-			throw new ConsumerException(
+			throw new ConsumeException(
 				message: "Failed to ack message.",
 				previous: $exception
 			);
