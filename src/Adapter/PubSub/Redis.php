@@ -69,11 +69,11 @@ class Redis implements PublisherInterface, SubscriberInterface
 			);
 		}
 
-		try {
+		foreach( $topics as $channel ){
+			$this->subscriptions[$channel] = $callback;
+		}
 
-			foreach( $topics as $channel ){
-				$this->subscriptions[$channel] = $callback;
-			}
+		try {
 
 			$this->getLoop()->subscribe(...$topics);
 		}
@@ -107,52 +107,51 @@ class Redis implements PublisherInterface, SubscriberInterface
 		 */
 		\pcntl_async_signals(false);
 
-		try {
+		$loop = $this->getLoop();
 
-			$loop = $this->getLoop();
+		while( $loop->valid() ) {
 
-			while( $loop->valid() ) {
-
+			try {
 				/**
 				 * @var object{kind:string,channel:string,payload:string} $msg
 				 */
 				$msg = $loop->current();
+			}
+			catch( RedisConnectionException $exception ){
+				throw new ConnectionException(
+					message: "Connection to Redis failed.",
+					previous: $exception
+				);
+			}
+			catch( Throwable $exception ){
+				throw new ConsumeException(
+					message: "Failed to consume message.",
+					previous: $exception
+				);
+			}
 
-				if( $msg->kind === "message" ){
-					$callback = $this->subscriptions[$msg->channel] ?? null;
+			if( $msg->kind === "message" ){
+				$callback = $this->subscriptions[$msg->channel] ?? null;
 
-					if( $callback === null ){
-						throw new ConsumeException(
-							\sprintf(
-								"Message received from channel \"%s\", but no callback defined for it.",
-								$msg->channel
-							)
-						);
-					}
-
-					$message = new Message(
-						topic: $msg->channel,
-						payload: $msg->payload,
-						reference: $msg
+				if( $callback === null ){
+					throw new ConsumeException(
+						\sprintf(
+							"Message received from channel \"%s\", but no callback defined for it.",
+							$msg->channel
+						)
 					);
-
-					\call_user_func($callback, $message);
 				}
 
-				\pcntl_signal_dispatch();
+				$message = new Message(
+					topic: $msg->channel,
+					payload: $msg->payload,
+					reference: $msg
+				);
+
+				\call_user_func($callback, $message);
 			}
-		}
-		catch( RedisConnectionException $exception ){
-			throw new ConnectionException(
-				message: "Connection to Redis failed.",
-				previous: $exception
-			);
-		}
-		catch( Throwable $exception ){
-			throw new ConsumeException(
-				message: "Failed to consume message.",
-				previous: $exception
-			);
+
+			\pcntl_signal_dispatch();
 		}
 	}
 
