@@ -44,7 +44,7 @@ for( $i = 0; $i < ($argv[1] ?? 100); $i++ ){
 	$c = \mt_rand(1, 100);
 
 	if( $c <= 5 ){
-		// There is no hanler defined for this and should end up in the deadletter.
+		// There is no handler defined for this and should end up in the deadletter.
 		$fruit = "apples";
 	}
 	elseif( $c <= 30 ){
