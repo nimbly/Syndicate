@@ -18,40 +18,64 @@
 
 use Predis\Client;
 use Monolog\Logger;
-use Nimbly\Syndicate\Router;
 use Nimbly\Syndicate\Application;
-use Nimbly\Syndicate\Queue\Redis;
+use Nimbly\Syndicate\Router\Router;
 use Monolog\Handler\ErrorLogHandler;
-use Nimbly\Syndicate\DeadletterPublisher;
+use Nimbly\Syndicate\Adapter\Queue\Redis;
+use Nimbly\Syndicate\Filter\RedirectFilter;
+use Nimbly\Syndicate\Middleware\ValidateMessage;
+use Nimbly\Syndicate\Validator\JsonSchemaValidator;
 use Nimbly\Syndicate\Examples\Handlers\ExampleHandler;
-use Nimbly\Syndicate\Middleware\ValidateMessages;
-use Nimbly\Syndicate\Validators\JsonSchemaValidator;
+use Nimbly\Syndicate\Middleware\ParseJsonMessage;
 
 require_once __DIR__ . "/../vendor/autoload.php";
 
+/**
+ * Use a Redis queue as our data source.
+ */
 $client = new Redis(new Client(parameters: ["read_write_timeout" => 0]));
+
+/**
+ * Validate messages against the "fruits" topic JSON schema.
+ */
+$validator = new JsonSchemaValidator(
+	["fruits" => \file_get_contents(__DIR__ . "/schemas/fruits.json")]
+);
 
 $application = new Application(
 	consumer: $client,
+
+	/**
+	 * Create a Router instance with our single ExampleHandler class.
+	 */
 	router: new Router(
 		handlers: [
 			ExampleHandler::class,
 		],
 	),
-	deadletter: new DeadletterPublisher($client, "deadletter"),
+
+	/**
+	 * Redirect deadletter messages back to the same Redis queue
+	 * except publish them to the "deadletter" queue.
+	 */
+	deadletter: new RedirectFilter($client, "deadletter"),
+
+	/**
+	 * Add a simple logger to show what's going on behind the scenes.
+	 */
 	logger: new Logger("EXAMPLE", [new ErrorLogHandler]),
+
 	middleware: [
+
 		/**
-		 * Validate all consumed messages on the "fruits" topic/location.
-		 * If message does not validate, it will be sent to the deadletter.
+		 * Parse all incoming messages as JSON.
 		 */
-		new ValidateMessages(
-			new JsonSchemaValidator(
-				[
-					"fruits" => \file_get_contents(__DIR__ . "/schemas/fruits.json")
-				]
-			)
-		)
+		new ParseJsonMessage,
+
+		/**
+		 * Validate all incoming messages against our JSON schema.
+		 */
+		new ValidateMessage($validator)
 	]
 );
 

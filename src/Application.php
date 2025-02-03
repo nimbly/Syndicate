@@ -3,9 +3,19 @@
 namespace Nimbly\Syndicate;
 
 use Nimbly\Resolve\Resolve;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use UnexpectedValueException;
+use Psr\Container\ContainerInterface;
+use Nimbly\Syndicate\Router\RouterInterface;
+use Nimbly\Syndicate\Adapter\ConsumerInterface;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
+use Nimbly\Syndicate\Exception\ConsumeException;
+use Nimbly\Syndicate\Exception\PublishException;
+use Nimbly\Syndicate\Exception\RoutingException;
+use Nimbly\Syndicate\Adapter\SubscriberInterface;
+use Nimbly\Syndicate\Exception\ConnectionException;
+use Nimbly\Syndicate\Middleware\MiddlewareInterface;
+use Nimbly\Syndicate\Exception\SubscriptionException;
 
 class Application
 {
@@ -21,8 +31,8 @@ class Application
 	protected $middleware;
 
 	/**
-	 * @param ConsumerInterface|LoopConsumerInterface $consumer The consumer to pull messages from.
-	 * @param RouterInterface $router A router instance that will aid resolving Messages received into callables.
+	 * @param ConsumerInterface|SubscriberInterface $consumer The consumer to pull messages from.
+	 * @param RouterInterface $router An array of class-strings representing your handlers or a full `RouterInterface` instance that will aid resolving Messages received into callables.
 	 * @param PublisherInterface|null $deadletter A deadletter publisher instance if you would like to use one.
 	 * @param ContainerInterface|null $container An optional container instance to be used when invoking the handler.
 	 * @param LoggerInterface|null $logger A LoggerInterface implementation for additional logging and context.
@@ -30,7 +40,7 @@ class Application
 	 * @param array<int> $signals Array of PHP signal constants to trigger a graceful shutdown. Defaults to [SIGINT, SIGTERM].
 	 */
 	public function __construct(
-		protected ConsumerInterface|LoopConsumerInterface $consumer,
+		protected ConsumerInterface|SubscriberInterface $consumer,
 		protected RouterInterface $router,
 		protected ?PublisherInterface $deadletter = null,
 		protected ?ContainerInterface $container = null,
@@ -39,28 +49,36 @@ class Application
 		protected array $signals = [SIGINT, SIGTERM],
 	)
 	{
+		/**
+		 * Attach interrupt handlers.
+		 */
 		$this->attachInterruptSignals($signals);
+
+		/**
+		 * Compile the middleware using the `dispatch` method as the kernel.
+		 */
 		$this->middleware = $this->compileMiddleware($middleware, [$this, "dispatch"]);
 	}
 
 	/**
 	 * Begin listening for new messages.
 	 *
-	 * @param string|array<string> $location The location to pull messages from the consumer: topic name, queue name, queue URL, etc. If using a `LoopConsumerInstance`, you can pass an array of topics to listen on.
+	 * @param string|array<string> $location The location to pull messages from the consumer: topic name, queue name, queue URL, etc. If using a `SubscriberInterface`, you can pass an array of topics to listen on.
 	 * @param integer $max_messages Maximum number of messages to pull at once.
 	 * @param integer $nack_timeout If nacking a message, how much timeout/delay before message is able to be reserved again. Also known as "visibility delay".
 	 * @param integer $polling_timeout Amount of time in seconds to poll before trying again.
 	 * @param array<string,mixed> $deadletter_options Options to be passed when publishing a message to the deadletter publisher.
 	 * @throws ConnectionException
-	 * @throws ConsumerException
-	 * @throws PublisherException
+	 * @throws ConsumeException
+	 * @throws PublishException
+	 * @throws SubscriptionException
 	 * @return void
 	 */
 	public function listen(string|array $location, int $max_messages = 1, int $nack_timeout = 0, int $polling_timeout = 10, array $deadletter_options = []): void
 	{
 		$this->listening = true;
 
-		if( $this->consumer instanceof LoopConsumerInterface ){
+		if( $this->consumer instanceof SubscriberInterface ){
 
 			$this->consumer->subscribe($location, $this->middleware);
 			$this->logger?->info(
@@ -91,7 +109,8 @@ class Application
 					"location" => $location,
 					"max_messages" => $max_messages,
 					"nack_timeout" => $nack_timeout,
-					"polling_timeout" => $polling_timeout
+					"polling_timeout" => $polling_timeout,
+					"deadletter_options" => $deadletter_options,
 				]
 			);
 
@@ -145,7 +164,11 @@ class Application
 
 							if( $this->deadletter === null ){
 								$this->consumer->nack($message, $nack_timeout);
-								throw new RoutingException("Cannot route message to deadletter as no deadletter implementation was given.");
+								throw new RoutingException(
+									"Cannot route message to deadletter as no deadletter implementation ".
+									"was given. Either provide a deadletter publisher or add a default ".
+									"handler to the router instance."
+								);
 							}
 
 							$this->deadletter->publish($message, $deadletter_options);
@@ -217,7 +240,7 @@ class Application
 
 			$this->listening = false;
 
-			if( $this->consumer instanceof LoopConsumerInterface ){
+			if( $this->consumer instanceof SubscriberInterface ){
 				$this->consumer->shutdown();
 			}
 		}
@@ -262,8 +285,8 @@ class Application
 				if( $middleware instanceof MiddlewareInterface === false ){
 					throw new UnexpectedValueException(
 						\sprintf(
-							"Provided middleware must be an instance of Nimbly\Syndicate\MiddlewareInterface or ".
-							"a class-string that references a Nimbly\Syndicate\MiddlewareInterface implementation. ".
+							"Provided middleware must be an instance of Nimbly\Syndicate\Middleware\MiddlewareInterface or ".
+							"a class-string that references a Nimbly\Syndicate\Middleware\MiddlewareInterface implementation. ".
 							"%s was given.",
 							$middleware::class
 						)

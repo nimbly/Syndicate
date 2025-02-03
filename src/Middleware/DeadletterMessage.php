@@ -3,15 +3,14 @@
 namespace Nimbly\Syndicate\Middleware;
 
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\MiddlewareInterface;
-use Nimbly\Syndicate\PublisherInterface;
 use Nimbly\Syndicate\Response;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
 
 /**
  * This middleware can be added to your `Application` instance and allows you
- * to move loop based consumer messages to a deadletter location. Simply
+ * to move subcriber based consumed messages to a deadletter location. Simply
  * return a `Response::deadletter` from your handlers and this middleware will
- * take care of the rest. If you are *not* using a loop based consumer
+ * take care of the rest. If you are *not* using a subscriber based consumer
  * (`PubSub\Mqtt` or `PubSub\Redis`), you *do not* need this middleware as
  * deadlettering is supported directly.
  */
