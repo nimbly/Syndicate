@@ -139,6 +139,9 @@ class Gearman implements PublisherInterface, SubscriberInterface
 		$this->running = true;
 
 		while( $this->worker->work() ){
+			/**
+			 * @psalm-suppress TypeDoesNotContainType
+			 */
 			if( $this->worker->returnCode() !== GEARMAN_SUCCESS ||
 				$this->running === false ) {
 				break;

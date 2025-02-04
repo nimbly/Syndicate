@@ -124,7 +124,7 @@ class Outbox implements PublisherInterface
 			"created_at" => \date("c"),
 		];
 
-		if( $this->identity_generator ){
+		if( \is_callable($this->identity_generator) ){
 			$values["id"] = \call_user_func($this->identity_generator, $message);
 		}
 
