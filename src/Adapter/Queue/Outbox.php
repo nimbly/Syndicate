@@ -53,24 +53,9 @@ class Outbox implements PublisherInterface
 	{
 		$values = $this->buildValues($message);
 
-		try {
-
-			$statement = $this->pdo->prepare(
-				$this->buildQuery($values)
-			);
-		}
-		catch( Throwable $exception ){
-			throw new PublishException(
-				message: "Failed to publish message.",
-				previous: $exception
-			);
-		}
-
-		if( $statement === false ){
-			throw new PublishException(
-				message: "Failed to publish message."
-			);
-		}
+		$statement = $this->getPublishStatement(
+			$this->buildQuery($values)
+		);
 
 		try {
 
