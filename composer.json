@@ -24,6 +24,7 @@
         "php-mqtt/client": "^2.2",
         "php-amqplib/php-amqplib": "^3.7",
 		"aws/aws-sdk-php": "^3.336",
+		"nimbly/shuttle": "^1.1",
         "softcreatr/jsonpath": "^0.9.1",
         "opis/json-schema": "^2.4"
     },
@@ -32,7 +33,7 @@
         "phpunit/phpunit": "^10.0",
         "symfony/var-dumper": "^6.0",
         "nimbly/carton": "^2.0",
-        "nimbly/shuttle": "^1.1",
+        "nimbly/proof": "^1.1",
         "mockery/mockery": "^1.6",
         "monolog/monolog": "^3.8"
     },
