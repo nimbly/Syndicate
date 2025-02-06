@@ -31,10 +31,10 @@ class RabbitMQTest extends TestCase
 		->withArgs([AMQPMessage::class, "exch", "rabbitmq", true, true, "tk1"])
 		->andReturns((object) ["id" => "afd1cbe8-6ee3-4de0-90f5-50c019a9a887"]);
 
-		$message = new Message("rabbitmq", "Ok");
+		$message = new Message("rabbitmq", "Ok", ["exchange" => "exch", "mandatory" => true, "immediate" => true, "ticket" => "tk1"]);
 
 		$publisher = new RabbitMQ($mock);
-		$publisher->publish($message, ["exchange" => "exch", "mandatory" => true, "immediate" => true, "ticket" => "tk1"]);
+		$publisher->publish($message);
 
 		$mock->shouldHaveReceived(
 			"basic_publish",

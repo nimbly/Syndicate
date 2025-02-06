@@ -28,7 +28,7 @@ class Mqtt implements PublisherInterface, SubscriberInterface
 	 * @inheritDoc
 	 * @return null
 	 *
-	 * Options:
+	 * Message attributes:
 	 * 	* `qos` integer, One of `MqttClient::QOS_AT_MOST_ONCE`, `MqttClient::QOS_AT_LEAST_ONCE`, or `MqttClient::QOS_EXACTLY_ONCE`. Defaults to `MqttClient::QOS_AT_MOST_ONCE`.
 	 *  * `retain` boolean, Whether to retain the message on the source. Defaults to false.
 	 */
@@ -41,8 +41,8 @@ class Mqtt implements PublisherInterface, SubscriberInterface
 			$this->client->publish(
 				topic: $message->getTopic(),
 				message: $message->getPayload(),
-				qualityOfService: (int) ($options["qos"] ?? MqttClient::QOS_AT_MOST_ONCE),
-				retain: (bool) ($options["retain"] ?? false)
+				qualityOfService: (int) ($message->getAttributes()["qos"] ?? MqttClient::QOS_AT_MOST_ONCE),
+				retain: (bool) ($message->getAttributes()["retain"] ?? false)
 			);
 		}
 		catch( ConnectingToBrokerFailedException $exception ){

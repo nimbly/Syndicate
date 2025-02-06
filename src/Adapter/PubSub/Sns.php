@@ -26,7 +26,7 @@ class Sns implements PublisherInterface
 	/**
 	 * @inheritDoc
 	 *
-	 * Options:
+	 * Message attributes:
 	 * * `MessageGroupId` (string)
 	 * * `MessageDeduplicationId (string)
 	 */
@@ -63,11 +63,13 @@ class Sns implements PublisherInterface
 	 */
 	private function buildArguments(Message $message, array $options = []): array
 	{
-		$args = [
+		$args = \array_filter([
 			"TopicArn" => $this->base_arn ?? "" . $message->getTopic(),
 			"Data" => $message->getPayload(),
+			"MessageGroupId" => $message->getAttributes()["MessageGroupId"] ?? null,
+			"MessageDeduplicationId" => $message->getAttributes()["MessageDeduplicationId"] ?? null,
 			...$options,
-		];
+		]);
 
 		if( $message->getAttributes() ){
 			$args["MessageAttributes"] = $message->getAttributes();
