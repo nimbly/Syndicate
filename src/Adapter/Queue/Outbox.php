@@ -53,7 +53,7 @@ class Outbox implements PublisherInterface
 	{
 		$values = $this->buildValues($message);
 
-		$statement = $this->getPublishStatement(
+		$statement = $this->getStatement(
 			$this->buildQuery($values)
 		);
 
@@ -122,7 +122,7 @@ class Outbox implements PublisherInterface
 	 * @param string $query
 	 * @return PDOStatement
 	 */
-	protected function getPublishStatement(string $query): PDOStatement
+	protected function getStatement(string $query): PDOStatement
 	{
 		if( $this->statement === null ){
 			try {
