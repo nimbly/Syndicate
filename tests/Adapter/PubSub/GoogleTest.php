@@ -35,7 +35,12 @@ class GoogleTest extends TestCase
 		->withAnyArgs()
 		->andReturns(["messageid"]);
 
-		$message = new Message("google", "Ok", ["attr1" => "val1", "attr2" => "val2"]);
+		$message = new Message(
+			topic: "google",
+			payload: "Ok",
+			attributes: ["attr1" => "val1", "attr2" => "val2"],
+			headers: ["header" => "value"]
+		);
 
 		$google = new Google($mock);
 		$google->publish($message, ["opt1" => "val1", "opt2" => "val2"]);
@@ -49,7 +54,7 @@ class GoogleTest extends TestCase
 			"publish",
 			[
 				["data" => "Ok", "attributes" => ["attr1" => "val1", "attr2" => "val2"]],
-				["opt1" => "val1", "opt2" => "val2"]
+				["opt1" => "val1", "opt2" => "val2", "headers" => ["header" => "value"]]
 			]
 		);
 	}
