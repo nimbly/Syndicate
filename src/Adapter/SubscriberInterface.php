@@ -7,7 +7,8 @@ use Nimbly\Syndicate\Exception\ConnectionException;
 use Nimbly\Syndicate\Exception\SubscriptionException;
 
 /**
- * Subscribers are integrations that require subscriptions to be declared: a topic name and a callback.
+ * Subscribers are adapters that require subscriptions to be
+ * declared: a topic name and a callback.
  */
 interface SubscriberInterface
 {

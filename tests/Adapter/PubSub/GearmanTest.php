@@ -75,8 +75,7 @@ class GearmanTest extends TestCase
 		$publisher = new Gearman(client: $mock);
 
 		$publisher->publish(
-			new Message("fruits", "bananas"),
-			["priority" => "low"]
+			new Message(topic: "fruits", payload: "bananas", attributes: ["priority" => "low"])
 		);
 
 		$mock->shouldHaveReceived(
@@ -95,8 +94,7 @@ class GearmanTest extends TestCase
 		$publisher = new Gearman(client: $mock);
 
 		$publisher->publish(
-			new Message("fruits", "bananas"),
-			["priority" => "high"]
+			new Message(topic: "fruits", payload: "bananas", attributes: ["priority" => "high"])
 		);
 
 		$mock->shouldHaveReceived(

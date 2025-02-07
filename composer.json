@@ -32,13 +32,14 @@
         "vimeo/psalm": "^5.0",
         "phpunit/phpunit": "^10.0",
         "symfony/var-dumper": "^6.0",
-        "nimbly/carton": "^2.0",
-        "nimbly/proof": "^1.1",
+		"ext-gearman": "*",
         "mockery/mockery": "^1.6",
+        "nimbly/carton": "^2.0",
         "monolog/monolog": "^3.8"
     },
 	"suggest": {
-		"ext-pcntl": "Enables graceful shutdown of the consumer listener."
+		"ext-pcntl": "Enables graceful shutdown of consumers.",
+		"ext-gearman": "Required for Gearman support."
 	},
     "autoload": {
         "psr-4": {

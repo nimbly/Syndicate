@@ -6,6 +6,10 @@ use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Exception\ConsumeException;
 use Nimbly\Syndicate\Exception\ConnectionException;
 
+/**
+ * A consumer is any adapter that can retrieve messages to be
+ * processed.
+ */
 interface ConsumerInterface
 {
 	/**

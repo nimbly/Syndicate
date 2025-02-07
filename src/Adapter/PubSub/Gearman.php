@@ -14,8 +14,9 @@ use Nimbly\Syndicate\Exception\SubscriptionException;
 use UnexpectedValueException;
 
 /**
- * Gearman background publisher and consumer. This integration only
+ * Gearman background publisher and consumer. This adapter only
  * supports background jobs (normal, low, and high priorities.)
+ * NOTE: This adapter requires the `ext-gearman` module.
  */
 class Gearman implements PublisherInterface, SubscriberInterface
 {
@@ -41,7 +42,7 @@ class Gearman implements PublisherInterface, SubscriberInterface
 	/**
 	 * @inheritDoc
 	 *
-	 * Options:
+	 * Message attributes:
 	 * 	* `priority` (string) The job priority. Values are `low`, `normal`, `high`. Defaults to `normal`.
 	 */
 	public function publish(Message $message, array $options = []): ?string
@@ -54,7 +55,7 @@ class Gearman implements PublisherInterface, SubscriberInterface
 			);
 		}
 
-		$job_id = match( $options["priority"] ?? "normal" ){
+		$job_id = match( $message->getAttributes()["priority"] ?? "normal" ){
 			"low" => $this->client->doLowBackground(
 						$message->getTopic(),
 						$message->getPayload()

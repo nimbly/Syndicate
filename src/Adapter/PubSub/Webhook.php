@@ -16,8 +16,8 @@ use Throwable;
 /**
  * A simple Webhook publisher.
  *
- * This publisher will make HTTP calls to the given hostname and endpoint. It assumes the endpoint will be the
- * topic name and will make a POST call.
+ * This publisher will make HTTP calls to the given hostname and endpoint. It assumes
+ * the endpoint will be the topic name and will make a POST call.
  *
  * You can supply a default set of headers to be included with each HTTP request.
  *

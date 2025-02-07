@@ -7,9 +7,14 @@ use Nimbly\Syndicate\Adapter\SubscriberInterface;
 use Nimbly\Syndicate\Adapter\PublisherInterface;
 use Nimbly\Syndicate\Exception\PublishException;
 
+/**
+ * A Mock pubsub adapter that can be used for testing. This adapter
+ * does not send messages to any external service. Messages are
+ * stored in memory.
+ */
 class Mock implements PublisherInterface, SubscriberInterface
 {
-	protected bool $isShutdown = false;
+	protected bool $running = false;
 
 	/**
 	 * @param array<string,array<Message>> $messages Array of preloaded messages in queue, indexed by topic.
@@ -56,6 +61,8 @@ class Mock implements PublisherInterface, SubscriberInterface
 	 */
 	public function loop(array $options = []): void
 	{
+		$this->running = true;
+
 		foreach( $this->subscriptions as $topic => $callback ){
 			if( !isset($this->messages[$topic]) ){
 				continue;
@@ -65,7 +72,10 @@ class Mock implements PublisherInterface, SubscriberInterface
 				$messages = \array_splice($this->messages[$topic], 0, 1);
 				\call_user_func($callback, $messages[0]);
 
-				if( $this->isShutdown ){
+				/**
+				 * @psalm-suppress TypeDoesNotContainType
+				 */
+				if( $this->running === false ){
 					return;
 				}
 			}
@@ -77,8 +87,7 @@ class Mock implements PublisherInterface, SubscriberInterface
 	 */
 	public function shutdown(): void
 	{
-		$this->isShutdown = true;
-		return;
+		$this->running = false;
 	}
 
 	/**
@@ -112,7 +121,7 @@ class Mock implements PublisherInterface, SubscriberInterface
 	 * Get the subscription (callback) for a topic.
 	 *
 	 * @param string $topic The topic name.
-	 * @return callable|null Returns null if no subscription does not exist.
+	 * @return callable|null Returns `null` if no subscriptions exist for given topic.
 	 */
 	public function getSubscription(string $topic): ?callable
 	{
@@ -120,12 +129,12 @@ class Mock implements PublisherInterface, SubscriberInterface
 	}
 
 	/**
-	 * Get the shutdown value.
+	 * Get the running value.
 	 *
 	 * @return boolean
 	 */
-	public function getIsShutdown(): bool
+	public function getRunning(): bool
 	{
-		return $this->isShutdown;
+		return $this->running;
 	}
 }

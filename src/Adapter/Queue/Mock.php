@@ -8,6 +8,11 @@ use Nimbly\Syndicate\Exception\PublishException;
 use Nimbly\Syndicate\Adapter\ConsumerInterface;
 use Nimbly\Syndicate\Adapter\PublisherInterface;
 
+/**
+ * A Mock queue adapter that can be used for testing. This
+ * adapter does not persist or send messages to any external
+ * service. Messages are stored in memory.
+ */
 class Mock implements PublisherInterface, ConsumerInterface
 {
 	/**

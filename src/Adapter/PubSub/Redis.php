@@ -14,6 +14,9 @@ use Nimbly\Syndicate\Exception\ConnectionException;
 use Nimbly\Syndicate\Exception\SubscriptionException;
 use Predis\Connection\ConnectionException as RedisConnectionException;
 
+/**
+ * This adapter uses Redis's built-in pubsub capabilities.
+ */
 class Redis implements PublisherInterface, SubscriberInterface
 {
 	protected ?Consumer $loop = null;

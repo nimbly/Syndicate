@@ -6,6 +6,10 @@ use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Exception\PublishException;
 use Nimbly\Syndicate\Exception\ConnectionException;
 
+/**
+ * A publisher is any adapter that can write (aka publish or produce) messages
+ * to a known location. These messages may be consumed by another service.
+ */
 interface PublisherInterface
 {
 	/**

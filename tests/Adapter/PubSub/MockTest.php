@@ -7,6 +7,7 @@ use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Adapter\PubSub\Mock;
 use Nimbly\Syndicate\Exception\PublishException;
+use ReflectionClass;
 
 /**
  * @covers Nimbly\Syndicate\Adapter\PubSub\Mock
@@ -130,15 +131,17 @@ class MockTest extends TestCase
 					new Message("fruits", "oranges"),
 					new Message("fruits", "pears"),
 				]
-			],
-			subscriptions: [
-				"fruits" => function(Message $message): Response {
-					return Response::ack;
-				}
 			]
 		);
 
-		$mock->shutdown();
+		$mock->subscribe(
+			"fruits",
+			function() use ($mock): Response {
+				$mock->shutdown();
+				return Response::ack;
+			}
+		);
+
 		$mock->loop();
 
 		$this->assertCount(2, $mock->getMessages("fruits"));
@@ -147,9 +150,19 @@ class MockTest extends TestCase
 	public function test_shutdown(): void
 	{
 		$mock = new Mock;
+		$this->assertFalse($mock->getRunning());
+
+		$reflectionClass = new ReflectionClass($mock);
+		$reflectionProperty = $reflectionClass->getProperty("running");
+
+		$reflectionProperty->setAccessible(true);
+		$reflectionProperty->setValue($mock, true);
+
+		$this->assertTrue($mock->getRunning());
+
 		$mock->shutdown();
 
-		$this->assertTrue($mock->getIsShutdown());
+		$this->assertFalse($mock->getRunning());
 	}
 
 	public function test_flush_all_messages(): void

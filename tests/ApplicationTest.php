@@ -286,7 +286,7 @@ class ApplicationTest extends TestCase
 		$application->listen("fruits");
 		$application->shutdown();
 
-		$this->assertTrue($consumer->getIsShutdown());
+		$this->assertFalse($consumer->getRunning());
 	}
 
 	public function test_compile_creates_callable_chain(): void

@@ -37,6 +37,7 @@ Namespace: `Nimbly\Syndicate\Adapter\Queue`
 | Beanstalk      | Y         | Y        | `pda/pheanstalk:^5.0` |
 | IronMQ         | Y         | Y        | `iron-io/iron_mq:^4.0` |
 | RabbitMQ       | Y         | Y        | `php-amqplib/php-amqplib:^3.7` |
+| Outbox         | Y         | N        | `PDO` |
 
 ### PubSubs
 
@@ -48,7 +49,7 @@ Namespace: `Nimbly\Syndicate\Adapter\PubSub`
 | SNS            | Y         | N        | `aws/aws-sdk-php:^3.336` |
 | MQTT           | Y         | Y*       | `php-mqtt/client:^1.1` |
 | Google         | Y         | Y        | `google/cloud-pubsub:^2.0` |
-| Gearman        | Y         | Y*       | `pecl:gearman` |
+| Gearman        | Y         | Y*       | `ext-gearman` |
 | Webhook        | Y         | N        | Any `psr/http-client` implementation |
 | Mercure        | Y         | N        | Any `psr/http-client` implementation |
 
@@ -156,7 +157,7 @@ To stop processing messages, press **Ctrl-c** to initiate a graceful shutdown.
 
 A publisher is an instance that sends (aka publishes) messages to a known location. The message contains all information the publisher needs to know including the topic, name, or destination URL of the message, the payload of the message, and if the integration supports it, headers and attributes.
 
-Once the message has been published, the integration chosen *may* return an acknowledgement like an ID.
+Once the message has been published, the integration chosen *may* return an acknowledgement like an ID or receipt of some sort.
 
 Please refer to the [**Supported integrations**](#supported-integrations) for detailed information on what publisher integrations are available.
 
@@ -165,7 +166,7 @@ $publisher = new Sns(
 	new SnsClient($aws_config)
 );
 
-$publisher->publish($message);
+$receipt = $publisher->publish($message);
 ```
 
 ### Messages
@@ -178,14 +179,14 @@ The `Message` instance contains the `topic` and `payload` of the message you wou
 $message = new Message(topic: "users", payload: \json_encode($user));
 ```
 
-If your integration supports it, the `Message` instance can also contain `headers` and `attributes`. These are simple key/value pair maps that are highly dependent on the integration chosen. Please refer to the vendor's documentation to see if these are supported and what possible values it may contain.
+If the adapter supports it, the `Message` instance can also contain `headers` and `attributes`. These are simple key/value pair maps that are highly dependent on the adapter chosen. Please refer to the vendor's documentation to see if these are supported and what possible values it may contain.
 
 ```php
 $message = new Message(
 	topic: "users",
 	payload: \json_encode($user),
 	headers: ["Header1" => "Value1"],
-	attributes: ["message_id" => (string) Uuid::uuid4()]
+	attributes: ["id" => (string) Uuid::uuid4(), "priority" => "high"]
 );
 
 $publisher->publish($message);
@@ -629,6 +630,12 @@ $application->listen(
 );
 ```
 
+```php
+$application->listen(
+	location: "users, orders, returns"
+);
+```
+
 #### Max Messages
 
 The `max_messages` parameter defines how many messages should be pulled off at a single time. Some implementations only allow a single message at a time, regardless of what value you use here.
@@ -646,7 +653,7 @@ The `deadletter_options` parameter is a set of options that will be passed to th
 
 ## Validators
 
-A good practice is to validate your messages before publishing or at least within your unit tests. Syndicate offers a `ValidatorFilter` filter that can assist in this: each message will be validated against your validator before being published. Currently, only a `JsonSchemaValidator` is available.
+A good practice is to validate your messages before publishing, before consuming them, or at least within your unit tests. Syndicate offers a `ValidatorFilter` filter that can assist in this: each message will be validated against your chosen validator before being published. Currently, only a `JsonSchemaValidator` is available.
 
 If the message fails validation, a `MessageValidationException` will be thrown.
 

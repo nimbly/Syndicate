@@ -12,6 +12,11 @@ use Nimbly\Syndicate\Exception\ConnectionException;
 use Nimbly\Syndicate\Exception\ConsumeException;
 use Nimbly\Syndicate\Exception\PublishException;
 
+/**
+ * This Redis adapter uses Redis lists to maintain a queue of
+ * sorts. New messages are pushed on (rpush) and consumed messages
+ * are popped off (lpop).
+ */
 class Redis implements PublisherInterface, ConsumerInterface
 {
 	/**
