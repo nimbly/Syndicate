@@ -33,10 +33,10 @@ class MqttTest extends TestCase
 		$mock->shouldReceive("connect");
 		$mock->shouldReceive("publish");
 
-		$message = new Message("mqtt", "Ok");
+		$message = new Message("mqtt", "Ok", ["qos" => MqttClient::QOS_AT_LEAST_ONCE, "retain" => true]);
 
 		$publisher = new Mqtt($mock);
-		$publisher->publish($message, ["qos" => MqttClient::QOS_AT_LEAST_ONCE, "retain" => true]);
+		$publisher->publish($message);
 
 		$mock->shouldHaveReceived("isConnected");
 		$mock->shouldHaveReceived("connect");

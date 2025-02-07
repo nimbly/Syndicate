@@ -25,7 +25,7 @@ class RabbitMQ implements PublisherInterface, ConsumerInterface
 	 * @inheritDoc
 	 * @return null
 	 *
-	 * Options:
+	 * Message attributes:
 	 * 	* `exchange` (string) Defaults to empty string "".
 	 *  * `mandatory` (boolean) Defaults to false.
 	 *  * `immediate` (boolean) Defaults to false.
@@ -37,11 +37,11 @@ class RabbitMQ implements PublisherInterface, ConsumerInterface
 
 			$this->channel->basic_publish(
 				msg: new AMQPMessage($message->getPayload(), $message->getAttributes()),
-				exchange: $options["exchange"] ?? "",
+				exchange: $message->getAttributes()["exchange"] ?? "",
 				routing_key: $message->getTopic(),
-				mandatory: $options["mandatory"] ?? false,
-				immediate: $options["immediate"] ?? false,
-				ticket: $options["ticket"] ?? null,
+				mandatory: $message->getAttributes()["mandatory"] ?? false,
+				immediate: $message->getAttributes()["immediate"] ?? false,
+				ticket: $message->getAttributes()["ticket"] ?? null,
 			);
 		}
 		catch( AMQPConnectionClosedException|AMQPConnectionBlockedException $exception ){
