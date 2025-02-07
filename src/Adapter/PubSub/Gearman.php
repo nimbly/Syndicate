@@ -80,7 +80,7 @@ class Gearman implements PublisherInterface, SubscriberInterface
 	public function subscribe(string|array $topics, callable $callback, array $options = []): void
 	{
 		if( $this->worker === null ){
-			throw new ConsumeException(
+			throw new SubscriptionException(
 				"No GearmanWorker instance was given. ".
 				"In order to process jobs, you must pass a GearmanWorker instance ".
 				"into the constructor."
@@ -138,13 +138,9 @@ class Gearman implements PublisherInterface, SubscriberInterface
 
 		$this->running = true;
 
-		while( $this->worker->work() ){
-			/**
-			 * @psalm-suppress TypeDoesNotContainType
-			 */
-			if( $this->worker->returnCode() !== GEARMAN_SUCCESS ||
-				$this->running === false ) {
-				break;
+		while( $this->running && $this->worker->work() ){
+			if( $this->worker->returnCode() !== 0 ){
+				$this->running = false;
 			}
 		}
 	}
