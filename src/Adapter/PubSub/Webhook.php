@@ -6,6 +6,7 @@ use Nimbly\Capsule\Request;
 use Nimbly\Syndicate\Message;
 use Nimbly\Capsule\HttpMethod;
 use Nimbly\Capsule\ResponseStatus;
+use Nimbly\Shuttle\Shuttle;
 use Psr\Http\Client\ClientInterface;
 use Nimbly\Syndicate\Adapter\PublisherInterface;
 use Nimbly\Syndicate\Exception\ConnectionException;
@@ -26,7 +27,7 @@ use Throwable;
 class Webhook implements PublisherInterface
 {
 	public function __construct(
-		protected ClientInterface $client,
+		protected ClientInterface $httpClient = new Shuttle,
 		protected ?string $hostname = null,
 		protected array $headers = []
 	)
@@ -46,7 +47,9 @@ class Webhook implements PublisherInterface
 	{
 		try {
 
-			$response = $this->client->sendRequest($this->buildRequest($message, $options));
+			$response = $this->httpClient->sendRequest(
+				$this->buildRequest($message, $options)
+			);
 		}
 		catch( Throwable $exception ){
 			throw new ConnectionException(

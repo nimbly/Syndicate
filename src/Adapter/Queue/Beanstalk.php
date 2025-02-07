@@ -28,7 +28,7 @@ class Beanstalk implements PublisherInterface, ConsumerInterface
 	/**
 	 * @inheritDoc
 	 *
-	 * Options:
+	 * Message attributes:
 	 * 	* `priority` (integer) Priority level, defaults to `Pheanstalk::DEFAULT_DELAY` (1024).
 	 * 	* `delay` (integer) Delay in seconds before message becomes available.
 	 * 	* `time_to_release` (integer) Time to run, in seconds. Amount of time message may be resevered for.
@@ -41,9 +41,9 @@ class Beanstalk implements PublisherInterface, ConsumerInterface
 
 			$job = $this->client->put(
 				data: $message->getPayload(),
-				priority: $options["priority"] ?? Pheanstalk::DEFAULT_PRIORITY,
-				delay: $options["delay"] ?? Pheanstalk::DEFAULT_DELAY,
-				timeToRelease: $options["time_to_release"] ??  Pheanstalk::DEFAULT_TTR
+				priority: $message->getAttributes()["priority"] ?? Pheanstalk::DEFAULT_PRIORITY,
+				delay: $message->getAttributes()["delay"] ?? Pheanstalk::DEFAULT_DELAY,
+				timeToRelease: $message->getAttributes()["time_to_release"] ??  Pheanstalk::DEFAULT_TTR
 			);
 		}
 		catch( PheanstalkConnectionException $exception ){
