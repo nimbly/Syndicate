@@ -15,6 +15,7 @@
         "psr/container": "^1.0|^2.0",
         "nimbly/capsule": "^3.0",
         "nimbly/resolve": "^2.0",
+		"nimbly/shuttle": "^1.1",
         "psr/http-client": "^1.0",
 		"pda/pheanstalk": "^5.0",
 		"predis/predis": "^2.3",
@@ -24,7 +25,6 @@
         "php-mqtt/client": "^2.2",
         "php-amqplib/php-amqplib": "^3.7",
 		"aws/aws-sdk-php": "^3.336",
-		"nimbly/shuttle": "^1.1",
         "softcreatr/jsonpath": "^0.9.1",
         "opis/json-schema": "^2.4"
     },

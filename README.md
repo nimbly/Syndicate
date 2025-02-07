@@ -48,8 +48,9 @@ Namespace: `Nimbly\Syndicate\Adapter\PubSub`
 | SNS            | Y         | N        | `aws/aws-sdk-php:^3.336` |
 | MQTT           | Y         | Y*       | `php-mqtt/client:^1.1` |
 | Google         | Y         | Y        | `google/cloud-pubsub:^2.0` |
-| Webhook        | Y         | N        |  |
-| Mercure        | Y         | N        |  |
+| Gearman        | Y         | Y*       | `pecl:gearman` |
+| Webhook        | Y         | N        | Any `psr/http-client` implementation |
+| Mercure        | Y         | N        | Any `psr/http-client` implementation |
 
 **NOTE:** Consumers denoted with **\*** indicate subscriber based adapters and do not support `ack`ing or `nack`ing due to the nature of pubsub. Additionally, the `predis/predis` library currently does not play well with interrupts and gracefully stopping its internal pubsub loop. If using this adapter, you should set the `signals` option to an empty array. See the [**Subscribers**](#subscribers) section below for more details.
 
@@ -620,7 +621,7 @@ $application->listen(
 
 The `location` parameter is the topic name, queue name, or queue URL you will be listening on. This parameter value is dependent on which consumer adapter you are using.
 
-For consumers that implement the `SubscriberInterface` (curently `PubSub\Redis` and `PubSub\Mqtt`), you can pass in an array of `location` strings representing `topics` to subscribe to or a comma seperated list of topic names.
+For consumers that implement the `SubscriberInterface` (curently `PubSub\Redis`, `PubSub\Gearman`, and `PubSub\Mqtt`), you can pass in an array of `location` strings representing `topics` to subscribe to or a comma seperated list of topic names.
 
 ```php
 $application->listen(
