@@ -28,6 +28,8 @@ class Google implements PublisherInterface, ConsumerInterface
 	{
 		$topic = $this->client->topic($message->getTopic(), $options);
 
+		$options["headers"] = $message->getHeaders();
+
 		try {
 
 			$result = $topic->publish(

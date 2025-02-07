@@ -11,8 +11,8 @@ use Nimbly\Syndicate\Adapter\PublisherInterface;
  * to move subcriber based consumed messages to a deadletter location. Simply
  * return a `Response::deadletter` from your handlers and this middleware will
  * take care of the rest. If you are *not* using a subscriber based consumer
- * (`PubSub\Mqtt` or `PubSub\Redis`), you *do not* need this middleware as
- * deadlettering is supported directly.
+ * (`PubSub\Gearman`, `PubSub\Mqtt`, or `PubSub\Redis`), you *do not* need this
+ * middleware as deadlettering is supported directly.
  */
 class DeadletterMessage implements MiddlewareInterface
 {
