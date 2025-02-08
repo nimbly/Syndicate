@@ -36,7 +36,7 @@ class Outbox implements PublisherInterface
 	/**
 	 * @param PDO $pdo
 	 * @param string $table Name of table in database.
-	 * @param callable|null $identity_generator If you need to generate a custom primary key, you can use this callback to do so.
+	 * @param callable|null $identity_generator If you need to generate a custom primary key, you can use this callback to do so. The `Message` instance will be passed into the callback.
 	 */
 	public function __construct(
 		protected PDO $pdo,
