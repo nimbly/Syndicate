@@ -2,10 +2,10 @@
 
 namespace Nimbly\Syndicate;
 
-use Nimbly\Resolve\Resolve;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use UnexpectedValueException;
-use Psr\Container\ContainerInterface;
+use Nimbly\Resolve\Resolve;
 use Nimbly\Syndicate\Router\RouterInterface;
 use Nimbly\Syndicate\Adapter\ConsumerInterface;
 use Nimbly\Syndicate\Adapter\PublisherInterface;

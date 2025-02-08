@@ -3,9 +3,9 @@
 namespace Nimbly\Syndicate\Router;
 
 use ReflectionClass;
+use UnexpectedValueException;
 use Flow\JSONPath\JSONPath;
 use Nimbly\Syndicate\Message;
-use UnexpectedValueException;
 use Nimbly\Syndicate\Exception\RoutingException;
 
 class Router implements RouterInterface
