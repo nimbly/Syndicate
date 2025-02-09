@@ -27,8 +27,6 @@ Syndicate is a powerful framework able to both publish and consume messages - id
 
 ### Queues
 
-Namespace: `Nimbly\Syndicate\Adapter\Queue`
-
 | Adapter        | Publish   | Consume  | Library |
 | -------------- | --------- | -------- | ------- |
 | Redis          | Y         | Y        | `predis/predis:^2.0` |
@@ -41,8 +39,6 @@ Namespace: `Nimbly\Syndicate\Adapter\Queue`
 
 ### PubSubs
 
-Namespace: `Nimbly\Syndicate\Adapter\PubSub`
-
 | Adapter        | Publish   | Consume  | Library |
 | -------------- | --------- | -------- | ------- |
 | Redis          | Y         | Y*       | `predis/predis:^2.0` |
@@ -52,6 +48,8 @@ Namespace: `Nimbly\Syndicate\Adapter\PubSub`
 | Gearman        | Y         | Y*       | `ext-gearman` |
 | Webhook        | Y         | N        | Any `psr/http-client` implementation |
 | Mercure        | Y         | N        | Any `psr/http-client` implementation |
+
+For detailed information on each adapter, please read the [ADAPTERS.md](/nimbly/Syndicate/blob/master/ADAPTERS.md) documentation.
 
 **NOTE:** Consumers denoted with **\*** indicate subscriber based adapters and do not support `ack`ing or `nack`ing due to the nature of pubsub. Additionally, the `predis/predis` library currently does not play well with interrupts and gracefully stopping its internal pubsub loop. If using this adapter, you should set the `signals` option to an empty array. See the [**Subscribers**](#subscribers) section below for more details.
 

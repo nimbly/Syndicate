@@ -10,13 +10,9 @@ The following is a list of currently supported adapters and any particular notes
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\PubSub\Gearman` | Y       | Y       | `ext-gearman` |
 
-
-#### Requirements
-
-Use of this adapter requires the PHP `ext-gearman` module.
-
 **NOTE:** Only background jobs are supported.
 
+#### Install
 
 ```bash
 sudo apt-get install php-gearman
@@ -50,7 +46,7 @@ $publisher->publish(
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\PubSub\Google` | Y       | Y       | `google/cloud-pubsub` |
 
-#### Requirements
+#### Install
 
 To use this adapter, you must install the `google/cloud-pubsub` library.
 
@@ -64,7 +60,7 @@ composer require google/cloud-pubsub
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\PubSub\Mercure` | Y       | N       | n/a |
 
-#### Requirements
+#### Install
 
 This adapter only requires a `psr-http-client` implementation. If none is given, it will default to `nimbly/shuttle` which comes pre-bundled with Syndicate.
 
@@ -94,9 +90,7 @@ $publisher->publish(
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\PubSub\Mqtt` | Y       | Y       | `php-mqtt/client` |
 
-#### Requirements
-
-This adapter requires the `php-mqtt/client` library.
+#### Install
 
 ```bash
 composer require php-mqtt/client
@@ -125,9 +119,7 @@ $publisher->publish(
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\PubSub\Redis` | Y       | Y       | `predis/predis` |
 
-#### Requirements
-
-This adapter requires the `predis/predis` library.
+#### Install
 
 ```bash
 composer require predis/predis
@@ -139,9 +131,7 @@ composer require predis/predis
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\PubSub\Sns` | Y       | N       | `aws/aws-sdk-php` |
 
-#### Requirements
-
-This adapter requires the `aws/aws-sdk-php` library.
+#### Install
 
 ```bash
 composer require aws/aws-sdk-php
@@ -171,7 +161,7 @@ $publisher->publish(
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\PubSub\Webhook` | Y       | N       | n/a |
 
-#### Requirements
+#### Install
 
 This adapter only requires a `psr-http-client` implementation. If none is given, it will default to `nimbly/shuttle` which comes pre-bundled with Syndicate.
 
@@ -237,9 +227,8 @@ $publisher->publish(
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Queue\Azure` | Y       | Y       | `microsoft/azure-storage-queue` |
 
-#### Requirements
+#### Install
 
-This adapter requires the `microsoft/azure-storage-queue` library.
 
 ```bash
 composer require microsoft/azure-storage-queue
@@ -251,9 +240,7 @@ composer require microsoft/azure-storage-queue
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Queue\Beanstalk` | Y       | Y       | `pda/pheanstalk` |
 
-#### Requirements
-
-This adapter requires the `pda/pheanstalk` library.
+#### Install
 
 ```bash
 composer require pda/pheanstalk
@@ -283,9 +270,7 @@ $publisher->publish(
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Queue\Iron` | Y       | Y       | `iron-io/iron_mq` |
 
-#### Requirements
-
-This adapter requires the `iron-io/iron_mq` library.
+#### Install
 
 ```bash
 composer require iron-io/iron_mq
@@ -315,9 +300,7 @@ $publisher->publish(
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Queue\Outbox` | Y       | N       | `ext-pdo` |
 
-#### Requirements
-
-This adapter requires the PHP `ext-pdo` module.
+#### Install
 
 ```bash
 sudo apt-get install php-pdo
@@ -329,9 +312,7 @@ sudo apt-get install php-pdo
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Queue\RabbitMQ` | Y       | Y       | `php-amqplib/php-amqplib` |
 
-#### Requirements
-
-This adapter requires the `php-amqplib/php-amqplib` library.
+#### Install
 
 ```bash
 composer require php-amqplib/php-amqplib
@@ -361,9 +342,7 @@ $publisher->publish(
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Queue\Redis` | Y       | Y       | `predis/predis` |
 
-#### Requirements
-
-This adapter requires the `predis/predis` library.
+#### Install
 
 ```bash
 composer require predis/predis
@@ -375,9 +354,7 @@ composer require predis/predis
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Queue\Sqs` | Y       | Y       | `aws/aws-sdk-php` |
 
-#### Requirements
-
-This adapter requires the `aws/aws-sdk-php` library.
+#### Install
 
 ```bash
 composer require aws/aws-sdk-php
