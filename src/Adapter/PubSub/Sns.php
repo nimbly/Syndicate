@@ -27,8 +27,8 @@ class Sns implements PublisherInterface
 	 * @inheritDoc
 	 *
 	 * Message attributes:
-	 * * `MessageGroupId` (string)
-	 * * `MessageDeduplicationId (string)
+	 * * `MessageGroupId` (string, optional)
+	 * * `MessageDeduplicationId (string, optional)
 	 */
 	public function publish(Message $message, array $options = []): ?string
 	{
@@ -63,25 +63,20 @@ class Sns implements PublisherInterface
 	 */
 	private function buildArguments(Message $message, array $options = []): array
 	{
+		$attributes = \array_filter(
+			$message->getAttributes(),
+			fn(string $key) => !\in_array($key, ["MessageGroupId", "MessageDeduplicationId"]),
+			ARRAY_FILTER_USE_KEY
+		);
+
 		$args = \array_filter([
 			"TopicArn" => $this->base_arn ?? "" . $message->getTopic(),
-			"Data" => $message->getPayload(),
+			"Message" => $message->getPayload(),
 			"MessageGroupId" => $message->getAttributes()["MessageGroupId"] ?? null,
 			"MessageDeduplicationId" => $message->getAttributes()["MessageDeduplicationId"] ?? null,
+			"MessageAttributes" => $attributes,
 			...$options,
 		]);
-
-		if( $message->getAttributes() ){
-			$args["MessageAttributes"] = $message->getAttributes();
-		}
-
-		if( isset($options["MessageGroupId"]) ){
-			$args["MessageGroupId"] = $options["MessageGroupId"];
-		}
-
-		if( isset($options["MessageDeduplicationId"]) ){
-			$args["MessageDeduplicationId"] = $options["MessageDeduplicationId"];
-		}
 
 		return $args;
 	}

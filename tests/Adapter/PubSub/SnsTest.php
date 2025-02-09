@@ -30,20 +30,20 @@ class SnsTest extends TestCase
 				"MessageId" => "afd1cbe8-6ee3-4de0-90f5-50c019a9a887"
 			]));
 
-		$message = new Message("sns_topic", "Ok", ["attr1" => "val1", "attr2" => "val2"]);
+		$message = new Message("sns_topic", "Ok", ["MessageGroupId" => "group", "MessageDeduplicationId" => "dedupe", "attr1" => "val1", "attr2" => "val2"]);
 
 		$publisher = new Sns($mock);
-		$publisher->publish($message, ["MessageGroupId" => "group", "MessageDeduplicationId" => "dedupe", "opt1" => "val1", "opt2" => "val2"]);
+		$publisher->publish($message, ["opt1" => "val1", "opt2" => "val2"]);
 
 		$mock->shouldHaveReceived(
 			"publish",
 			[
 				[
 					"TopicArn" => "sns_topic",
-					"Data" => "Ok",
-					"MessageAttributes" => ["attr1" => "val1", "attr2" => "val2"],
+					"Message" => "Ok",
 					"MessageGroupId" => "group",
 					"MessageDeduplicationId" => "dedupe",
+					"MessageAttributes" => ["attr1" => "val1", "attr2" => "val2"],
 					"opt1" => "val1",
 					"opt2" => "val2"
 				]

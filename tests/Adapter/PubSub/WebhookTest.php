@@ -16,6 +16,7 @@ use Nimbly\Syndicate\Adapter\PubSub\Webhook;
 use Nimbly\Syndicate\Exception\PublishException;
 use Nimbly\Syndicate\Exception\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use Nimbly\Capsule\HttpMethod;
 
 /**
  * @covers Nimbly\Syndicate\Adapter\PubSub\Webhook
@@ -88,7 +89,7 @@ class WebhookTest extends TestCase
 	{
 		$publisher = new Webhook(
 			new Shuttle,
-			"https://service.com/events",
+			"https://service.com/events/",
 			[
 				"Content-Type" => "application/json",
 				"Authorization" => "Bearer EezohmaiZae2heich7iuthis"
@@ -157,26 +158,15 @@ class WebhookTest extends TestCase
 		$reflectionMethod = $reflectionClass->getMethod("buildRequest");
 
 		$message = new Message(
-			topic: "test",
+			topic: "https://events.example.com/test",
 			payload: "Ok",
-			headers: ["Message-Header" => "Syndicate"]
+			headers: ["Message-Header" => "Syndicate", "Authorization" => "Bearer abc123"]
 		);
-
-		$options = [
-			"method" => "PUT",
-			"uri" => "https://test.com/",
-			"headers" => [
-				"Override-Header-1" => "Value1",
-				"Override-Header-2" => "Value2"
-			]
-		];
 
 		/**
 		 * @var Request $request
 		 */
-		$request = $reflectionMethod->invoke($publisher, $message, $options);
-
-		$this->assertInstanceOf(Request::class, $request);
+		$request = $reflectionMethod->invoke($publisher, $message, ["method" => HttpMethod::PUT]);
 
 		$this->assertEquals(
 			"PUT",
@@ -184,7 +174,7 @@ class WebhookTest extends TestCase
 		);
 
 		$this->assertEquals(
-			"https://test.com/",
+			"https://events.example.com/test",
 			(string) $request->getUri()
 		);
 
@@ -194,23 +184,13 @@ class WebhookTest extends TestCase
 		);
 
 		$this->assertEquals(
-			"Bearer EezohmaiZae2heich7iuthis",
+			"Bearer abc123",
 			$request->getHeaderLine("Authorization")
 		);
 
 		$this->assertEquals(
 			"Syndicate",
 			$request->getHeaderLine("Message-Header")
-		);
-
-		$this->assertEquals(
-			"Value1",
-			$request->getHeaderLine("Override-Header-1")
-		);
-
-		$this->assertEquals(
-			"Value2",
-			$request->getHeaderLine("Override-Header-2")
 		);
 
 		$this->assertEquals(

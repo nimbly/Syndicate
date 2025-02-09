@@ -113,11 +113,13 @@ class SqsTest extends TestCase
 			"Messages" => [
 				[
 					"Body" => "Message1",
+					"Attributes" => [],
 					"ReceiptHandle" => "afd1cbe8-6ee3-4de0-90f5-50c019a9a887"
 				],
 
 				[
 					"Body" => "Message2",
+					"Attributes" => [],
 					"ReceiptHandle" => "0be31d6e-0b46-43d4-854c-772e7d717ce5"
 				],
 			]
@@ -149,11 +151,13 @@ class SqsTest extends TestCase
 			"Messages" => [
 				[
 					"Body" => "Message1",
+					"Attributes" => [],
 					"ReceiptHandle" => "afd1cbe8-6ee3-4de0-90f5-50c019a9a887"
 				],
 
 				[
 					"Body" => "Message2",
+					"Attributes" => [],
 					"ReceiptHandle" => "0be31d6e-0b46-43d4-854c-772e7d717ce5"
 				],
 			]

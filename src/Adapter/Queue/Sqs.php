@@ -30,16 +30,11 @@ class Sqs implements PublisherInterface, ConsumerInterface
 	 */
 	public function publish(Message $message, array $options = []): ?string
 	{
-		$message = [
-			"QueueUrl" => $this->base_url ?? "" . $message->getTopic(),
-			"MessageBody" => $message->getPayload(),
-			"MessageAttributes" => $message->getAttributes(),
-			...$options
-		];
+		$args = $this->buildPublishArguments($message, $options);
 
 		try {
 
-			$result = $this->client->sendMessage($message);
+			$result = $this->client->sendMessage($args);
 		}
 		catch( CredentialsException $exception ){
 			throw new ConnectionException(
@@ -55,6 +50,33 @@ class Sqs implements PublisherInterface, ConsumerInterface
 		}
 
 		return (string) $result->get("MessageId");
+	}
+
+	/**
+	 * Build the arguments array needed to call SQS when publishing a message.
+	 *
+	 * @param Message $message
+	 * @param array<string,mixed> $options
+	 * @return array<string,mixed>
+	 */
+	private function buildPublishArguments(Message $message, array $options = []): array
+	{
+		$attributes = \array_filter(
+			$message->getAttributes(),
+			fn(string $key) => !\in_array($key, ["MessageGroupId", "MessageDeduplicationId"]),
+			ARRAY_FILTER_USE_KEY
+		);
+
+		$args = \array_filter([
+			"QueueUrl" => $this->base_url ?? "" . $message->getTopic(),
+			"MessageBody" => $message->getPayload(),
+			"MessageGroupId" => $message->getAttributes()["MessageGroupId"] ?? null,
+			"MessageDeduplicationId" => $message->getAttributes()["MessageDeduplicationId"] ?? null,
+			"MessageAttributes" => $attributes,
+			...$options,
+		]);
+
+		return $args;
 	}
 
 	/**
@@ -88,7 +110,7 @@ class Sqs implements PublisherInterface, ConsumerInterface
 				return new Message(
 					topic: $topic,
 					payload: $message["Body"],
-					//attributes: $message["Attributes"],
+					attributes: $message["Attributes"],
 					reference: $message["ReceiptHandle"]
 				);
 			},

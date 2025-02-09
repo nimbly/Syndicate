@@ -26,17 +26,16 @@ class IronMQTest extends TestCase
 		$mock = Mockery::mock(IronMQ::class);
 
 		$mock->shouldReceive("postMessage")
-		->withArgs(["ironmq", "Ok", ["opt1" => "val1", "opt2" => "val2"]])
 		->andReturns((object) ["id" => "afd1cbe8-6ee3-4de0-90f5-50c019a9a887"]);
 
-		$message = new Message("ironmq", "Ok");
+		$message = new Message("ironmq", "Ok", ["delay" => 60, "timeout" => 120, "expires_in" => 3600]);
 
 		$publisher = new Iron($mock);
-		$publisher->publish($message, ["opt1" => "val1", "opt2" => "val2"]);
+		$publisher->publish($message);
 
 		$mock->shouldHaveReceived(
 			"postMessage",
-			["ironmq", "Ok", ["opt1" => "val1", "opt2" => "val2"]]
+			["ironmq", "Ok", ["delay" => 60, "timeout" => 120, "expires_in" => 3600]]
 		)->once();
 	}
 

@@ -24,15 +24,26 @@ class Iron implements PublisherInterface, ConsumerInterface
 
 	/**
 	 * @inheritDoc
+	 *
+	 * Message attributes:
+	 * * `delay` (integer, optional, default `0`) Amount of time (in seconds) before message becomes available for consuming.
+	 * * `timeout` (integer, optional, default `60`) Amount of time (in seconds) a reserved message is automatically released.
+	 * * `expires_in` (integer, optional, default `604800`) Amount of time (in seconds) a message will be auto-deleted.
 	 */
 	public function publish(Message $message, array $options = []): ?string
 	{
+		$properties = \array_filter([
+			"delay" => $message->getAttributes()["delay"] ?? null,
+			"timeout" => $message->getAttributes()["timeout"] ?? null,
+			"expires_in" => $message->getAttributes()["expires_in"] ?? null
+		]);
+
 		try {
 
 			$result = $this->client->postMessage(
 				$message->getTopic(),
 				$message->getPayload(),
-				$options
+				$properties
 			);
 		}
 		catch( HttpException $exception ){

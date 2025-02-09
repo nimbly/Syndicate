@@ -2,9 +2,9 @@
 
 namespace Nimbly\Syndicate\Adapter\PubSub;
 
+use Nimbly\Capsule\HttpMethod;
 use Nimbly\Capsule\Request;
 use Nimbly\Syndicate\Message;
-use Nimbly\Capsule\HttpMethod;
 use Nimbly\Capsule\ResponseStatus;
 use Nimbly\Shuttle\Shuttle;
 use Psr\Http\Client\ClientInterface;
@@ -26,22 +26,26 @@ use Throwable;
  */
 class Webhook implements PublisherInterface
 {
+	/**
+	 * @param ClientInterface $httpClient PSR-18 HTTP ClientInterface instance.
+	 * @param string|null $base_uri Default/base hostname/uri to send HTTP requests to.
+	 * @param array<string,string> $headers Default headers to send with each request.
+	 * @param HttpMethod $method Default HTTP method to use. Defaults to `HttpMethod::POST`.
+	 */
 	public function __construct(
 		protected ClientInterface $httpClient = new Shuttle,
-		protected ?string $hostname = null,
-		protected array $headers = []
+		protected ?string $base_uri = null,
+		protected array $headers = [],
+		protected HttpMethod $method = HttpMethod::POST
 	)
 	{
 	}
 
 	/**
 	 * @inheritDoc
-	 * @return null
 	 *
 	 * Options:
-	 * 	* `method` (string) Override the default (POST) HTTP method to use.
-	 *  * `uri` (string) Override the URI being used.
-	 *  * `headers` (array<string,string>) Additional headers to be included with the request. These are merged with default headers provided in constructor as well as headers within the `Message` instance itself.
+	 * 	* `method` (string) Override the default HTTP method to use.
 	 */
 	public function publish(Message $message, array $options = []): ?string
 	{
@@ -65,7 +69,7 @@ class Webhook implements PublisherInterface
 			);
 		}
 
-		return null;
+		return $response->getBody()->getContents();
 	}
 
 	/**
@@ -77,18 +81,19 @@ class Webhook implements PublisherInterface
 	 */
 	protected function buildRequest(Message $message, array $options = []): Request
 	{
+		if( \preg_match("/^https?:\/\//i", $message->getTopic()) ){
+			$uri = $message->getTopic();
+		}
+		else {
+			$uri = ($this->base_uri ?? "") . $message->getTopic();
+		}
+
 		return new Request(
-			method: $options["method"] ?? HttpMethod::POST,
-			uri: $options["uri"] ??
-				\sprintf(
-					"%s/%s",
-					\trim($this->hostname ?? "", "/"),
-					\urlencode($message->getTopic())
-				),
+			method: $options["method"] ?? $this->method,
+			uri: $uri,
 			body: $message->getPayload(),
 			headers: \array_merge(
 				$this->headers,
-				$options["headers"] ?? [],
 				$message->getHeaders()
 			)
 		);
