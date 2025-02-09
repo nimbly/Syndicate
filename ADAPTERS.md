@@ -2,13 +2,62 @@
 
 The following is a list of currently supported adapters and any particular notes, special options, and message attributes that can be used with them.
 
-## PubSub
+### Options vs Attributes
+
+**Attributes** are properties that add definition to the Message itself.
+
+**Options** are properties that describe *how* the Message should be published.
+
+
+### Azure
+
+| Adapter | Publish | Consume | Library |
+|---------|---------|---------|---------|
+| `Nimbly\Syndicate\Adapter\Azure` | Y       | Y       | `microsoft/azure-storage-queue` |
+
+#### Install
+
+```bash
+composer require microsoft/azure-storage-queue
+```
+
+**NOTE:** Azure has stopped development and maintenance of this library.
+
+### Beanstalk
+
+| Adapter | Publish | Consume | Library |
+|---------|---------|---------|---------|
+| `Nimbly\Syndicate\Adapter\Beanstalk` | Y       | Y       | `pda/pheanstalk` |
+
+#### Install
+
+```bash
+composer require pda/pheanstalk
+```
+
+#### Message attributes
+
+The following message attributes are supported when publishing messages:
+
+* `priority` (integer, optional, defaults to `Pheanstalk::DEFAULT_PRIORITY`) The priority of the message.
+* `delay` (integer, optional, defaults to `Pheanstalk::DEFAULT_DELAY`) The delay in seconds before message becomes available.
+* `time_to_release` (integer, optional, defaults to `Pheanstalk::DEFAULT_TTR`) The amount of time (in seconds) a handler has to process a message before it is automatically released.
+
+```php
+$publisher->publish(
+	new Message(
+		topic: "fruits",
+		payload: "bananas",
+		attributes: ["priority" => 0, "delay" => 30, "time_to_release" => 120]
+	)
+);
+```
 
 ### Gearman
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\PubSub\Gearman` | Y       | Y       | `ext-gearman` |
+| `Nimbly\Syndicate\Adapter\Gearman` | Y       | Y       | `ext-gearman` |
 
 **NOTE:** Only background jobs are supported.
 
@@ -40,11 +89,41 @@ $publisher->publish(
 );
 ```
 
+### IronMQ
+
+| Adapter | Publish | Consume | Library |
+|---------|---------|---------|---------|
+| `Nimbly\Syndicate\Adapter\Iron` | Y       | Y       | `iron-io/iron_mq` |
+
+#### Install
+
+```bash
+composer require iron-io/iron_mq
+```
+
+#### Message attributes
+
+The following message attributes are supported when publishing messages:
+
+* `delay` (integer, optional, default `0`) Amount of time (in seconds) before message becomes available for consuming.
+* `timeout` (integer, optional, default `60`) Amount of time (in seconds) a reserved message is automatically released.
+* `expires_in` (integer, optional, default `604800`) Amount of time (in seconds) a message will be auto-deleted.
+
+```php
+$publisher->publish(
+	new Message(
+		topic: "fruits",
+		payload: "bananas",
+		attributes: ["delay" => 30, "timeout" => 120, "expires_in" => 86400]
+	)
+);
+```
+
 ### Google
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\PubSub\Google` | Y       | Y       | `google/cloud-pubsub` |
+| `Nimbly\Syndicate\Adapter\Google` | Y       | Y       | `google/cloud-pubsub` |
 
 #### Install
 
@@ -58,7 +137,7 @@ composer require google/cloud-pubsub
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\PubSub\Mercure` | Y       | N       | n/a |
+| `Nimbly\Syndicate\Adapter\Mercure` | Y       | N       | n/a |
 
 #### Install
 
@@ -72,14 +151,13 @@ The following message attributes are supported when publishing a message:
 
 * `id` (string, optional) A unique ID for this message. If none provided, the Mercure hub will generate one.
 * `private` (boolean, optional, defaults to `false`) Flag this message as private (i.e. only authenticated subscribers may receive this message.)
-* `type` (string, optional) The message type.
 
 ```php
 $publisher->publish(
 	new Message(
 		topic: "fruits",
 		payload: "bananas",
-		attributes: ["id" => $uuid, "private" => true, "type" => ""]
+		attributes: ["id" => $uuid, "private" => true]
 	)
 );
 ```
@@ -88,7 +166,7 @@ $publisher->publish(
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\PubSub\Mqtt` | Y       | Y       | `php-mqtt/client` |
+| `Nimbly\Syndicate\Adapter\Mqtt` | Y       | Y       | `php-mqtt/client` |
 
 #### Install
 
@@ -113,11 +191,69 @@ $publisher->publish(
 );
 ```
 
-### Redis
+### Outbox
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\PubSub\Redis` | Y       | Y       | `predis/predis` |
+| `Nimbly\Syndicate\Adapter\Outbox` | Y       | N       | `ext-pdo` |
+
+#### Install
+
+```bash
+sudo apt-get install php-pdo
+```
+
+### RabbitMQ
+
+| Adapter | Publish | Consume | Library |
+|---------|---------|---------|---------|
+| `Nimbly\Syndicate\Adapter\RabbitMQ` | Y       | Y       | `php-amqplib/php-amqplib` |
+
+#### Install
+
+```bash
+composer require php-amqplib/php-amqplib
+```
+
+#### Message attributes
+
+The following message attributes are supported when publishing messages:
+
+* `exchange` (string, optional, defaults to empty string) Name of exchange to use.
+* `mandatory` (boolean, defaults to `false`) Defaults to false.
+* `immediate` (boolean, defaults to `false`) Defaults to false.
+
+```php
+$publisher->publish(
+	new Message(
+		topic: "fruits",
+		payload: "bananas",
+		attributes: ["exchange" => "my-exchange", "mandatory" => true, "immediate" => true]
+	)
+);
+```
+
+### Redis Queue
+
+This adapter uses Redis's LIST feature to simulate a queue. Messages are `rpush`ed onto the list and `lpop`ed off when consuming.
+
+| Adapter | Publish | Consume | Library |
+|---------|---------|---------|---------|
+| `Nimbly\Syndicate\Adapter\Redis` | Y       | Y       | `predis/predis` |
+
+#### Install
+
+```bash
+composer require predis/predis
+```
+
+### Redis PubSub
+
+This adapter uses Redis's built-in pubsub feature.
+
+| Adapter | Publish | Consume | Library |
+|---------|---------|---------|---------|
+| `Nimbly\Syndicate\Adapter\RedisPubSub` | Y       | Y       | `predis/predis` |
 
 #### Install
 
@@ -129,7 +265,7 @@ composer require predis/predis
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\PubSub\Sns` | Y       | N       | `aws/aws-sdk-php` |
+| `Nimbly\Syndicate\Adapter\Sns` | Y       | N       | `aws/aws-sdk-php` |
 
 #### Install
 
@@ -143,7 +279,7 @@ The following message attributes are supported when publishing messages:
 
 * `MessageGroupId` (string, optional) The message group ID.
 * `MessageDeduplicationId` (string, optional) The message deduplication ID.
-* **any** See https://docs.aws.amazon.com/sns/latest/dg/sns-message-attributes.html for more information.
+* **any** All other values are assumed to be SNS message attributes. See https://docs.aws.amazon.com/sns/latest/dg/sns-message-attributes.html for more information.
 
 ```php
 $publisher->publish(
@@ -155,11 +291,31 @@ $publisher->publish(
 );
 ```
 
+### SQS
+
+| Adapter | Publish | Consume | Library |
+|---------|---------|---------|---------|
+| `Nimbly\Syndicate\Adapter\Sqs` | Y       | Y       | `aws/aws-sdk-php` |
+
+#### Install
+
+```bash
+composer require aws/aws-sdk-php
+```
+
+#### Message attributes
+
+The following message attributes are supported when publishing messages:
+
+* `MessageGroupId` (string, optional) The message group ID.
+* `MessageDeduplicationId` (string, optional) The message deduplication ID.
+* **any**  All other values will be sent as `MessageAttributes` and must adhere to SQS guidelines for message metadata. @see See https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-metadata.html for more information.
+
 ### Webhook
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\PubSub\Webhook` | Y       | N       | n/a |
+| `Nimbly\Syndicate\Adapter\Webhook` | Y       | N       | n/a |
 
 #### Install
 
@@ -216,146 +372,4 @@ $publisher->publish(
 	topic: "https://events.domain.com/users",
 	payload: \json_encode($user)
 );
-```
-
-## Queue
-
-
-### Azure
-
-| Adapter | Publish | Consume | Library |
-|---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\Queue\Azure` | Y       | Y       | `microsoft/azure-storage-queue` |
-
-#### Install
-
-
-```bash
-composer require microsoft/azure-storage-queue
-```
-
-### Beanstalk
-
-| Adapter | Publish | Consume | Library |
-|---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\Queue\Beanstalk` | Y       | Y       | `pda/pheanstalk` |
-
-#### Install
-
-```bash
-composer require pda/pheanstalk
-```
-
-#### Message attributes
-
-The following message attributes are supported when publishing messages:
-
-* `priority` (integer, optional, defaults to `Pheanstalk::DEFAULT_PRIORITY`) The priority of the message.
-* `delay` (integer, optional, defaults to `Pheanstalk::DEFAULT_DELAY`) The delay in seconds before message becomes available.
-* `time_to_release` (integer, optional, defaults to `Pheanstalk::DEFAULT_TTR`) The amount of time (in seconds) a handler has to process a message before it is automatically released.
-
-```php
-$publisher->publish(
-	new Message(
-		topic: "fruits",
-		payload: "bananas",
-		attributes: ["priority" => 0, "delay" => 30, "time_to_release" => 120]
-	)
-);
-```
-
-### IronMQ
-
-| Adapter | Publish | Consume | Library |
-|---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\Queue\Iron` | Y       | Y       | `iron-io/iron_mq` |
-
-#### Install
-
-```bash
-composer require iron-io/iron_mq
-```
-
-#### Message attributes
-
-The following message attributes are supported when publishing messages:
-
-* `delay` (integer, optional, default `0`) Amount of time (in seconds) before message becomes available for consuming.
-* `timeout` (integer, optional, default `60`) Amount of time (in seconds) a reserved message is automatically released.
-* `expires_in` (integer, optional, default `604800`) Amount of time (in seconds) a message will be auto-deleted.
-
-```php
-$publisher->publish(
-	new Message(
-		topic: "fruits",
-		payload: "bananas",
-		attributes: ["delay" => 30, "timeout" => 120, "expires_in" => 86400]
-	)
-);
-```
-
-### Outbox
-
-| Adapter | Publish | Consume | Library |
-|---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\Queue\Outbox` | Y       | N       | `ext-pdo` |
-
-#### Install
-
-```bash
-sudo apt-get install php-pdo
-```
-
-### RabbitMQ
-
-| Adapter | Publish | Consume | Library |
-|---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\Queue\RabbitMQ` | Y       | Y       | `php-amqplib/php-amqplib` |
-
-#### Install
-
-```bash
-composer require php-amqplib/php-amqplib
-```
-
-#### Message attributes
-
-The following message attributes are supported when publishing messages:
-
-* `exchange` (string, optional, defaults to empty string) Name of exchange to use.
-* `mandatory` (boolean, defaults to `false`) Defaults to false.
-* `immediate` (boolean, defaults to `false`) Defaults to false.
-
-```php
-$publisher->publish(
-	new Message(
-		topic: "fruits",
-		payload: "bananas",
-		attributes: ["exchange" => "my-exchange", "mandatory" => true, "immediate" => true]
-	)
-);
-```
-
-### Redis
-
-| Adapter | Publish | Consume | Library |
-|---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\Queue\Redis` | Y       | Y       | `predis/predis` |
-
-#### Install
-
-```bash
-composer require predis/predis
-```
-
-### SQS
-
-| Adapter | Publish | Consume | Library |
-|---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\Queue\Sqs` | Y       | Y       | `aws/aws-sdk-php` |
-
-#### Install
-
-```bash
-composer require aws/aws-sdk-php
 ```

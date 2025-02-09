@@ -4,7 +4,7 @@ namespace Nimbly\Syndicate\Tests\Filter;
 
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\Adapter\Queue\Mock;
+use Nimbly\Syndicate\Adapter\Mock;
 use Nimbly\Syndicate\Filter\ValidatorFilter;
 use Nimbly\Syndicate\Validator\JsonSchemaValidator;
 use Nimbly\Syndicate\Exception\MessageValidationException;

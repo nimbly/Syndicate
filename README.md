@@ -470,7 +470,7 @@ The `deadletter` parameter allows you to define a deadletter location: a place t
 
 ```php
 // Use Redis queue as our main consumer.
-$redis = new Nimbly\Syndicate\Adapter\Queue\Redis(new Client);
+$redis = new Nimbly\Syndicate\Adapter\Redis(new Client);
 
 // Redirect all messages to the "deadletter" queue in Redis.
 $deadletter = new RedirectFilter($redis, "deadletter");

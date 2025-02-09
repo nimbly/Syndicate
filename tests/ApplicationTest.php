@@ -13,7 +13,7 @@ use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Application;
 use Nimbly\Syndicate\Router\Router;
-use Nimbly\Syndicate\Adapter\Queue\Mock;
+use Nimbly\Syndicate\Adapter\Mock;
 use Nimbly\Syndicate\Filter\RedirectFilter;
 use Nimbly\Syndicate\Router\RouterInterface;
 use Nimbly\Syndicate\Exception\RoutingException;
@@ -21,7 +21,7 @@ use Nimbly\Syndicate\Tests\Fixtures\TestHandler;
 use Nimbly\Syndicate\Tests\Fixtures\TestMiddleware;
 use Nimbly\Syndicate\Middleware\MiddlewareInterface;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
-use Nimbly\Syndicate\Adapter\PubSub\Mock as PubSubMock;
+use Nimbly\Syndicate\Adapter\MockPubSub;
 
 /**
  * @covers Nimbly\Syndicate\Application
@@ -110,9 +110,9 @@ class ApplicationTest extends TestCase
 		$logger->shouldHaveReceived("warning");
 	}
 
-	public function test_listen_with_loop_consumer(): void
+	public function test_listen_with_subscriber(): void
 	{
-		$consumer = new PubSubMock(
+		$consumer = new MockPubSub(
 			[
 				"fruits" => [
 					new Message("fruits", "apples"),
@@ -270,9 +270,9 @@ class ApplicationTest extends TestCase
 		$this->assertCount(0, $mock->getMessages("test_topic"));
 	}
 
-	public function test_shutdown_with_loop_consumer(): void
+	public function test_shutdown_with_subscriber(): void
 	{
-		$consumer = new PubSubMock(
+		$consumer = new MockPubSub(
 			["fruits" => []]
 		);
 
@@ -332,7 +332,7 @@ class ApplicationTest extends TestCase
 		$reflectionMethod->invoke(
 			$application,
 			[
-				\Nimbly\Syndicate\Adapter\PubSub\Mock::class
+				\Nimbly\Syndicate\Adapter\Mock::class
 			]
 		);
 	}

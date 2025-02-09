@@ -5,7 +5,7 @@ namespace Nimbly\Syndicate\Tests\Middleware;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;
-use Nimbly\Syndicate\Adapter\Queue\Mock;
+use Nimbly\Syndicate\Adapter\Mock;
 use Nimbly\Syndicate\Filter\RedirectFilter;
 use Nimbly\Syndicate\Middleware\DeadletterMessage;
 
