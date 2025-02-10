@@ -21,7 +21,7 @@ use Nimbly\Syndicate\Tests\Fixtures\TestHandler;
 use Nimbly\Syndicate\Tests\Fixtures\TestMiddleware;
 use Nimbly\Syndicate\Middleware\MiddlewareInterface;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
-use Nimbly\Syndicate\Adapter\MockPubSub;
+use Nimbly\Syndicate\Adapter\MockSubscriber;
 
 /**
  * @covers Nimbly\Syndicate\Application
@@ -112,7 +112,7 @@ class ApplicationTest extends TestCase
 
 	public function test_listen_with_subscriber(): void
 	{
-		$consumer = new MockPubSub(
+		$consumer = new MockSubscriber(
 			[
 				"fruits" => [
 					new Message("fruits", "apples"),
@@ -272,7 +272,7 @@ class ApplicationTest extends TestCase
 
 	public function test_shutdown_with_subscriber(): void
 	{
-		$consumer = new MockPubSub(
+		$consumer = new MockSubscriber(
 			["fruits" => []]
 		);
 

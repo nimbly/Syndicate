@@ -2,15 +2,17 @@
 
 namespace Nimbly\Syndicate\Adapter;
 
+use Nimbly\Syndicate\Exception\ConsumeException;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Exception\PublishException;
+use Nimbly\Syndicate\Exception\SubscriptionException;
 
 /**
- * A Mock pubsub adapter that can be used for testing. This adapter
+ * A mock subscriber adapter that can be used for testing. This adapter
  * does not send messages to any external service. Messages are
  * stored in memory.
  */
-class MockPubSub implements PublisherInterface, SubscriberInterface
+class MockSubscriber implements PublisherInterface, SubscriberInterface
 {
 	protected bool $running = false;
 
@@ -42,6 +44,10 @@ class MockPubSub implements PublisherInterface, SubscriberInterface
 	 */
 	public function subscribe(string|array $topics, callable $callback, array $options = []): void
 	{
+		if( isset($options["exception"]) ){
+			throw new SubscriptionException("Failed to subscribe to topic.");
+		}
+
 		if( \is_string($topics) ){
 			$topics = \array_map(
 				fn(string $topic) => \trim($topic),
@@ -59,6 +65,10 @@ class MockPubSub implements PublisherInterface, SubscriberInterface
 	 */
 	public function loop(array $options = []): void
 	{
+		if( isset($options["exception"]) ){
+			throw new ConsumeException("Failed to consume message.");
+		}
+
 		$this->running = true;
 
 		foreach( $this->subscriptions as $topic => $callback ){

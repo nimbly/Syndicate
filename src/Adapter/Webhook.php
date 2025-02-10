@@ -20,7 +20,8 @@ use Nimbly\Syndicate\Exception\PublishException;
  *
  * You can supply a default set of headers to be included with each HTTP request.
  *
- * Alternatively, you can override the
+ * You can override the hostname/URI by using a fully qualified URI as the topic
+ * name. For example: "https://events.api.example.com/topics/users"
  */
 class Webhook implements PublisherInterface
 {
@@ -79,7 +80,7 @@ class Webhook implements PublisherInterface
 	 */
 	protected function buildRequest(Message $message, array $options = []): Request
 	{
-		if( \preg_match("/^https?:\/\//i", $message->getTopic()) ){
+		if( \preg_match("/^https?\:\/\//i", $message->getTopic()) ){
 			$uri = $message->getTopic();
 		}
 		else {

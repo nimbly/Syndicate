@@ -230,10 +230,10 @@ class GoogleTest extends TestCase
 		$mockSubscription->shouldReceive("acknowledge")
 		->andReturns(["receiptid"]);
 
-		$mockPubsubMessage = Mockery::mock(PubSubMessage::class);
+		$MockSubscriberMessage = Mockery::mock(PubSubMessage::class);
 
 		$google = new Google($mock);
-		$google->ack(new Message(topic: "google", payload: "Ok", reference: $mockPubsubMessage));
+		$google->ack(new Message(topic: "google", payload: "Ok", reference: $MockSubscriberMessage));
 
 		$mockSubscription->shouldHaveReceived(
 			"acknowledge",

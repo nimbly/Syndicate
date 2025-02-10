@@ -18,10 +18,10 @@
 
 use Predis\Client;
 use Monolog\Logger;
+use Monolog\Handler\ErrorLogHandler;
 use Nimbly\Syndicate\Application;
 use Nimbly\Syndicate\Router\Router;
-use Monolog\Handler\ErrorLogHandler;
-use Nimbly\Syndicate\Adapter\Queue\Redis;
+use Nimbly\Syndicate\Adapter\Redis;
 use Nimbly\Syndicate\Filter\RedirectFilter;
 use Nimbly\Syndicate\Middleware\ValidateMessage;
 use Nimbly\Syndicate\Validator\JsonSchemaValidator;

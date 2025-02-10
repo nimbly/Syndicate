@@ -7,9 +7,9 @@ use Nimbly\Syndicate\Exception\ConsumeException;
 use Nimbly\Syndicate\Exception\PublishException;
 
 /**
- * A Mock queue adapter that can be used for testing. This
- * adapter does not persist or send messages to any external
- * service. Messages are stored in memory.
+ * A mock queue adapter that can be used for testing. This adapter
+ * does not send messages to any external service. Messages are
+ * stored in memory.
  */
 class Mock implements PublisherInterface, ConsumerInterface
 {
@@ -83,7 +83,6 @@ class Mock implements PublisherInterface, ConsumerInterface
 	 * Flush messages for a given topic or all topics.
 	 *
 	 * @param string|null $topic The topic to flush messages for. If `null` flush all topics.
-	 *
 	 * @return void
 	 */
 	public function flushMessages(?string $topic = null): void

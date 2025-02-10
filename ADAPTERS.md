@@ -162,6 +162,35 @@ $publisher->publish(
 );
 ```
 
+### Mock
+
+A set of mock adapters are provided for your unit testing convenience. The `Mock` adapter implements `ConsumerInterface` and the `MockSubscriber` implements `SubscriberInterface`. Both adapters allow publishing of messags.
+
+These adapters also offer convenience methods to inspect the message queues and subscriptions as well as the ability to flush all messages or messages within a specific topic.
+
+
+| Adapter | Publish | Consume | Library |
+|---------|---------|---------|---------|
+| `Nimbly\Syndicate\Adapter\Mock` | Y       | Y       | |
+| `Nimbly\Syndicate\Adapter\MockSubscriber` | Y       | Y       | |
+
+
+#### Options
+
+Most of the major methods that support an `options` array, support an `"exception" => true` value to simulate an exception being thrown.
+
+### NullPublisher
+
+Don't need or care about messages actually being published? Then this adapter is for you! All calls to `publish` sends your message into the void.
+
+This adapter is a good fit when you are developing locally and don't want or need messages to be published to a queue or broker.
+
+By default, publishing will return a random hexadecimal string. Optionally, you can provide a `receipt` callback into the constructor to generate any receipt value you want.
+
+| Adapter | Publish | Consume | Library |
+|---------|---------|---------|---------|
+| `Nimbly\Syndicate\Adapter\NullPublisher` | Y       | N       | |
+
 ### MQTT
 
 | Adapter | Publish | Consume | Library |

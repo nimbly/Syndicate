@@ -5,20 +5,20 @@ namespace Nimbly\Syndicate\Tests\Adapter;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\Adapter\MockPubSub;
+use Nimbly\Syndicate\Adapter\MockSubscriber;
 use Nimbly\Syndicate\Exception\PublishException;
 use ReflectionClass;
 
 /**
- * @covers Nimbly\Syndicate\Adapter\MockPubSub
+ * @covers Nimbly\Syndicate\Adapter\MockSubscriber
  */
-class MockPubSubTest extends TestCase
+class MockSubscriberTest extends TestCase
 {
 	public function test_publish(): void
 	{
 		$message = new Message("test", "Ok");
 
-		$mock = new MockPubSub;
+		$mock = new MockSubscriber;
 		$mock->publish($message);
 
 		$messages = $mock->getMessages("test");
@@ -29,7 +29,7 @@ class MockPubSubTest extends TestCase
 
 	public function test_publish_failure_throws_publish_exception(): void
 	{
-		$mock = new MockPubSub;
+		$mock = new MockSubscriber;
 
 		$this->expectException(PublishException::class);
 		$mock->publish(new Message("test", "Ok"), ["exception" => true]);
@@ -41,7 +41,7 @@ class MockPubSubTest extends TestCase
 			return Response::ack;
 		};
 
-		$mock = new MockPubSub;
+		$mock = new MockSubscriber;
 		$mock->subscribe("fruits", $callback);
 
 		$subscription = $mock->getSubscription("fruits");
@@ -55,7 +55,7 @@ class MockPubSubTest extends TestCase
 			return Response::ack;
 		};
 
-		$mock = new MockPubSub;
+		$mock = new MockSubscriber;
 		$mock->subscribe(["fruits", "veggies"], $callback);
 
 		$subscription = $mock->getSubscription("fruits");
@@ -71,7 +71,7 @@ class MockPubSubTest extends TestCase
 			return Response::ack;
 		};
 
-		$mock = new MockPubSub;
+		$mock = new MockSubscriber;
 		$mock->subscribe("fruits, veggies", $callback);
 
 		$subscription = $mock->getSubscription("fruits");
@@ -87,7 +87,7 @@ class MockPubSubTest extends TestCase
 			return Response::ack;
 		};
 
-		$mock = new MockPubSub(messages: ["veggies" => [new Message("veggies", "OK")]]);
+		$mock = new MockSubscriber(messages: ["veggies" => [new Message("veggies", "OK")]]);
 		$mock->subscribe("fruits, veggies", $callback);
 
 		$mock->loop();
@@ -97,7 +97,7 @@ class MockPubSubTest extends TestCase
 
 	public function test_loop(): void
 	{
-		$mock = new MockPubSub(
+		$mock = new MockSubscriber(
 			messages: [
 				"fruits" => [
 					new Message("fruits", "apples"),
@@ -124,7 +124,7 @@ class MockPubSubTest extends TestCase
 
 	public function test_loop_exits_when_shutdown(): void
 	{
-		$mock = new MockPubSub(
+		$mock = new MockSubscriber(
 			messages: [
 				"fruits" => [
 					new Message("fruits", "apples"),
@@ -149,7 +149,7 @@ class MockPubSubTest extends TestCase
 
 	public function test_shutdown(): void
 	{
-		$mock = new MockPubSub;
+		$mock = new MockSubscriber;
 		$this->assertFalse($mock->getRunning());
 
 		$reflectionClass = new ReflectionClass($mock);
@@ -167,7 +167,7 @@ class MockPubSubTest extends TestCase
 
 	public function test_flush_all_messages(): void
 	{
-		$mock = new MockPubSub;
+		$mock = new MockSubscriber;
 		$mock->publish(new Message("fruits", "ok"));
 		$mock->publish(new Message("fruits", "ok"));
 
@@ -180,7 +180,7 @@ class MockPubSubTest extends TestCase
 
 	public function test_flush_topic_messages(): void
 	{
-		$mock = new MockPubSub;
+		$mock = new MockSubscriber;
 		$mock->publish(new Message("fruits", "ok"));
 		$mock->publish(new Message("fruits", "ok"));
 		$mock->publish(new Message("veggies", "ok"));

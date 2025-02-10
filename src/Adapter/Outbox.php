@@ -20,9 +20,9 @@ use Nimbly\Syndicate\Message;
  * 		id {:any data type you want:} primary key,
  * 		topic text not null,
  * 		payload text,
- * 		headers text, -- json serialized
- * 		attributes text, -- json serialized
- * 		created_at timestamp (with timezone), not null
+ * 		headers text, -- json serialized headers from message
+ * 		attributes text, -- json serialized attributes from message
+ * 		created_at timestamp not null
  * );
  * ```
  *
