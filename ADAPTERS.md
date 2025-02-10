@@ -8,7 +8,7 @@ The following is a list of currently supported adapters and any particular notes
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Azure` | Y       | Y       | `microsoft/azure-storage-queue` |
 
-## Install
+### Install
 
 ```bash
 composer require microsoft/azure-storage-queue
@@ -22,7 +22,7 @@ composer require microsoft/azure-storage-queue
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Beanstalk` | Y       | Y       | `pda/pheanstalk` |
 
-## Install
+### Install
 
 ```bash
 composer require pda/pheanstalk
