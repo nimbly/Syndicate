@@ -11,7 +11,7 @@ use Nimbly\Syndicate\Exception\PublishException;
  * does not send messages to any external service. Messages are
  * stored in memory.
  */
-class Mock implements PublisherInterface, ConsumerInterface
+class MockQueue implements PublisherInterface, ConsumerInterface
 {
 	/**
 	 * @param array<string,array<Message>> $messages Array of preloaded messages in queue, indexed by topic.

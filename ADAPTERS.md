@@ -155,10 +155,10 @@ $publisher->publish(
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\Mock` | Y       | Y       | - |
+| `Nimbly\Syndicate\Adapter\MockQueue` | Y       | Y       | - |
 | `Nimbly\Syndicate\Adapter\MockSubscriber` | Y       | Y       | - |
 
-A set of mock adapters are provided for your unit testing convenience. The `Mock` adapter implements `ConsumerInterface` and the `MockSubscriber` implements `SubscriberInterface`. Both adapters allow publishing of messages.
+A set of mock adapters are provided for your unit testing convenience. The `MockQueue` adapter implements `ConsumerInterface` and the `MockSubscriber` implements `SubscriberInterface`. Both adapters allow publishing of messages.
 
 These adapters also offer convenience methods to inspect the message queues and subscriptions as well as the ability to flush all messages or messages within a specific topic.
 

@@ -4,7 +4,7 @@ namespace Nimbly\Syndicate\Tests\Filter;
 
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\Adapter\Mock;
+use Nimbly\Syndicate\Adapter\MockQueue;
 use Nimbly\Syndicate\Filter\ValidatorFilter;
 use Nimbly\Syndicate\Validator\JsonSchemaValidator;
 use Nimbly\Syndicate\Exception\MessageValidationException;
@@ -35,7 +35,7 @@ class ValidatorFilterTest extends TestCase
 			]
 		]);
 
-		$publisher = new ValidatorFilter($validator, new Mock);
+		$publisher = new ValidatorFilter($validator, new MockQueue);
 
 		$this->expectException(MessageValidationException::class);
 		$publisher->publish(new Message("vegetables", "Ok"));
@@ -61,7 +61,7 @@ class ValidatorFilterTest extends TestCase
 			])
 		]);
 
-		$publisher = new ValidatorFilter($validator, new Mock);
+		$publisher = new ValidatorFilter($validator, new MockQueue);
 
 		$this->expectException(MessageValidationException::class);
 		$publisher->publish(new Message("fruits", \json_encode(["name" => "peaches", "published_at" => date("c")])));
@@ -75,7 +75,7 @@ class ValidatorFilterTest extends TestCase
 					return false;
 				}
 			},
-			new Mock
+			new MockQueue
 		);
 
 		$this->expectException(MessageValidationException::class);
@@ -102,7 +102,7 @@ class ValidatorFilterTest extends TestCase
 			])
 		]);
 
-		$mockPublisher = new Mock;
+		$mockPublisher = new MockQueue;
 		$publisher = new ValidatorFilter($validator, $mockPublisher);
 		$message = new Message("fruits", \json_encode(["name" => "apples", "published_at" => date("c")]));
 

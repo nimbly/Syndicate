@@ -34,7 +34,7 @@ Syndicate is a powerful framework able to both publish and consume messages - id
 | [IronMQ](/ADAPTERS.md#ironmq)         | Y         | Y        | `iron-io/iron_mq` |
 | [Mercure](/ADAPTERS.md#mercure)        | Y         | N        | Any `psr/http-client` implementation |
 | [MockSubscriber](/ADAPTERS.md#mock) | Y         | Y        | - |
-| [Mock](/ADAPTERS.md#mock)           | Y         | Y        | - |
+| [MockQueue](/ADAPTERS.md#mock)           | Y         | Y        | - |
 | [MQTT](/ADAPTERS.md#mqtt)           | Y         | Y*       | `php-mqtt/client` |
 | [NullPublisher](/ADAPTERS.md#nullpublisher) | Y         | N        | - |
 | [Outbox](/ADAPTERS.md#outbox)         | Y         | N        | `PDO` |

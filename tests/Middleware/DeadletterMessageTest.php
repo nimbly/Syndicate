@@ -5,7 +5,7 @@ namespace Nimbly\Syndicate\Tests\Middleware;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Response;
-use Nimbly\Syndicate\Adapter\Mock;
+use Nimbly\Syndicate\Adapter\MockQueue;
 use Nimbly\Syndicate\Filter\RedirectFilter;
 use Nimbly\Syndicate\Middleware\DeadletterMessage;
 
@@ -16,7 +16,7 @@ class DeadletterMessageTest extends TestCase
 {
 	public function test_deadletter_response(): void
 	{
-		$mock = new Mock;
+		$mock = new MockQueue;
 		$publisher = new RedirectFilter($mock, "deadletter");
 
 		$middleware = new DeadletterMessage($publisher);
@@ -33,7 +33,7 @@ class DeadletterMessageTest extends TestCase
 
 	public function test_other_response(): void
 	{
-		$mock = new Mock;
+		$mock = new MockQueue;
 		$publisher = new RedirectFilter($mock, "deadletter");
 
 		$middleware = new DeadletterMessage($publisher);
