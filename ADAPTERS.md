@@ -284,7 +284,7 @@ composer require predis/predis
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\RedisPubSub` | Y       | Y       | `predis/predis` |
+| `Nimbly\Syndicate\Adapter\RedisPubsub` | Y       | Y       | `predis/predis` |
 
 This adapter uses Redis's built-in pubsub feature.
 

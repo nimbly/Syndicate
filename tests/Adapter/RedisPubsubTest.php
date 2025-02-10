@@ -14,15 +14,15 @@ use Nimbly\Syndicate\Exception\ConsumeException;
 use Nimbly\Syndicate\Exception\PublishException;
 use Nimbly\Syndicate\Exception\ConnectionException;
 use Nimbly\Syndicate\Exception\SubscriptionException;
-use Nimbly\Syndicate\Adapter\RedisPubSub;
+use Nimbly\Syndicate\Adapter\RedisPubsub;
 use Predis\Connection\NodeConnectionInterface;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Predis\Connection\ConnectionException as RedisConnectionException;
 
 /**
- * @covers Nimbly\Syndicate\Adapter\RedisPubSub
+ * @covers Nimbly\Syndicate\Adapter\RedisPubsub
  */
-class RedisPubSubTest extends TestCase
+class RedisPubsubTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;
 
@@ -34,7 +34,7 @@ class RedisPubSubTest extends TestCase
 
 		$message = new Message("test", "Ok");
 
-		$publisher = new RedisPubSub($mock);
+		$publisher = new RedisPubsub($mock);
 		$publisher->publish($message);
 
 		$mock->shouldHaveReceived(
@@ -51,7 +51,7 @@ class RedisPubSubTest extends TestCase
 
 		$message = new Message("test", "Ok");
 
-		$publisher = new RedisPubSub($mock);
+		$publisher = new RedisPubsub($mock);
 		$receipt = $publisher->publish($message);
 
 		$this->assertEquals(
@@ -72,7 +72,7 @@ class RedisPubSubTest extends TestCase
 
 		$message = new Message("test", "Ok");
 
-		$publisher = new RedisPubSub($mock);
+		$publisher = new RedisPubsub($mock);
 
 		$this->expectException(ConnectionException::class);
 		$publisher->publish($message);
@@ -86,7 +86,7 @@ class RedisPubSubTest extends TestCase
 
 		$message = new Message("test", "Ok");
 
-		$publisher = new RedisPubSub($mock);
+		$publisher = new RedisPubsub($mock);
 
 		$this->expectException(PublishException::class);
 		$publisher->publish($message);
@@ -101,7 +101,7 @@ class RedisPubSubTest extends TestCase
 			->andReturn($mockConsumer);
 		$mockConsumer->shouldReceive("subscribe");
 
-		$consumer = new RedisPubSub($mock);
+		$consumer = new RedisPubsub($mock);
 		$consumer->subscribe("test", "strtolower");
 
 		$mock->shouldHaveReceived("pubSubLoop");
@@ -130,7 +130,7 @@ class RedisPubSubTest extends TestCase
 			->andReturn($mockConsumer);
 		$mockConsumer->shouldReceive("subscribe");
 
-		$consumer = new RedisPubSub($mock);
+		$consumer = new RedisPubsub($mock);
 		$consumer->subscribe(["test", "test2"], "strtolower");
 
 		$mock->shouldHaveReceived("pubSubLoop");
@@ -170,7 +170,7 @@ class RedisPubSubTest extends TestCase
 				)
 			);
 
-		$consumer = new RedisPubSub($mock);
+		$consumer = new RedisPubsub($mock);
 
 		$this->expectException(ConnectionException::class);
 		$consumer->subscribe("test", "strtolower");
@@ -188,7 +188,7 @@ class RedisPubSubTest extends TestCase
 			->withAnyArgs()
 			->andThrow(new Exception("Failure"));
 
-		$consumer = new RedisPubSub($mock);
+		$consumer = new RedisPubsub($mock);
 
 		$this->expectException(SubscriptionException::class);
 		$consumer->subscribe("test", "strtolower");
@@ -212,7 +212,7 @@ class RedisPubSubTest extends TestCase
 				(object) ["kind" => "message", "channel" => "test", "payload" => "Ok"]
 			);
 
-		$consumer = new RedisPubSub($mock);
+		$consumer = new RedisPubsub($mock);
 		$consumer->subscribe("test", fn($msg) => Response::ack);
 		$consumer->loop();
 
@@ -235,7 +235,7 @@ class RedisPubSubTest extends TestCase
 				(object) ["kind" => "message", "channel" => "fruits", "payload" => "Ok"]
 			);
 
-		$consumer = new RedisPubSub($mock);
+		$consumer = new RedisPubsub($mock);
 
 		$this->expectException(ConsumeException::class);
 		$consumer->loop();
@@ -261,7 +261,7 @@ class RedisPubSubTest extends TestCase
 				)
 			);
 
-		$consumer = new RedisPubSub($mock);
+		$consumer = new RedisPubsub($mock);
 
 		$this->expectException(ConnectionException::class);
 		$consumer->loop();
@@ -282,7 +282,7 @@ class RedisPubSubTest extends TestCase
 		$mockConsumer->shouldReceive("current")
 			->andThrows(new Exception("Failure"));
 
-		$consumer = new RedisPubSub($mock);
+		$consumer = new RedisPubsub($mock);
 
 		$this->expectException(ConsumeException::class);
 		$consumer->loop();
@@ -298,7 +298,7 @@ class RedisPubSubTest extends TestCase
 
 		$mockConsumer->shouldReceive("stop");
 
-		$consumer = new RedisPubSub($mock);
+		$consumer = new RedisPubsub($mock);
 		$consumer->shutdown();
 
 		$mockConsumer->shouldHaveReceived("stop", [true]);
@@ -319,7 +319,7 @@ class RedisPubSubTest extends TestCase
 				)
 			);
 
-		$consumer = new RedisPubSub($mock);
+		$consumer = new RedisPubsub($mock);
 
 		$this->expectException(ConnectionException::class);
 		$consumer->shutdown();
@@ -336,7 +336,7 @@ class RedisPubSubTest extends TestCase
 		$mockConsumer->shouldReceive("stop")
 			->andThrow(new Exception("Failure"));
 
-		$consumer = new RedisPubSub($mock);
+		$consumer = new RedisPubsub($mock);
 
 		$this->expectException(ConnectionException::class);
 		$consumer->shutdown();
@@ -348,7 +348,7 @@ class RedisPubSubTest extends TestCase
 		$mock->shouldReceive("pubSubLoop")
 			->andReturn(null);
 
-		$consumer = new RedisPubSub($mock);
+		$consumer = new RedisPubsub($mock);
 
 		$reflectionClass = new ReflectionClass($consumer);
 		$reflectionMethod = $reflectionClass->getMethod("getLoop");

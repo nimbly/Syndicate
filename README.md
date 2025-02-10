@@ -40,7 +40,7 @@ Syndicate is a powerful framework able to both publish and consume messages - id
 | [Outbox](/ADAPTERS.md#outbox)         | Y         | N        | `PDO` |
 | [RabbitMQ](/ADAPTERS.md#rabbitmq)       | Y         | Y        | `php-amqplib/php-amqplib` |
 | [Redis](/ADAPTERS.md#redis-queue)          | Y         | Y        | `predis/predis` |
-| [RedisPubSub](/ADAPTERS.md#redis-pubsub)    | Y         | Y*       | `predis/predis` |
+| [RedisPubsub](/ADAPTERS.md#redis-pubsub)    | Y         | Y*       | `predis/predis` |
 | [SNS](/ADAPTERS.md#sns)            | Y         | N        | `aws/aws-sdk-php` |
 | [SQS](/ADAPTERS.md#sqs)            | Y         | Y        | `aws/aws-sdk-php` |
 | [Webhook](/ADAPTERS.md#webhook)        | Y         | N        | Any `psr/http-client` implementation |

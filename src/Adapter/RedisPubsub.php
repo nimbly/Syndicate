@@ -15,7 +15,7 @@ use Nimbly\Syndicate\Exception\SubscriptionException;
 /**
  * This adapter uses Redis's built-in pubsub capabilities.
  */
-class RedisPubSub implements PublisherInterface, SubscriberInterface
+class RedisPubsub implements PublisherInterface, SubscriberInterface
 {
 	protected ?Consumer $loop = null;
 
