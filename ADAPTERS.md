@@ -2,20 +2,13 @@
 
 The following is a list of currently supported adapters and any particular notes, special options, and message attributes that can be used with them.
 
-### Options vs Attributes
-
-**Attributes** are properties that add definition to the Message itself.
-
-**Options** are properties that describe *how* the Message should be published.
-
-
-### Azure
+## Azure
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Azure` | Y       | Y       | `microsoft/azure-storage-queue` |
 
-#### Install
+## Install
 
 ```bash
 composer require microsoft/azure-storage-queue
@@ -23,19 +16,19 @@ composer require microsoft/azure-storage-queue
 
 **NOTE:** Azure has stopped development and maintenance of this library.
 
-### Beanstalk
+## Beanstalk
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Beanstalk` | Y       | Y       | `pda/pheanstalk` |
 
-#### Install
+## Install
 
 ```bash
 composer require pda/pheanstalk
 ```
 
-#### Message attributes
+### Message attributes
 
 The following message attributes are supported when publishing messages:
 
@@ -53,7 +46,7 @@ $publisher->publish(
 );
 ```
 
-### Gearman
+## Gearman
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
@@ -61,7 +54,7 @@ $publisher->publish(
 
 **NOTE:** Only background jobs are supported.
 
-#### Install
+### Install
 
 ```bash
 sudo apt-get install php-gearman
@@ -73,7 +66,7 @@ Or you can install directly from PEAR/PECL.
 sudo pecl install gearman
 ```
 
-#### Message attributes
+### Message attributes
 
 The following message attributes are supported when publishing a message:
 
@@ -89,19 +82,19 @@ $publisher->publish(
 );
 ```
 
-### IronMQ
+## IronMQ
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Iron` | Y       | Y       | `iron-io/iron_mq` |
 
-#### Install
+### Install
 
 ```bash
 composer require iron-io/iron_mq
 ```
 
-#### Message attributes
+### Message attributes
 
 The following message attributes are supported when publishing messages:
 
@@ -119,13 +112,13 @@ $publisher->publish(
 );
 ```
 
-### Google
+## Google
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Google` | Y       | Y       | `google/cloud-pubsub` |
 
-#### Install
+### Install
 
 To use this adapter, you must install the `google/cloud-pubsub` library.
 
@@ -133,19 +126,15 @@ To use this adapter, you must install the `google/cloud-pubsub` library.
 composer require google/cloud-pubsub
 ```
 
-### Mercure
+## Mercure
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\Mercure` | Y       | N       | n/a |
+| `Nimbly\Syndicate\Adapter\Mercure` | Y       | N       | `psr/http-client` |
 
-#### Install
+If no `psr/http-client` implementation is given, this adapter will fall back to using `nimbly/shuttle` which is bundled with Syndicate.
 
-This adapter only requires a `psr-http-client` implementation. If none is given, it will default to `nimbly/shuttle` which comes pre-bundled with Syndicate.
-
-Mercure hub requires a JWT to publish messages. Please refer to the Mercure documentation on JWT format and required claims.
-
-#### Message attributes
+### Message attributes
 
 The following message attributes are supported when publishing a message:
 
@@ -162,48 +151,35 @@ $publisher->publish(
 );
 ```
 
-### Mock
+## Mock
 
-A set of mock adapters are provided for your unit testing convenience. The `Mock` adapter implements `ConsumerInterface` and the `MockSubscriber` implements `SubscriberInterface`. Both adapters allow publishing of messags.
+A set of mock adapters are provided for your unit testing convenience. The `Mock` adapter implements `ConsumerInterface` and the `MockSubscriber` implements `SubscriberInterface`. Both adapters allow publishing of messages.
 
 These adapters also offer convenience methods to inspect the message queues and subscriptions as well as the ability to flush all messages or messages within a specific topic.
 
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\Mock` | Y       | Y       | |
-| `Nimbly\Syndicate\Adapter\MockSubscriber` | Y       | Y       | |
+| `Nimbly\Syndicate\Adapter\Mock` | Y       | Y       | - |
+| `Nimbly\Syndicate\Adapter\MockSubscriber` | Y       | Y       | - |
 
-
-#### Options
+### Options
 
 Most of the major methods that support an `options` array, support an `"exception" => true` value to simulate an exception being thrown.
 
-### NullPublisher
-
-Don't need or care about messages actually being published? Then this adapter is for you! All calls to `publish` sends your message into the void.
-
-This adapter is a good fit when you are developing locally and don't want or need messages to be published to a queue or broker.
-
-By default, publishing will return a random hexadecimal string. Optionally, you can provide a `receipt` callback into the constructor to generate any receipt value you want.
-
-| Adapter | Publish | Consume | Library |
-|---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\NullPublisher` | Y       | N       | |
-
-### MQTT
+## MQTT
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Mqtt` | Y       | Y       | `php-mqtt/client` |
 
-#### Install
+### Install
 
 ```bash
 composer require php-mqtt/client
 ```
 
-#### Message attributes
+### Message attributes
 
 The following message attributes are supported when publishing messages:
 
@@ -220,31 +196,60 @@ $publisher->publish(
 );
 ```
 
-### Outbox
+## NullPublisher
+
+Don't need or care about messages actually being published? Then this adapter is for you! All calls to `publish` sends your message into the void.
+
+This adapter is a good fit when you are developing locally and don't want or need messages to be published to a queue or broker.
+
+By default, publishing will return a random hexadecimal string. Optionally, you can provide a `receipt` callback into the constructor to generate any receipt value you want.
+
+| Adapter | Publish | Consume | Library |
+|---------|---------|---------|---------|
+| `Nimbly\Syndicate\Adapter\NullPublisher` | Y       | N       | - |
+
+## Outbox
+
+This adapter uses a database as the means to publish messages to a specified table. This is a common pattern in EDA called the "outbox pattern."
+
+Required minimum table structure is:
+
+```sql
+CREATE TABLE {:your table name:} (
+	id {:any data type you want:} primary key,
+	topic text not null,
+	payload text,
+	headers text, -- json serialized headers from message
+	attributes text, -- json serialized attributes from message
+	created_at timestamp not null
+);
+```
+
+See https://microservices.io/patterns/data/transactional-outbox.html for a detailed explanation of the outbox pattern.
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Outbox` | Y       | N       | `ext-pdo` |
 
-#### Install
+### Install
 
 ```bash
 sudo apt-get install php-pdo
 ```
 
-### RabbitMQ
+## RabbitMQ
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\RabbitMQ` | Y       | Y       | `php-amqplib/php-amqplib` |
 
-#### Install
+### Install
 
 ```bash
 composer require php-amqplib/php-amqplib
 ```
 
-#### Message attributes
+### Message attributes
 
 The following message attributes are supported when publishing messages:
 
@@ -262,7 +267,7 @@ $publisher->publish(
 );
 ```
 
-### Redis Queue
+## Redis Queue
 
 This adapter uses Redis's LIST feature to simulate a queue. Messages are `rpush`ed onto the list and `lpop`ed off when consuming.
 
@@ -270,13 +275,13 @@ This adapter uses Redis's LIST feature to simulate a queue. Messages are `rpush`
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Redis` | Y       | Y       | `predis/predis` |
 
-#### Install
+### Install
 
 ```bash
 composer require predis/predis
 ```
 
-### Redis PubSub
+## Redis PubSub
 
 This adapter uses Redis's built-in pubsub feature.
 
@@ -284,25 +289,25 @@ This adapter uses Redis's built-in pubsub feature.
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\RedisPubSub` | Y       | Y       | `predis/predis` |
 
-#### Install
+### Install
 
 ```bash
 composer require predis/predis
 ```
 
-### SNS
+## SNS
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Sns` | Y       | N       | `aws/aws-sdk-php` |
 
-#### Install
+### Install
 
 ```bash
 composer require aws/aws-sdk-php
 ```
 
-#### Message attributes
+### Message attributes
 
 The following message attributes are supported when publishing messages:
 
@@ -320,19 +325,19 @@ $publisher->publish(
 );
 ```
 
-### SQS
+## SQS
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Sqs` | Y       | Y       | `aws/aws-sdk-php` |
 
-#### Install
+### Install
 
 ```bash
 composer require aws/aws-sdk-php
 ```
 
-#### Message attributes
+### Message attributes
 
 The following message attributes are supported when publishing messages:
 
@@ -340,13 +345,17 @@ The following message attributes are supported when publishing messages:
 * `MessageDeduplicationId` (string, optional) The message deduplication ID.
 * **any**  All other values will be sent as `MessageAttributes` and must adhere to SQS guidelines for message metadata. @see See https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-metadata.html for more information.
 
-### Webhook
+## Webhook
+
+This publisher will make HTTP calls to the given hostname and endpoint. It assumes the endpoint will be the topic name and will make a POST call.
 
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\Webhook` | Y       | N       | n/a |
+| `Nimbly\Syndicate\Adapter\Webhook` | Y       | N       | `psr/http-client` |
 
-#### Install
+If no `psr/http-client` implementation is given, this adapter will fall back to using `nimbly/shuttle` which is bundled with Syndicate.
+
+### Install
 
 This adapter only requires a `psr-http-client` implementation. If none is given, it will default to `nimbly/shuttle` which comes pre-bundled with Syndicate.
 
@@ -360,7 +369,7 @@ $publisher = new Webhook(
 );
 ```
 
-#### Message headers
+### Message headers
 
 You may supply custom headers for the message. These headers will be merged with the default headers supplied in the constructor. The resulting merged headers will be included in the HTTP call.
 
@@ -372,7 +381,7 @@ $publisher->publish(
 );
 ```
 
-#### Publishing options
+### Publishing options
 
 The following publishing options are supported:
 
