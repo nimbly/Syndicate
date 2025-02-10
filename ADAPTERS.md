@@ -153,15 +153,14 @@ $publisher->publish(
 
 ## Mock
 
-A set of mock adapters are provided for your unit testing convenience. The `Mock` adapter implements `ConsumerInterface` and the `MockSubscriber` implements `SubscriberInterface`. Both adapters allow publishing of messages.
-
-These adapters also offer convenience methods to inspect the message queues and subscriptions as well as the ability to flush all messages or messages within a specific topic.
-
-
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Mock` | Y       | Y       | - |
 | `Nimbly\Syndicate\Adapter\MockSubscriber` | Y       | Y       | - |
+
+A set of mock adapters are provided for your unit testing convenience. The `Mock` adapter implements `ConsumerInterface` and the `MockSubscriber` implements `SubscriberInterface`. Both adapters allow publishing of messages.
+
+These adapters also offer convenience methods to inspect the message queues and subscriptions as well as the ability to flush all messages or messages within a specific topic.
 
 ### Options
 
@@ -198,17 +197,21 @@ $publisher->publish(
 
 ## NullPublisher
 
+| Adapter | Publish | Consume | Library |
+|---------|---------|---------|---------|
+| `Nimbly\Syndicate\Adapter\NullPublisher` | Y       | N       | - |
+
 Don't need or care about messages actually being published? Then this adapter is for you! All calls to `publish` sends your message into the void.
 
 This adapter is a good fit when you are developing locally and don't want or need messages to be published to a queue or broker.
 
 By default, publishing will return a random hexadecimal string. Optionally, you can provide a `receipt` callback into the constructor to generate any receipt value you want.
 
+## Outbox
+
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\NullPublisher` | Y       | N       | - |
-
-## Outbox
+| `Nimbly\Syndicate\Adapter\Outbox` | Y       | N       | `ext-pdo` |
 
 This adapter uses a database as the means to publish messages to a specified table. This is a common pattern in EDA called the "outbox pattern."
 
@@ -226,10 +229,6 @@ CREATE TABLE {:your table name:} (
 ```
 
 See https://microservices.io/patterns/data/transactional-outbox.html for a detailed explanation of the outbox pattern.
-
-| Adapter | Publish | Consume | Library |
-|---------|---------|---------|---------|
-| `Nimbly\Syndicate\Adapter\Outbox` | Y       | N       | `ext-pdo` |
 
 ### Install
 
@@ -269,11 +268,11 @@ $publisher->publish(
 
 ## Redis Queue
 
-This adapter uses Redis's LIST feature to simulate a queue. Messages are `rpush`ed onto the list and `lpop`ed off when consuming.
-
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Redis` | Y       | Y       | `predis/predis` |
+
+This adapter uses Redis's LIST feature to simulate a queue. Messages are `rpush`ed onto the list and `lpop`ed off when consuming.
 
 ### Install
 
@@ -283,11 +282,11 @@ composer require predis/predis
 
 ## Redis PubSub
 
-This adapter uses Redis's built-in pubsub feature.
-
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\RedisPubSub` | Y       | Y       | `predis/predis` |
+
+This adapter uses Redis's built-in pubsub feature.
 
 ### Install
 
@@ -347,11 +346,11 @@ The following message attributes are supported when publishing messages:
 
 ## Webhook
 
-This publisher will make HTTP calls to the given hostname and endpoint. It assumes the endpoint will be the topic name and will make a POST call.
-
 | Adapter | Publish | Consume | Library |
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Webhook` | Y       | N       | `psr/http-client` |
+
+This publisher will make HTTP calls to the given hostname and endpoint. It assumes the endpoint will be the topic name and will make a POST call.
 
 If no `psr/http-client` implementation is given, this adapter will fall back to using `nimbly/shuttle` which is bundled with Syndicate.
 
