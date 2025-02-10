@@ -22,7 +22,7 @@
 
 use Predis\Client;
 use Nimbly\Syndicate\Message;
-use Nimbly\Syndicate\Adapter\Queue\Redis;
+use Nimbly\Syndicate\Adapter\Redis;
 use Nimbly\Syndicate\Filter\ValidatorFilter;
 use Nimbly\Syndicate\Validator\JsonSchemaValidator;
 

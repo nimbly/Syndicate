@@ -25,33 +25,27 @@ Syndicate is a powerful framework able to both publish and consume messages - id
 
 ## Supported integrations
 
-### Queues
-
-Namespace: `Nimbly\Syndicate\Adapter\Queue`
-
 | Adapter        | Publish   | Consume  | Library |
 | -------------- | --------- | -------- | ------- |
-| Redis          | Y         | Y        | `predis/predis:^2.0` |
-| Azure          | Y         | Y        | `microsoft/azure-storage-queue:^1.3` |
-| SQS            | Y         | Y        | `aws/aws-sdk-php:^3.336` |
-| Beanstalk      | Y         | Y        | `pda/pheanstalk:^5.0` |
-| IronMQ         | Y         | Y        | `iron-io/iron_mq:^4.0` |
-| RabbitMQ       | Y         | Y        | `php-amqplib/php-amqplib:^3.7` |
-| Outbox         | Y         | N        | `PDO` |
+| [Azure](/ADAPTERS.md#azure)          | Y         | Y        | `microsoft/azure-storage-queue` |
+| [Beanstalk](/ADAPTERS.md#beanstalk)      | Y         | Y        | `pda/pheanstalk` |
+| [Gearman](/ADAPTERS.md#gearman)        | Y         | Y*       | `ext-gearman` |
+| [Google](/ADAPTERS.md#google)         | Y         | Y        | `google/cloud-pubsub` |
+| [IronMQ](/ADAPTERS.md#ironmq)         | Y         | Y        | `iron-io/iron_mq` |
+| [Mercure](/ADAPTERS.md#mercure)        | Y         | N        | Any `psr/http-client` implementation |
+| [MockSubscriber](/ADAPTERS.md#mock) | Y         | Y        | - |
+| [MockQueue](/ADAPTERS.md#mock)           | Y         | Y        | - |
+| [MQTT](/ADAPTERS.md#mqtt)           | Y         | Y*       | `php-mqtt/client` |
+| [NullPublisher](/ADAPTERS.md#nullpublisher) | Y         | N        | - |
+| [Outbox](/ADAPTERS.md#outbox)         | Y         | N        | `PDO` |
+| [RabbitMQ](/ADAPTERS.md#rabbitmq)       | Y         | Y        | `php-amqplib/php-amqplib` |
+| [Redis](/ADAPTERS.md#redis-queue)          | Y         | Y        | `predis/predis` |
+| [RedisPubsub](/ADAPTERS.md#redis-pubsub)    | Y         | Y*       | `predis/predis` |
+| [SNS](/ADAPTERS.md#sns)            | Y         | N        | `aws/aws-sdk-php` |
+| [SQS](/ADAPTERS.md#sqs)            | Y         | Y        | `aws/aws-sdk-php` |
+| [Webhook](/ADAPTERS.md#webhook)        | Y         | N        | Any `psr/http-client` implementation |
 
-### PubSubs
-
-Namespace: `Nimbly\Syndicate\Adapter\PubSub`
-
-| Adapter        | Publish   | Consume  | Library |
-| -------------- | --------- | -------- | ------- |
-| Redis          | Y         | Y*       | `predis/predis:^2.0` |
-| SNS            | Y         | N        | `aws/aws-sdk-php:^3.336` |
-| MQTT           | Y         | Y*       | `php-mqtt/client:^1.1` |
-| Google         | Y         | Y        | `google/cloud-pubsub:^2.0` |
-| Gearman        | Y         | Y*       | `ext-gearman` |
-| Webhook        | Y         | N        | Any `psr/http-client` implementation |
-| Mercure        | Y         | N        | Any `psr/http-client` implementation |
+For detailed information on each adapter, please read the [ADAPTERS.md](/ADAPTERS.md) documentation.
 
 **NOTE:** Consumers denoted with **\*** indicate subscriber based adapters and do not support `ack`ing or `nack`ing due to the nature of pubsub. Additionally, the `predis/predis` library currently does not play well with interrupts and gracefully stopping its internal pubsub loop. If using this adapter, you should set the `signals` option to an empty array. See the [**Subscribers**](#subscribers) section below for more details.
 
@@ -472,7 +466,7 @@ The `deadletter` parameter allows you to define a deadletter location: a place t
 
 ```php
 // Use Redis queue as our main consumer.
-$redis = new Nimbly\Syndicate\Adapter\Queue\Redis(new Client);
+$redis = new Nimbly\Syndicate\Adapter\Redis(new Client);
 
 // Redirect all messages to the "deadletter" queue in Redis.
 $deadletter = new RedirectFilter($redis, "deadletter");

@@ -13,7 +13,7 @@ use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Application;
 use Nimbly\Syndicate\Router\Router;
-use Nimbly\Syndicate\Adapter\Queue\Mock;
+use Nimbly\Syndicate\Adapter\MockQueue;
 use Nimbly\Syndicate\Filter\RedirectFilter;
 use Nimbly\Syndicate\Router\RouterInterface;
 use Nimbly\Syndicate\Exception\RoutingException;
@@ -21,7 +21,7 @@ use Nimbly\Syndicate\Tests\Fixtures\TestHandler;
 use Nimbly\Syndicate\Tests\Fixtures\TestMiddleware;
 use Nimbly\Syndicate\Middleware\MiddlewareInterface;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
-use Nimbly\Syndicate\Adapter\PubSub\Mock as PubSubMock;
+use Nimbly\Syndicate\Adapter\MockSubscriber;
 
 /**
  * @covers Nimbly\Syndicate\Application
@@ -32,7 +32,7 @@ class ApplicationTest extends TestCase
 
 	public function test_routing(): void
 	{
-		$mock = new Mock;
+		$mock = new MockQueue;
 		$mock->publish(new Message("test_topic", "Ok"));
 
 		$application = new Application(
@@ -54,7 +54,7 @@ class ApplicationTest extends TestCase
 
 	public function test_no_handler_throws_exception(): void
 	{
-		$mock = new Mock;
+		$mock = new MockQueue;
 		$mock->publish(new Message("test_topic", "Ok"));
 
 		$application = new Application(
@@ -73,7 +73,7 @@ class ApplicationTest extends TestCase
 
 	public function test_interrupt_signals(): void
 	{
-		$mock = new Mock;
+		$mock = new MockQueue;
 		$mock->publish(new Message("test_topic", "Ok"));
 
 		$application = new Application(
@@ -101,7 +101,7 @@ class ApplicationTest extends TestCase
 		$logger->shouldReceive("warning");
 
 		$application = new Application(
-			consumer: new Mock,
+			consumer: new MockQueue,
 			router: new Router([]),
 			logger: $logger,
 			signals: []
@@ -110,9 +110,9 @@ class ApplicationTest extends TestCase
 		$logger->shouldHaveReceived("warning");
 	}
 
-	public function test_listen_with_loop_consumer(): void
+	public function test_listen_with_subscriber(): void
 	{
-		$consumer = new PubSubMock(
+		$consumer = new MockSubscriber(
 			[
 				"fruits" => [
 					new Message("fruits", "apples"),
@@ -137,7 +137,7 @@ class ApplicationTest extends TestCase
 	public function test_listen_with_multiple_locations_on_consumer_interface_instance_throws_unexpected_value_exception(): void
 	{
 		$application = new Application(
-			consumer: new Mock,
+			consumer: new MockQueue,
 			router: new Router(handlers: [TestHandler::class])
 		);
 
@@ -147,7 +147,7 @@ class ApplicationTest extends TestCase
 
 	public function test_listen_no_response_acks_message(): void
 	{
-		$mock = new Mock;
+		$mock = new MockQueue;
 		$mock->publish(new Message("test_topic", "Ok"));
 
 		$application = new Application(
@@ -168,7 +168,7 @@ class ApplicationTest extends TestCase
 
 	public function test_listen_nack_response_releases_message(): void
 	{
-		$mock = new Mock;
+		$mock = new MockQueue;
 		$mock->publish(new Message("test_topic", "Ok"));
 
 		$application = new Application(
@@ -190,7 +190,7 @@ class ApplicationTest extends TestCase
 
 	public function test_listen_deadletter_response_publishes_message_to_deadletter(): void
 	{
-		$mock = new Mock;
+		$mock = new MockQueue;
 		$mock->publish(new Message("test_topic", "Ok"));
 
 		$application = new Application(
@@ -215,7 +215,7 @@ class ApplicationTest extends TestCase
 
 	public function test_listen_deadletter_response_with_no_deadletter_publisher_throws_exception(): void
 	{
-		$mock = new Mock;
+		$mock = new MockQueue;
 		$mock->publish(new Message("test_topic", "Ok"));
 
 		$application = new Application(
@@ -240,7 +240,7 @@ class ApplicationTest extends TestCase
 		$container = new Container;
 		$container->set(DateTime::class, new DateTime("2025-01-01T00:00:01Z"));
 
-		$mock = new Mock;
+		$mock = new MockQueue;
 		$mock->publish(new Message("test_topic", "Ok"));
 
 		$application = new Application(
@@ -270,9 +270,9 @@ class ApplicationTest extends TestCase
 		$this->assertCount(0, $mock->getMessages("test_topic"));
 	}
 
-	public function test_shutdown_with_loop_consumer(): void
+	public function test_shutdown_with_subscriber(): void
 	{
-		$consumer = new PubSubMock(
+		$consumer = new MockSubscriber(
 			["fruits" => []]
 		);
 
@@ -291,7 +291,7 @@ class ApplicationTest extends TestCase
 
 	public function test_compile_creates_callable_chain(): void
 	{
-		$application = new Application(new Mock, new Router([]));
+		$application = new Application(new MockQueue, new Router([]));
 
 		$reflectionClass = new ReflectionClass($application);
 		$reflectionMethod = $reflectionClass->getMethod("compileMiddleware");
@@ -322,7 +322,7 @@ class ApplicationTest extends TestCase
 
 	public function test_normalize_invalid_middleware_throws_unexpected_value_exception(): void
 	{
-		$application = new Application(new Mock, new Router([]));
+		$application = new Application(new MockQueue, new Router([]));
 
 		$reflectionClass = new ReflectionClass($application);
 		$reflectionMethod = $reflectionClass->getMethod("normalizeMiddleware");
@@ -332,14 +332,14 @@ class ApplicationTest extends TestCase
 		$reflectionMethod->invoke(
 			$application,
 			[
-				\Nimbly\Syndicate\Adapter\PubSub\Mock::class
+				\Nimbly\Syndicate\Adapter\MockQueue::class
 			]
 		);
 	}
 
 	public function test_normalize_creates_class_string_instances(): void
 	{
-		$application = new Application(new Mock, new Router([]));
+		$application = new Application(new MockQueue, new Router([]));
 
 		$reflectionClass = new ReflectionClass($application);
 		$reflectionMethod = $reflectionClass->getMethod("normalizeMiddleware");

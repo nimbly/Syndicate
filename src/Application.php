@@ -2,10 +2,10 @@
 
 namespace Nimbly\Syndicate;
 
-use Nimbly\Resolve\Resolve;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use UnexpectedValueException;
-use Psr\Container\ContainerInterface;
+use Nimbly\Resolve\Resolve;
 use Nimbly\Syndicate\Router\RouterInterface;
 use Nimbly\Syndicate\Adapter\ConsumerInterface;
 use Nimbly\Syndicate\Adapter\PublisherInterface;
@@ -64,32 +64,39 @@ class Application
 	 * Begin listening for new messages.
 	 *
 	 * @param string|array<string> $location The location to pull messages from the consumer: topic name, queue name, queue URL, etc. If using a `SubscriberInterface`, you can pass an array of topics to listen on.
-	 * @param integer $max_messages Maximum number of messages to pull at once.
-	 * @param integer $nack_timeout If nacking a message, how much timeout/delay before message is able to be reserved again. Also known as "visibility delay".
-	 * @param integer $polling_timeout Amount of time in seconds to poll before trying again.
+	 * @param int $max_messages The number of messages to pull off at once.
+	 * @param array<string,mixed> $options Options to pass to consumer.
 	 * @param array<string,mixed> $deadletter_options Options to be passed when publishing a message to the deadletter publisher.
+	 * @param array<string,mixed> $subscription_options Options to pass when subscribing - only used if consumer is a `SubscriberInterface` instance.
 	 * @throws ConnectionException
 	 * @throws ConsumeException
 	 * @throws PublishException
 	 * @throws SubscriptionException
 	 * @return void
 	 */
-	public function listen(string|array $location, int $max_messages = 1, int $nack_timeout = 0, int $polling_timeout = 10, array $deadletter_options = []): void
+	public function listen(
+		string|array $location,
+		int $max_messages = 1,
+		array $options = ["polling_timeout" => 10, "nack_delay" => 10],
+		array $deadletter_options = [],
+		array $subscription_options = []): void
 	{
 		$this->listening = true;
 
 		if( $this->consumer instanceof SubscriberInterface ){
 
-			$this->consumer->subscribe($location, $this->middleware);
+			$this->consumer->subscribe($location, $this->middleware, $subscription_options);
 			$this->logger?->info(
-				"[NIMBLY/SYNDICATE] Loop consumer listening started.",
+				"[NIMBLY/SYNDICATE] Subscriber listening started.",
 				[
-					"consumer" => $this->consumer::class,
-					"topics" => $location
+					"subscriber" => $this->consumer::class,
+					"topics" => $location,
+					"options" => $options,
+					"deadletter_options" => $deadletter_options,
 				]
 			);
 
-			$this->consumer->loop();
+			$this->consumer->loop($options);
 		}
 		else {
 
@@ -108,8 +115,7 @@ class Application
 					"consumer" => $this->consumer::class,
 					"location" => $location,
 					"max_messages" => $max_messages,
-					"nack_timeout" => $nack_timeout,
-					"polling_timeout" => $polling_timeout,
+					"options" => $options,
 					"deadletter_options" => $deadletter_options,
 				]
 			);
@@ -119,7 +125,7 @@ class Application
 			 */
 			while( $this->listening ) {
 
-				$messages = $this->consumer->consume($location, $max_messages, ["timeout" => $polling_timeout]);
+				$messages = $this->consumer->consume($location, $max_messages, $options);
 
 				foreach( $messages as $message ){
 
@@ -148,7 +154,7 @@ class Application
 								]
 							);
 
-							$this->consumer->nack($message, $nack_timeout);
+							$this->consumer->nack($message, $options["nack_delay"] ?? 10);
 							break;
 
 						case Response::deadletter:
@@ -163,7 +169,7 @@ class Application
 							);
 
 							if( $this->deadletter === null ){
-								$this->consumer->nack($message, $nack_timeout);
+								$this->consumer->nack($message, $options["nack_delay"] ?? 10);
 								throw new RoutingException(
 									"Cannot route message to deadletter as no deadletter implementation ".
 									"was given. Either provide a deadletter publisher or add a default ".

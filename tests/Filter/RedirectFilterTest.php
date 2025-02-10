@@ -4,7 +4,7 @@ namespace Nimbly\Syndicate\Tests\Filter;
 
 use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
-use Nimbly\Syndicate\Adapter\Queue\Mock;
+use Nimbly\Syndicate\Adapter\MockQueue;
 use Nimbly\Syndicate\Filter\RedirectFilter;
 
 /**
@@ -14,7 +14,7 @@ class RedirectFilterTest extends TestCase
 {
 	public function test_publish_returns_receipt(): void
 	{
-		$mock = new Mock;
+		$mock = new MockQueue;
 
 		$filter = new RedirectFilter($mock, "deadletter");
 
@@ -27,7 +27,7 @@ class RedirectFilterTest extends TestCase
 
 	public function test_publish_redirects_to_given_topic(): void
 	{
-		$mock = new Mock;
+		$mock = new MockQueue;
 
 		$filter = new RedirectFilter($mock, "deadletter");
 		$filter->publish(
@@ -41,7 +41,7 @@ class RedirectFilterTest extends TestCase
 
 	public function test_publish_copies_original_message(): void
 	{
-		$mock = new Mock;
+		$mock = new MockQueue;
 
 		$filter = new RedirectFilter($mock, "deadletter");
 		$filter->publish(
