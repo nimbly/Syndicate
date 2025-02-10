@@ -25,29 +25,25 @@ Syndicate is a powerful framework able to both publish and consume messages - id
 
 ## Supported integrations
 
-### Queues
-
 | Adapter        | Publish   | Consume  | Library |
 | -------------- | --------- | -------- | ------- |
-| Redis          | Y         | Y        | `predis/predis:^2.0` |
-| Azure          | Y         | Y        | `microsoft/azure-storage-queue:^1.3` |
-| SQS            | Y         | Y        | `aws/aws-sdk-php:^3.336` |
-| Beanstalk      | Y         | Y        | `pda/pheanstalk:^5.0` |
-| IronMQ         | Y         | Y        | `iron-io/iron_mq:^4.0` |
-| RabbitMQ       | Y         | Y        | `php-amqplib/php-amqplib:^3.7` |
-| Outbox         | Y         | N        | `PDO` |
-
-### PubSubs
-
-| Adapter        | Publish   | Consume  | Library |
-| -------------- | --------- | -------- | ------- |
-| Redis          | Y         | Y*       | `predis/predis:^2.0` |
-| SNS            | Y         | N        | `aws/aws-sdk-php:^3.336` |
-| MQTT           | Y         | Y*       | `php-mqtt/client:^1.1` |
-| Google         | Y         | Y        | `google/cloud-pubsub:^2.0` |
-| Gearman        | Y         | Y*       | `ext-gearman` |
-| Webhook        | Y         | N        | Any `psr/http-client` implementation |
-| Mercure        | Y         | N        | Any `psr/http-client` implementation |
+| [Azure](/ADAPTERS.md#azure)          | Y         | Y        | `microsoft/azure-storage-queue` |
+| [Beanstalk](/ADAPTERS.md#beanstalk)      | Y         | Y        | `pda/pheanstalk` |
+| [Gearman](/ADAPTERS.md#gearman)        | Y         | Y*       | `ext-gearman` |
+| [Google](/ADAPTERS.md#google)         | Y         | Y        | `google/cloud-pubsub` |
+| [IronMQ](/ADAPTERS.md#ironmq)         | Y         | Y        | `iron-io/iron_mq` |
+| [Mercure](/ADAPTERS.md#mercure)        | Y         | N        | Any `psr/http-client` implementation |
+| [MockSubscriber](/ADAPTERS.md#mock) | Y         | Y        | - |
+| [Mock](/ADAPTERS.md#mock)           | Y         | Y        | - |
+| [MQTT](/ADAPTERS.md#mqtt)           | Y         | Y*       | `php-mqtt/client` |
+| [NullPublisher](/ADAPTERS.md#nullpublisher) | Y         | N        | - |
+| [Outbox](/ADAPTERS.md#outbox)         | Y         | N        | `PDO` |
+| [RabbitMQ](/ADAPTERS.md#rabbitmq)       | Y         | Y        | `php-amqplib/php-amqplib` |
+| [Redis](/ADAPTERS.md#redis-queue)          | Y         | Y        | `predis/predis` |
+| [RedisPubSub](/ADAPTERS.md#redis-pubsub)    | Y         | Y*       | `predis/predis` |
+| [SNS](/ADAPTERS.md#sns)            | Y         | N        | `aws/aws-sdk-php` |
+| [SQS](/ADAPTERS.md#sqs)            | Y         | Y        | `aws/aws-sdk-php` |
+| [Webhook](/ADAPTERS.md#webhook)        | Y         | N        | Any `psr/http-client` implementation |
 
 For detailed information on each adapter, please read the [ADAPTERS.md](/ADAPTERS.md) documentation.
 
