@@ -27,7 +27,7 @@ class SegmentTest extends TestCase
 
 		$this->expectException(PublishException::class);
 		$publisher->publish(
-			new Message("track", "Ok", ["userId" => "abc123"])
+			new Message("track", "Ok", ["event" => "Foo", "userId" => "abc123"])
 		);
 	}
 
@@ -45,6 +45,17 @@ class SegmentTest extends TestCase
 
 		$mock->shouldHaveReceived("track");
 		$mock->shouldNotHaveReceived("flush");
+	}
+
+	public function test_unsupported_topic_throws_publish_exception(): void
+	{
+		$mock = Mockery::mock(Client::class);
+		$publisher = new Segment($mock);
+
+		$this->expectException(PublishException::class);
+		$publisher->publish(
+			new Message("unsupported", "Ok", ["userId" => "abc123"])
+		);
 	}
 
 	public function test_track_requires_event(): void
