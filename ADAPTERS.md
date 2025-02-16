@@ -294,6 +294,90 @@ This adapter uses Redis's built-in pubsub feature.
 composer require predis/predis
 ```
 
+## Segment
+
+| Adapter | Publish | Consume | Library |
+|---------|---------|---------|---------|
+| `Nimbly\Syndicate\Adapter\Segment` | Y       | N       | `segmentio/analytics-php` |
+
+Only "track", "identify", and "group" calls are supported at this time. The Message's topic should contain `track`, `identify`, or `group`.
+
+**ALL** published messages *must* contain *either* an `anonymousId` or  a `userId` message attribute.
+
+```php
+$publisher->publish(
+	new Message(
+		topic: "track",
+		payload: \json_encode($item),
+		attributes: [
+			"event" => "ItemAdded",
+			"anonymousId"=> $session->id,
+		]
+	)
+);
+```
+
+For details on specific payload options, see https://segment.com/docs/connections/spec.
+
+### Install
+
+```bash
+composer require segmentio/analytics-php
+```
+
+### Message attributes
+
+
+#### Track
+
+Track calls *must* provide the `event` name in a message attribute. The message payload contains traits about the specific event.
+
+```php
+$publisher->publish(
+	new Message(
+		topic: "track",
+		payload: \json_encode($order),
+		attributes: [
+			"event" => "OrderPlaced",
+			"userId" => $user->id,
+		]
+	)
+);
+```
+
+#### Identify
+
+The message payload contains traits about the user.
+
+```php
+$publisher->publish(
+	new Message(
+		topic: "identify",
+		payload: \json_encode($user),
+		attributes: [
+			"userId" => $user->id,
+		]
+	)
+);
+```
+
+#### Group
+
+Group calls *must* contain a `groupId` in a message attribute. The message payload contains traits about the group.
+
+```php
+$publisher->publish(
+	new Message(
+		topic: "group",
+		payload: \json_encode($group),
+		attributes: [
+			"groupId" => $group->id,
+			"userId" => $user->id,
+		]
+	)
+);
+```
+
 ## SNS
 
 | Adapter | Publish | Consume | Library |
