@@ -1,6 +1,6 @@
 <?php
 
-namespace Nimbly\Syndicate\Adapter\PubSub;
+namespace Nimbly\Syndicate\Adapter;
 
 use Segment\Client;
 use Nimbly\Syndicate\Adapter\PublisherInterface;
@@ -8,8 +8,7 @@ use Nimbly\Syndicate\Exception\PublishException;
 use Nimbly\Syndicate\Message;
 
 /**
- * Segment.io adapter. Only "track", "identify", and "group" calls
- * are supported.
+ * Segment.io adapter supporting "track", "identify", and "group" calls.
  *
  * @see https://segment.com/docs/connections/spec
  */
@@ -81,7 +80,7 @@ class Segment implements PublisherInterface
 
 		if( !isset($request["anonymousId"]) && !isset($request["userId"]) ){
 			throw new PublishException(
-				message: "Segment requires an anonymous ID or a user ID. Please add either an \"anonymousId\" or \"userId\" to the Message attributes."
+				message: "Segment requires an anonymous ID or a user ID. Please add either an \"anonymousId\" or \"userId\" to the message attributes."
 			);
 		}
 
@@ -106,7 +105,7 @@ class Segment implements PublisherInterface
 
 		if( !isset($request["event"]) ){
 			throw new PublishException(
-				message: "Segment track call requires an event name. Please add an \"event\" attribute to the Message."
+				message: "Segment track call requires an event name. Please add an \"event\" attribute to the message."
 			);
 		}
 
@@ -139,19 +138,19 @@ class Segment implements PublisherInterface
 	 */
 	protected function buildGroupRequest(Message $message): array
 	{
+		if( !isset($message->getAttributes()["groupId"]) ){
+			throw new PublishException(
+				message: "Segment group call requires a groupId. Please add a \"groupId\" attribute to the message."
+			);
+		}
+
 		$request = \array_merge(
 			$this->buildCommonRequest($message),
 			[
-				"groupId" => $message->getAttributes()["groupID"] ?? null,
+				"groupId" => $message->getAttributes()["groupId"],
 				"traits" => \json_decode($message->getPayload(), true),
 			]
 		);
-
-		if( !isset($request["groupId"]) ){
-			throw new PublishException(
-				message: "Segment group call requires a group ID. Add a \"groupId\" attribute to the Message."
-			);
-		}
 
 		return $request;
 	}

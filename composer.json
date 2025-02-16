@@ -19,8 +19,7 @@
         "nimbly/capsule": "^3.0",
 		"nimbly/shuttle": "^1.1",
         "softcreatr/jsonpath": "^0.9.1",
-        "opis/json-schema": "^2.4",
-        "segmentio/analytics-php": "^3.8"
+        "opis/json-schema": "^2.4"
     },
     "require-dev": {
         "vimeo/psalm": "^5.0",
@@ -37,7 +36,8 @@
 		"iron-io/iron_mq": "^4.0",
         "php-mqtt/client": "^2.2",
         "php-amqplib/php-amqplib": "^3.7",
-		"aws/aws-sdk-php": "^3.336"
+		"aws/aws-sdk-php": "^3.336",
+		"segmentio/analytics-php": "^3.8"
     },
 	"suggest": {
 		"ext-pcntl": "Enables graceful shutdown of consumers.",
