@@ -14,6 +14,10 @@ use Nimbly\Syndicate\Exception\PublishException;
 
 class RabbitMQ implements PublisherInterface, ConsumerInterface
 {
+	/**
+	 * @param AMQPChannel $channel
+	 * @param string $exchange Default exchange to use.
+	 */
 	public function __construct(
 		protected AMQPChannel $channel,
 		protected string $exchange = "")

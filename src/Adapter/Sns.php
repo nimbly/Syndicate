@@ -12,7 +12,7 @@ use Nimbly\Syndicate\Exception\PublishException;
 class Sns implements PublisherInterface
 {
 	/**
-	 * @param SnsClient $client
+	 * @param SnsClient $client SnsClient instance.
 	 * @param string|null $base_arn An optional base ARN if you are publishing all messages to the same AWS account. With this option set, when you publish a message, its topic does not need to include the base ARN portion.
 	 */
 	public function __construct(

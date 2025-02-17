@@ -24,6 +24,9 @@ class RedisPubsub implements PublisherInterface, SubscriberInterface
 	 */
 	protected array $subscriptions = [];
 
+	/**
+	 * @param Client $client Predis Client instance.
+	 */
 	public function __construct(
 		protected Client $client,
 	)
