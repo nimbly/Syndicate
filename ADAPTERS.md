@@ -52,7 +52,6 @@ $publisher->publish(
 |---------|---------|---------|---------|
 | `Nimbly\Syndicate\Adapter\Gearman` | Y       | Y       | `ext-gearman` |
 
-**NOTE:** Only background jobs are supported.
 
 ### Install
 
@@ -65,6 +64,10 @@ Or you can install directly from PEAR/PECL.
 ```bash
 sudo pecl install gearman
 ```
+
+Gearman uses two different clients depending on whether you are publishing or consuming messages: `GearmanClient` for publishing messages and `GearmanWorker` for consuming messages.
+
+**NOTE:** Only Gearman background jobs are supported.
 
 ### Message attributes
 
@@ -133,6 +136,13 @@ composer require google/cloud-pubsub
 | `Nimbly\Syndicate\Adapter\Mercure` | Y       | N       | `psr/http-client` |
 
 If no `psr/http-client` implementation is given, this adapter will fall back to using `nimbly/shuttle` which is bundled with Syndicate.
+
+```php
+$publisher = new Mercure(
+	hub: "https://mercure.example.com/.well-known/mercure",
+	token: $jwt,
+)
+```
 
 ### Message attributes
 
@@ -332,6 +342,8 @@ composer require segmentio/analytics-php
 
 Track calls *must* provide the `event` name in a message attribute. The message payload contains traits about the specific event.
 
+See https://segment.com/docs/connections/spec/track/ for a full list of available message attributes.
+
 ```php
 $publisher->publish(
 	new Message(
@@ -349,6 +361,9 @@ $publisher->publish(
 
 The message payload contains traits about the user.
 
+See https://segment.com/docs/connections/spec/identify/ for a full list of available message attributes.
+
+
 ```php
 $publisher->publish(
 	new Message(
@@ -364,6 +379,9 @@ $publisher->publish(
 #### Group
 
 Group calls *must* contain a `groupId` in a message attribute. The message payload contains traits about the group.
+
+See https://segment.com/docs/connections/spec/group/ for a full list of available message attributes.
+
 
 ```php
 $publisher->publish(

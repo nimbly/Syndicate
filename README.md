@@ -37,7 +37,7 @@ Syndicate is a powerful framework able to both publish and consume messages - id
 | [MockQueue](/ADAPTERS.md#mock)           | Y         | Y        | - |
 | [MQTT](/ADAPTERS.md#mqtt)           | Y         | Y*       | `php-mqtt/client` |
 | [NullPublisher](/ADAPTERS.md#nullpublisher) | Y         | N        | - |
-| [Outbox](/ADAPTERS.md#outbox)         | Y         | N        | `PDO` |
+| [Outbox](/ADAPTERS.md#outbox)         | Y         | N        | `ext-pdo` |
 | [RabbitMQ](/ADAPTERS.md#rabbitmq)       | Y         | Y        | `php-amqplib/php-amqplib` |
 | [Redis](/ADAPTERS.md#redis-queue)          | Y         | Y        | `predis/predis` |
 | [RedisPubsub](/ADAPTERS.md#redis-pubsub)    | Y         | Y*       | `predis/predis` |
