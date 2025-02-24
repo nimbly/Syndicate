@@ -13,6 +13,11 @@ use Psr\Http\Client\RequestExceptionInterface;
 
 class Mercure implements PublisherInterface
 {
+	/**
+	 * @param string $hub Mercure hub URL.
+	 * @param string $token JWT token for publishing.
+	 * @param ClientInterface $httpClient PSR-18 HTTP ClientInterface instance. Defaults to a `Nimbly\Shuttle` instance.
+	 */
 	public function __construct(
 		protected string $hub,
 		protected string $token,

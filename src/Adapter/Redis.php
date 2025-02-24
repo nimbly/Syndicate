@@ -18,7 +18,7 @@ use Nimbly\Syndicate\Exception\PublishException;
 class Redis implements PublisherInterface, ConsumerInterface
 {
 	/**
-	 * @param Client $client
+	 * @param Client $client Predis Client instance.
 	 */
 	public function __construct(
 		protected Client $client)

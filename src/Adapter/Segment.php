@@ -14,6 +14,10 @@ use Nimbly\Syndicate\Message;
  */
 class Segment implements PublisherInterface
 {
+	/**
+	 * @param Client $client Segment client.
+	 * @param boolean $autoflush If you would rather flush queued messages manually, set this to `false`.
+	 */
 	public function __construct(
 		protected Client $client,
 		protected bool $autoflush = true,
