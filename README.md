@@ -1,7 +1,7 @@
 # Syndicate
 
 [![Latest Stable Version](https://img.shields.io/packagist/v/nimbly/Syndicate.svg?style=flat-square)](https://packagist.org/packages/nimbly/Syndicate)
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/nimbly/syndicate/test.yml?style=flat-square)](https://github.com/nimbly/Syndicate/actions/workflows/test.yml)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/nimbly/syndicate/coverage.yml?style=flat-square)](https://github.com/nimbly/Syndicate/actions/workflows/coverage.yml)
 [![Codecov branch](https://img.shields.io/codecov/c/github/nimbly/syndicate/master?style=flat-square)](https://app.codecov.io/github/nimbly/Syndicate)
 [![License](https://img.shields.io/github/license/nimbly/Syndicate.svg?style=flat-square)](https://packagist.org/packages/nimbly/Syndicate)
 
