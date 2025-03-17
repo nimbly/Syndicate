@@ -7,11 +7,10 @@ use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Adapter\MockSubscriber;
 use Nimbly\Syndicate\Exception\PublishException;
+use PHPUnit\Framework\Attributes\CoversClass;
 use ReflectionClass;
 
-/**
- * @covers Nimbly\Syndicate\Adapter\MockSubscriber
- */
+#[CoversClass(MockSubscriber::class)]
 class MockSubscriberTest extends TestCase
 {
 	public function test_publish(): void

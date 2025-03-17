@@ -3,11 +3,10 @@
 namespace Nimbly\Syndicate\Tests\Router;
 
 use Nimbly\Syndicate\Router\Consume;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers Nimbly\Syndicate\Router\Consume
- */
+#[CoversClass(Consume::class)]
 class ConsumeAttributeTest extends TestCase
 {
 	public function test_get_topic(): void

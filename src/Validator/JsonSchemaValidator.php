@@ -6,13 +6,14 @@ use Nimbly\Syndicate\Message;
 use Opis\JsonSchema\Validator;
 use Opis\JsonSchema\Errors\ValidationError;
 use Nimbly\Syndicate\Exception\MessageValidationException;
+use UnexpectedValueException;
 
 class JsonSchemaValidator implements ValidatorInterface
 {
 	protected Validator $validator;
 
 	/**
-	 * @param array<string,string> $schemas A key/value pair array of topic names to JSON schemas.
+	 * @param array<string,string> $schemas A key/value pair array of topic names to JSON schemas or full path to a schema file.
 	 * @param bool $ignore_missing_schemas If a schema cannot be found for a Message topic, should validation be ignored? Defaults to `false`.
 	 */
 	public function __construct(
@@ -21,6 +22,28 @@ class JsonSchemaValidator implements ValidatorInterface
 	)
 	{
 		$this->validator = new Validator;
+
+		$this->schemas = \array_map(
+			function(mixed $schema): mixed {
+				if( \is_string($schema) && \file_exists($schema) ){
+					$contents = \file_get_contents($schema);
+
+					if( $contents === false ){
+						throw new UnexpectedValueException(
+							\sprintf(
+								"Failed to read schema file \"%s\".",
+								$schema
+							)
+						);
+					}
+
+					return $contents;
+				}
+
+				return $schema;
+			},
+			$schemas
+		);
 	}
 
 	/**

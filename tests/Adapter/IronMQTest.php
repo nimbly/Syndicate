@@ -13,10 +13,9 @@ use Nimbly\Syndicate\Exception\ConsumeException;
 use Nimbly\Syndicate\Exception\PublishException;
 use Nimbly\Syndicate\Exception\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use PHPUnit\Framework\Attributes\CoversClass;
 
-/**
- * @covers Nimbly\Syndicate\Adapter\Iron
- */
+#[CoversClass(Iron::class)]
 class IronMQTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;

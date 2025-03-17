@@ -4,11 +4,10 @@ namespace Nimbly\Syndicate\Tests\Exception;
 
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Exception\MessageValidationException;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers Nimbly\Syndicate\Exception\MessageValidationException
- */
+#[CoversClass(MessageValidationException::class)]
 class MessageValidationExceptionTest extends TestCase
 {
 	public function test_get_failed_message(): void

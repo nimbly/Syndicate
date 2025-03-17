@@ -11,10 +11,9 @@ use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Exception\RoutingException;
 use Nimbly\Syndicate\Tests\Fixtures\TestHandler;
+use PHPUnit\Framework\Attributes\CoversClass;
 
-/**
- * @covers Nimbly\Syndicate\Router\Router
- */
+#[CoversClass(Router::class)]
 class RouterTest extends TestCase
 {
 	public function test_constructor(): void

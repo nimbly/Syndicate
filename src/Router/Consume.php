@@ -4,7 +4,7 @@ namespace Nimbly\Syndicate\Router;
 
 use Attribute;
 
-#[Attribute]
+#[Attribute(Attribute::TARGET_METHOD)]
 class Consume
 {
 	/**

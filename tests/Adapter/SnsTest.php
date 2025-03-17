@@ -13,10 +13,9 @@ use Aws\Exception\CredentialsException;
 use Nimbly\Syndicate\Exception\PublishException;
 use Nimbly\Syndicate\Exception\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use PHPUnit\Framework\Attributes\CoversClass;
 
-/**
- * @covers Nimbly\Syndicate\Adapter\Sns
- */
+#[CoversClass(Sns::class)]
 class SnsTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;

@@ -5,12 +5,11 @@ namespace Nimbly\Syndicate\Tests\Middleware;
 use Nimbly\Syndicate\Message;
 use Nimbly\Syndicate\Middleware\ParseJsonMessage;
 use Nimbly\Syndicate\Response;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use UnexpectedValueException;
 
-/**
- * @covers Nimbly\Syndicate\Middleware\ParseJsonMessage
- */
+#[CoversClass(ParseJsonMessage::class)]
 class ParseJsonMessageTest extends TestCase
 {
 	public function test_invalid_json_throws_unexpected_value_exception(): void

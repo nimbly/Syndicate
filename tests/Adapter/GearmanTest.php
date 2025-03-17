@@ -2,7 +2,6 @@
 
 namespace Nimbly\Syndicate\Tests\Adapter;
 
-use Closure;
 use Mockery;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use PHPUnit\Framework\TestCase;
@@ -13,12 +12,11 @@ use Nimbly\Syndicate\Exception\ConsumeException;
 use Nimbly\Syndicate\Exception\PublishException;
 use Nimbly\Syndicate\Exception\SubscriptionException;
 use Nimbly\Syndicate\Message;
+use PHPUnit\Framework\Attributes\CoversClass;
 use ReflectionClass;
 use UnexpectedValueException;
 
-/**
- * @covers Nimbly\Syndicate\Adapter\Gearman
- */
+#[CoversClass(Gearman::class)]
 class GearmanTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;

@@ -7,12 +7,11 @@ use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Nimbly\Syndicate\Adapter\Segment;
 use Nimbly\Syndicate\Exception\PublishException;
 use Nimbly\Syndicate\Message;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Segment\Client;
 
-/**
- * @covers Nimbly\Syndicate\Adapter\Segment
- */
+#[CoversClass(Segment::class)]
 class SegmentTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;

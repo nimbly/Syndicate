@@ -9,10 +9,9 @@ use Nimbly\Syndicate\Filter\ValidatorFilter;
 use Nimbly\Syndicate\Validator\JsonSchemaValidator;
 use Nimbly\Syndicate\Exception\MessageValidationException;
 use Nimbly\Syndicate\Validator\ValidatorInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
 
-/**
- * @covers Nimbly\Syndicate\Filter\ValidatorFilter
- */
+#[CoversClass(ValidatorFilter::class)]
 class ValidatorFilterTest extends TestCase
 {
 	public function test_missing_schema_throws_message_validation_exception(): void

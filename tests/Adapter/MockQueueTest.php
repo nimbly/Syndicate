@@ -7,10 +7,9 @@ use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Adapter\MockQueue;
 use Nimbly\Syndicate\Exception\ConsumeException;
 use Nimbly\Syndicate\Exception\PublishException;
+use PHPUnit\Framework\Attributes\CoversClass;
 
-/**
- * @covers Nimbly\Syndicate\Adapter\MockQueue
- */
+#[CoversClass(MockQueue::class)]
 class MockQueueTest extends TestCase
 {
 	public function test_publish(): void

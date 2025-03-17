@@ -6,10 +6,9 @@ use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Adapter\MockQueue;
 use Nimbly\Syndicate\Filter\RedirectFilter;
+use PHPUnit\Framework\Attributes\CoversClass;
 
-/**
- * @covers Nimbly\Syndicate\Filter\RedirectFilter
- */
+#[CoversClass(RedirectFilter::class)]
 class RedirectFilterTest extends TestCase
 {
 	public function test_publish_returns_receipt(): void

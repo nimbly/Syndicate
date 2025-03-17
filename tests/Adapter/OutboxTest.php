@@ -6,11 +6,10 @@ use PDO;
 use Nimbly\Syndicate\Adapter\Outbox;
 use Nimbly\Syndicate\Exception\PublishException;
 use Nimbly\Syndicate\Message;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers Nimbly\Syndicate\Adapter\Outbox
- */
+#[CoversClass(Outbox::class)]
 class OutboxTest extends TestCase
 {
 	public function test_publish_prepare_failure_throws_publish_exception(): void

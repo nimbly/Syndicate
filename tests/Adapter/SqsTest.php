@@ -14,10 +14,9 @@ use Nimbly\Syndicate\Exception\ConsumeException;
 use Nimbly\Syndicate\Exception\PublishException;
 use Nimbly\Syndicate\Exception\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use PHPUnit\Framework\Attributes\CoversClass;
 
-/**
- * @covers Nimbly\Syndicate\Adapter\Sqs
- */
+#[CoversClass(Sqs::class)]
 class SqsTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;

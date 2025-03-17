@@ -15,10 +15,9 @@ use Nimbly\Syndicate\Exception\ConnectionException;
 use Nimbly\Syndicate\Exception\SubscriptionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use PhpMqtt\Client\Exceptions\ConnectingToBrokerFailedException;
+use PHPUnit\Framework\Attributes\CoversClass;
 
-/**
- * @covers Nimbly\Syndicate\Adapter\Mqtt
- */
+#[CoversClass(Mqtt::class)]
 class MqttTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;

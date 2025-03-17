@@ -15,10 +15,9 @@ use Nimbly\Syndicate\Exception\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use PhpAmqpLib\Exception\AMQPConnectionClosedException;
 use PhpAmqpLib\Exception\AMQPConnectionBlockedException;
+use PHPUnit\Framework\Attributes\CoversClass;
 
-/**
- * @covers Nimbly\Syndicate\Adapter\RabbitMQ
- */
+#[CoversClass(RabbitMQ::class)]
 class RabbitMQTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;

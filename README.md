@@ -63,7 +63,7 @@ composer require nimbly/syndicate
 ## Table of contents
 * [Quick Start](#quick-start)
 	* [Publisher](#publisher-quick-start)
-	* [Application](#application-quick-start)
+	* [Consumer](#consumer-quick-start)
 * [Publishers](#publishers)
 	* [Messages](#messages)
 	* [Filters](#filters)
@@ -111,7 +111,7 @@ $publisher->publish($message);
 
 You can also add any number of publishing filters for things like validating your messages against a JSON schema or redirecting messages to another topic. See [**Filters**](#filters) section for more information.
 
-### Application Quick Start
+### Consumer Quick Start
 
 Create a consumer instance by selecting your adapter.
 
@@ -252,7 +252,7 @@ $consumer = new Sqs(
 
 A variation of Consumers, Subscriber adapters use a *slightly* different technique to get their messages consumed and are *typically* pubsub. However, the `Application` can still use them to route messages to your handlers. One noticeable difference is that when starting the `Application`, you can provide an array of topics to consume from, rather than a single queue URL or name.
 
-**NOTE:** These adapters do not support `ack`ing or `nack`ing of messages due to the nature of pubsub. `deadletter`ing from handlers is possible by adding the `Nimbly\Syndicate\Middleware\DeadletterMessage` middleware and returning `Response::deadletter` from your handlers. Any other return value from your handlers will be completely ignored by these adapters.
+**NOTE:** These adapters do not support `ack`ing or `nack`ing of messages due to the nature of pubsub. `deadletter`ing from handlers is possible by adding the `Nimbly\Syndicate\Middleware\DeadletterMessage` middleware and returning `Response::deadletter` from your handlers. Any other return value from your handlers will be completely ignored by these adapters, unless you implement your own middleware to handle these cases.
 
 ## Routing
 
@@ -656,11 +656,13 @@ If the message fails validation, a `MessageValidationException` will be thrown.
 
 Syndicate ships with a `JsonSchemaValidator` that can be used to validate messages against a JSON schema. This validator can be used with the built-in `ValidateMessage` middleware or the `ValidatorFilter` publisher filter.
 
+You need to provide a key/value pair array of topic names that map to either the raw schema data or a filename where the schema can be read from.
+
 ```php
 $publisher = new ValidatorFilter(
 	new JsonSchemaValidator([
-		"fruits" => \file_get_contents(__DIR__ . "/schemas/fruits.json"),
-		"veggies" => \file_get_contents(__DIR__ . "/schemas/veggies.json")
+		"fruits" => __DIR__ . "/schemas/fruits.json",
+		"veggies" => __DIR__ . "/schemas/veggies.json"
 	]),
 	new Mqtt(new MqttClient("localhost"))
 );

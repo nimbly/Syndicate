@@ -4,12 +4,10 @@ namespace Nimbly\Syndicate\Tests\Adapter;
 
 use Nimbly\Syndicate\Adapter\NullPublisher;
 use Nimbly\Syndicate\Message;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Ramsey\Uuid\Uuid;
 
-/**
- * @covers Nimbly\Syndicate\Adapter\NullPublisher
- */
+#[CoversClass(NullPublisher::class)]
 class NullPublisherTest extends TestCase
 {
 	public function test_publish_returns_random_hex_string(): void

@@ -13,10 +13,9 @@ use Nimbly\Shuttle\Handler\MockHandler;
 use Nimbly\Syndicate\Adapter\Mercure;
 use Nimbly\Syndicate\Exception\PublishException;
 use Nimbly\Syndicate\Exception\ConnectionException;
+use PHPUnit\Framework\Attributes\CoversClass;
 
-/**
- * @covers Nimbly\Syndicate\Adapter\Mercure
- */
+#[CoversClass(Mercure::class)]
 class MercureTest extends TestCase
 {
 	public function test_publish(): void

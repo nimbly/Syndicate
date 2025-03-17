@@ -14,10 +14,9 @@ use Nimbly\Syndicate\Exception\ConsumeException;
 use Nimbly\Syndicate\Exception\PublishException;
 use Google\Cloud\PubSub\Message as PubSubMessage;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use PHPUnit\Framework\Attributes\CoversClass;
 
-/**
- * @covers Nimbly\Syndicate\Adapter\Google
- */
+#[CoversClass(Google::class)]
 class GoogleTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;

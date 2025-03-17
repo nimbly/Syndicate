@@ -22,10 +22,9 @@ use Nimbly\Syndicate\Tests\Fixtures\TestMiddleware;
 use Nimbly\Syndicate\Middleware\MiddlewareInterface;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Nimbly\Syndicate\Adapter\MockSubscriber;
+use PHPUnit\Framework\Attributes\CoversClass;
 
-/**
- * @covers Nimbly\Syndicate\Application
- */
+#[CoversClass(Application::class)]
 class ApplicationTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;

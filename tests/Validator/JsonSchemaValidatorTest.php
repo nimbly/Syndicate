@@ -6,12 +6,30 @@ use Nimbly\Syndicate\Message;
 use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Exception\MessageValidationException;
 use Nimbly\Syndicate\Validator\JsonSchemaValidator;
+use PHPUnit\Framework\Attributes\CoversClass;
 
-/**
- * @covers Nimbly\Syndicate\Validator\JsonSchemaValidator
- */
+#[CoversClass(JsonSchemaValidator::class)]
 class JsonSchemaValidatorTest extends TestCase
 {
+	public function test_schema_filename_is_loaded(): void
+	{
+		$validator = new JsonSchemaValidator([
+			"fruits" => __DIR__ . "/../Fixtures/schema.json"
+		]);
+
+		$result = $validator->validate(
+			new Message(
+				"fruits",
+				\json_encode([
+					"name" => "apples",
+					"published_at" => \date("c"),
+				])
+			)
+		);
+
+		$this->assertTrue($result);
+	}
+
 	public function test_missing_schema_throws_message_validation_exception_by_default(): void
 	{
 		$validator = new JsonSchemaValidator([

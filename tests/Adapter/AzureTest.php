@@ -19,10 +19,9 @@ use MicrosoftAzure\Storage\Queue\Models\ListMessagesResult;
 use MicrosoftAzure\Storage\Queue\Models\CreateMessageResult;
 use MicrosoftAzure\Storage\Queue\Models\ListMessagesOptions;
 use MicrosoftAzure\Storage\Common\Exceptions\ServiceException;
+use PHPUnit\Framework\Attributes\CoversClass;
 
-/**
- * @covers Nimbly\Syndicate\Adapter\Azure
- */
+#[CoversClass(Azure::class)]
 class AzureTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;

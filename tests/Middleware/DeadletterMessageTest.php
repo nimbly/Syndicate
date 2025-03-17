@@ -8,10 +8,9 @@ use Nimbly\Syndicate\Response;
 use Nimbly\Syndicate\Adapter\MockQueue;
 use Nimbly\Syndicate\Filter\RedirectFilter;
 use Nimbly\Syndicate\Middleware\DeadletterMessage;
+use PHPUnit\Framework\Attributes\CoversClass;
 
-/**
- * @covers Nimbly\Syndicate\Middleware\DeadletterMessage
- */
+#[CoversClass(DeadletterMessage::class)]
 class DeadletterMessageTest extends TestCase
 {
 	public function test_deadletter_response(): void

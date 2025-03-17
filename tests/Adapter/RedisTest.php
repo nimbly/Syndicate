@@ -13,11 +13,10 @@ use Nimbly\Syndicate\Exception\PublishException;
 use Nimbly\Syndicate\Exception\ConnectionException;
 use Predis\Connection\NodeConnectionInterface;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use PHPUnit\Framework\Attributes\CoversClass;
 use Predis\Connection\ConnectionException as RedisConnectionException;
 
-/**
- * @covers Nimbly\Syndicate\Adapter\Redis
- */
+#[CoversClass(Redis::class)]
 class RedisTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;

@@ -17,10 +17,9 @@ use Nimbly\Syndicate\Exception\PublishException;
 use Nimbly\Syndicate\Exception\ConnectionException;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Nimbly\Capsule\HttpMethod;
+use PHPUnit\Framework\Attributes\CoversClass;
 
-/**
- * @covers Nimbly\Syndicate\Adapter\Webhook
- */
+#[CoversClass(Webhook::class)]
 class WebhookTest extends TestCase
 {
 	use MockeryPHPUnitIntegration;

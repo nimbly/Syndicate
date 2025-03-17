@@ -3,11 +3,10 @@
 namespace Nimbly\Syndicate\Tests;
 
 use Nimbly\Syndicate\Message;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers Nimbly\Syndicate\Message
- */
+#[CoversClass(Message::class)]
 class MessageTest extends TestCase
 {
 	public function test_get_topic(): void

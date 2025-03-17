@@ -7,10 +7,9 @@ use PHPUnit\Framework\TestCase;
 use Nimbly\Syndicate\Middleware\ValidateMessage;
 use Nimbly\Syndicate\Response;
 use Nimbly\Syndicate\Validator\JsonSchemaValidator;
+use PHPUnit\Framework\Attributes\CoversClass;
 
-/**
- * @covers Nimbly\Syndicate\Middleware\ValidateMessage
- */
+#[CoversClass(ValidateMessage::class)]
 class ValidateMessageTest extends TestCase
 {
 	public function test_handle_missing_schema_returns_response_deadletter(): void
