@@ -1,6 +1,7 @@
 scratch.php
 .phpunit.cache/
 .vscode/
+.idea/
 vendor/
 build/
 composer.lock

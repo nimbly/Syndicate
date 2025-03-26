@@ -34,7 +34,7 @@ require __DIR__ . "/../vendor/autoload.php";
  */
 $publisher = new ValidatorFilter(
 	validator: new JsonSchemaValidator([
-		"fruits" => \file_get_contents(__DIR__ . "/schemas/fruits.json")
+		"fruits" => __DIR__ . "/schemas/fruits.json"
 	]),
 	publisher: new Redis(new Client)
 );

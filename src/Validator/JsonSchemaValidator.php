@@ -68,7 +68,7 @@ class JsonSchemaValidator implements ValidatorInterface
 		}
 
 		$result = $this->validator->validate(
-			\json_decode($message->getPayload()),
+			$message->getParsedPayload() ?: \json_decode($message->getPayload()),
 			$this->schemas[$message->getTopic()]
 		);
 

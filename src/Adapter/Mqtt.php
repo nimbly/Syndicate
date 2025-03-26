@@ -167,6 +167,7 @@ class Mqtt implements PublisherInterface, SubscriberInterface
 	/**
 	 * Connect to Mqtt.
 	 *
+	 * @throws ConnectionException
 	 * @return void
 	 */
 	private function connect(): void
@@ -189,6 +190,7 @@ class Mqtt implements PublisherInterface, SubscriberInterface
 	/**
 	 * Disconnect from Mqtt.
 	 *
+	 * @throws ConnectionException
 	 * @return void
 	 */
 	private function disconnect(): void

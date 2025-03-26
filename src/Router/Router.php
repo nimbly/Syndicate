@@ -182,8 +182,8 @@ class Router implements RouterInterface
 			if( count($data) > 1 || (!\is_string($data[0]) && !\is_int($data[0])) ){
 				throw new UnexpectedValueException(
 					\sprintf(
-						"JSON path \"%s\" matched more than one value or the value is not a string. " .
-						"Please refine your JSON path to return just a single string.",
+						"JSON path \"%s\" matched more than one value or the value is not a string or integer. " .
+						"Please refine your JSON path to return just a single string or integer value.",
 						$path
 					)
 				);

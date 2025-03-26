@@ -51,11 +51,11 @@ class Mercure implements PublisherInterface
 		$request = new Request(
 			method: HttpMethod::POST,
 			uri: $this->hub,
+			body: \http_build_query($body),
 			headers: [
 				"Content-Type" => "application/x-www-form-urlencoded",
 				"Authorization" => "Bearer " . $this->token,
 			],
-			body: \http_build_query($body),
 		);
 
 		try {
