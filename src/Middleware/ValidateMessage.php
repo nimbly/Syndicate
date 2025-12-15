@@ -13,6 +13,8 @@ use Nimbly\Syndicate\Exception\MessageValidationException;
  * handler. If a Message does not validate, a `Response::deadletter` is
  * returned in hopes of sending the message to your defined deadletter
  * location.
+ *
+ * If a deadletter is not configured, a RoutingException will be thrown.
  */
 class ValidateMessage implements MiddlewareInterface
 {

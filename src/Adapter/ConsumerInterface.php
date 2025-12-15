@@ -16,7 +16,7 @@ interface ConsumerInterface
 	 * Grab a message or messages from the given topic.
 	 *
 	 * @param string $topic The topic or queue name/URL to consume messages from.
-	 * @param int $max_messages Maxiumum number of messages to retrieve at once.
+	 * @param int $max_messages Maximum number of messages to retrieve at once.
 	 * @param array<string,mixed> Implementation specific options.
 	 * @throws ConnectionException
 	 * @throws ConsumeException

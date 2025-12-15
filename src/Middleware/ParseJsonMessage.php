@@ -11,6 +11,7 @@ use Nimbly\Syndicate\Response;
  * retrieved via the `getParsedPayload()` method on the `Message` instance.
  *
  * If the payload cannot be parsed, the message will attempted to be deadlettered.
+ * If a deadletter is not configured, a RoutingException will be thrown.
  */
 class ParseJsonMessage implements MiddlewareInterface
 {

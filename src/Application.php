@@ -225,7 +225,7 @@ class Application
 		}
 
 		return $this->call(
-			$this->makeCallable($handler),
+			$this->makeCallable($handler, $this->container),
 			$this->container,
 			[Message::class => $message]
 		);

@@ -7,12 +7,11 @@ use Nimbly\Syndicate\Middleware\ParseJsonMessage;
 use Nimbly\Syndicate\Response;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use UnexpectedValueException;
 
 #[CoversClass(ParseJsonMessage::class)]
 class ParseJsonMessageTest extends TestCase
 {
-	public function test_invalid_json_throws_unexpected_value_exception(): void
+	public function test_invalid_json_returns_deadletter_response(): void
 	{
 		$middleware = new ParseJsonMessage;
 
