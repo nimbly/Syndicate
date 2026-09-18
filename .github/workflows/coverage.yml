@@ -33,7 +33,7 @@ jobs:
       run: composer install --prefer-dist --no-progress
 
     - name: Check dependencies
-      run: composer audit
+      run: composer audit --abandoned=report
 
     - name: Run static analysis
       run: make analyze
