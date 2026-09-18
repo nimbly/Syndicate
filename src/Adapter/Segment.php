@@ -75,11 +75,11 @@ class Segment implements PublisherInterface
 	protected function buildCommonRequest(Message $message): array
 	{
 		$request = \array_filter([
-			"anonymousId" => $message->getAttributes()["anonymousId"] ?? null,
-			"userId" => $message->getAttributes()["userId"] ?? null,
-			"integrations" => $message->getAttributes()["integrations"] ?? [],
-			"timestamp" => $message->getAttributes()["timestamp"] ?? null,
-			"context" => $message->getAttributes()["context"] ?? null,
+			"anonymousId" => $message->getAttribute("anonymousId") ?? null,
+			"userId" => $message->getAttribute("userId") ?? null,
+			"integrations" => $message->getAttribute("integrations] ?? ["),
+			"timestamp" => $message->getAttribute("timestamp") ?? null,
+			"context" => $message->getAttribute("context") ?? null,
 		]);
 
 		if( !isset($request["anonymousId"]) && !isset($request["userId"]) ){
@@ -102,7 +102,7 @@ class Segment implements PublisherInterface
 		$request = \array_merge(
 			$this->buildCommonRequest($message),
 			[
-				"event" => $message->getAttributes()["event"] ?? null,
+				"event" => $message->getAttribute("event") ?? null,
 				"properties" => \json_decode($message->getPayload(), true),
 			]
 		);
@@ -142,7 +142,7 @@ class Segment implements PublisherInterface
 	 */
 	protected function buildGroupRequest(Message $message): array
 	{
-		if( !isset($message->getAttributes()["groupId"]) ){
+		if( $message->getAttribute("groupId") === null ){
 			throw new PublishException(
 				message: "Segment group call requires a groupId. Please add a \"groupId\" attribute to the message."
 			);
@@ -151,7 +151,7 @@ class Segment implements PublisherInterface
 		$request = \array_merge(
 			$this->buildCommonRequest($message),
 			[
-				"groupId" => $message->getAttributes()["groupId"],
+				"groupId" => $message->getAttribute("groupId"),
 				"traits" => \json_decode($message->getPayload(), true),
 			]
 		);

@@ -24,7 +24,7 @@ class NullPublisherTest extends TestCase
 	public function test_receipt_callback(): void
 	{
 		$publisher = new NullPublisher(
-			fn(Message $message) => $message->getAttributes()["id"]
+			fn(Message $message) => $message->getAttribute("id")
 		);
 
 		$receipt = $publisher->publish(

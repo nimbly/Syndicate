@@ -53,7 +53,7 @@ class Gearman implements PublisherInterface, SubscriberInterface
 			);
 		}
 
-		$job_id = match( $message->getAttributes()["priority"] ?? "normal" ){
+		$job_id = match( $message->getAttribute("priority") ?? "normal" ){
 			"low" => $this->client->doLowBackground(
 						$message->getTopic(),
 						$message->getPayload()

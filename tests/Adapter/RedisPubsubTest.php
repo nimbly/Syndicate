@@ -111,7 +111,6 @@ class RedisPubsubTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($consumer);
 		$reflectionProperty = $reflectionClass->getProperty("subscriptions");
-		$reflectionProperty->setAccessible(true);
 
 		$subscriptions = $reflectionProperty->getValue($consumer);
 
@@ -141,7 +140,6 @@ class RedisPubsubTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($consumer);
 		$reflectionProperty = $reflectionClass->getProperty("subscriptions");
-		$reflectionProperty->setAccessible(true);
 
 		$subscriptions = $reflectionProperty->getValue($consumer);
 
@@ -351,7 +349,6 @@ class RedisPubsubTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($consumer);
 		$reflectionMethod = $reflectionClass->getMethod("getLoop");
-		$reflectionMethod->setAccessible(true);
 
 		$this->expectException(ConsumeException::class);
 		$reflectionMethod->invoke($consumer);

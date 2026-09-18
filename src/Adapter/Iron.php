@@ -35,7 +35,7 @@ class Iron implements PublisherInterface, ConsumerInterface
 		$properties = \array_filter([
 			"delay" => $options["delay"] ?? null,
 			"timeout" => $options["timeout"] ?? null,
-			"expires_in" => $message->getAttributes()["expires_in"] ?? null
+			"expires_in" => $message->getAttribute("expires_in") ?? null
 		]);
 
 		try {

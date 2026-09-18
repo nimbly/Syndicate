@@ -294,7 +294,6 @@ class ApplicationTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($application);
 		$reflectionMethod = $reflectionClass->getMethod("compileMiddleware");
-		$reflectionMethod->setAccessible(true);
 
 		$chain = $reflectionMethod->invoke(
 			$application,
@@ -325,7 +324,6 @@ class ApplicationTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($application);
 		$reflectionMethod = $reflectionClass->getMethod("normalizeMiddleware");
-		$reflectionMethod->setAccessible(true);
 
 		$this->expectException(UnexpectedValueException::class);
 		$reflectionMethod->invoke(
@@ -342,7 +340,6 @@ class ApplicationTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($application);
 		$reflectionMethod = $reflectionClass->getMethod("normalizeMiddleware");
-		$reflectionMethod->setAccessible(true);
 
 		$middleware = $reflectionMethod->invoke(
 			$application,

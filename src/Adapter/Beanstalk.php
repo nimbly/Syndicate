@@ -41,7 +41,7 @@ class Beanstalk implements PublisherInterface, ConsumerInterface
 
 			$job = $this->client->put(
 				data: $message->getPayload(),
-				priority: $message->getAttributes()["priority"] ?? Pheanstalk::DEFAULT_PRIORITY,
+				priority: $message->getAttribute("priority") ?? Pheanstalk::DEFAULT_PRIORITY,
 				delay: $options["delay"] ?? Pheanstalk::DEFAULT_DELAY,
 				timeToRelease: $options["time_to_release"] ??  Pheanstalk::DEFAULT_TTR
 			);

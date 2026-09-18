@@ -153,8 +153,6 @@ class MockSubscriberTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($mock);
 		$reflectionProperty = $reflectionClass->getProperty("running");
-
-		$reflectionProperty->setAccessible(true);
 		$reflectionProperty->setValue($mock, true);
 
 		$this->assertTrue($mock->getRunning());

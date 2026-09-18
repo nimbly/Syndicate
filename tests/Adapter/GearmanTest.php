@@ -195,7 +195,6 @@ class GearmanTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($subscriber);
 		$reflectionProperty = $reflectionClass->getProperty("running");
-		$reflectionProperty->setAccessible(true);
 		$reflectionProperty->setValue($subscriber, true);
 
 		$this->assertTrue($reflectionProperty->getValue($subscriber));

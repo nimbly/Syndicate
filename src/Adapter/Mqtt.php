@@ -39,8 +39,8 @@ class Mqtt implements PublisherInterface, SubscriberInterface
 			$this->client->publish(
 				topic: $message->getTopic(),
 				message: $message->getPayload(),
-				qualityOfService: (int) ($message->getAttributes()["qos"] ?? MqttClient::QOS_AT_MOST_ONCE),
-				retain: (bool) ($message->getAttributes()["retain"] ?? false)
+				qualityOfService: (int) ($message->getAttribute("qos") ?? MqttClient::QOS_AT_MOST_ONCE),
+				retain: (bool) ($message->getAttribute("retain") ?? false)
 			);
 		}
 		catch( ConnectingToBrokerFailedException $exception ){

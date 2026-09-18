@@ -22,7 +22,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionProperty = $reflectionClass->getProperty("routes");
-		$reflectionProperty->setAccessible(true);
 
 		$routes = $reflectionProperty->getValue($router);
 
@@ -94,7 +93,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionProperty = $reflectionClass->getProperty("routes");
-		$reflectionProperty->setAccessible(true);
 
 		$routes = $reflectionProperty->getValue($router);
 
@@ -136,7 +134,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionMethod = $reflectionClass->getMethod("buildRegex");
-		$reflectionMethod->setAccessible(true);
 
 		$regex = $reflectionMethod->invoke($router, "Syndicate/*/Messages");
 
@@ -159,7 +156,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionMethod = $reflectionClass->getMethod("matchString");
-		$reflectionMethod->setAccessible(true);
 
 		$match = $reflectionMethod->invoke($router, "Messages/Users/Create", "Messages/*/Create");
 
@@ -172,7 +168,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionMethod = $reflectionClass->getMethod("matchString");
-		$reflectionMethod->setAccessible(true);
 
 		$match = $reflectionMethod->invoke($router, "Messages/Users/Create", "");
 		$this->assertTrue($match);
@@ -187,7 +182,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionMethod = $reflectionClass->getMethod("matchString");
-		$reflectionMethod->setAccessible(true);
 
 		$match = $reflectionMethod->invoke($router, "Messages/Users/Update", "Messages/*/Create");
 
@@ -200,7 +194,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionMethod = $reflectionClass->getMethod("matchString");
-		$reflectionMethod->setAccessible(true);
 
 		$match = $reflectionMethod->invoke($router, "Messages/Users/Update", ["Messages/*/Create", "Messages/*/Update"]);
 
@@ -213,7 +206,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionMethod = $reflectionClass->getMethod("matchString");
-		$reflectionMethod->setAccessible(true);
 
 		$match = $reflectionMethod->invoke($router, "Messages/Users/Delete", ["Messages/*/Create", "Messages/*/Update"]);
 
@@ -226,7 +218,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionMethod = $reflectionClass->getMethod("matchKeyValuePairs");
-		$reflectionMethod->setAccessible(true);
 
 		$match = $reflectionMethod->invoke(
 			$router,
@@ -243,7 +234,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionMethod = $reflectionClass->getMethod("matchKeyValuePairs");
-		$reflectionMethod->setAccessible(true);
 
 		$match = $reflectionMethod->invoke(
 			$router,
@@ -260,7 +250,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionMethod = $reflectionClass->getMethod("matchKeyValuePairs");
-		$reflectionMethod->setAccessible(true);
 
 		$match = $reflectionMethod->invoke(
 			$router,
@@ -277,7 +266,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionMethod = $reflectionClass->getMethod("matchKeyValuePairs");
-		$reflectionMethod->setAccessible(true);
 
 		$match = $reflectionMethod->invoke(
 			$router,
@@ -294,7 +282,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionMethod = $reflectionClass->getMethod("matchJson");
-		$reflectionMethod->setAccessible(true);
 
 		$json = [
 			"id" => "421d7fdb-f552-4214-bda3-62e4fd64d7ef",
@@ -324,7 +311,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionMethod = $reflectionClass->getMethod("matchJson");
-		$reflectionMethod->setAccessible(true);
 
 		$json = [
 			"id" => "421d7fdb-f552-4214-bda3-62e4fd64d7ef",
@@ -354,7 +340,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionMethod = $reflectionClass->getMethod("matchJson");
-		$reflectionMethod->setAccessible(true);
 
 		$json = "id: 421d7fdb-f552-4214-bda3-62e4fd64d7ef";
 
@@ -368,7 +353,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionMethod = $reflectionClass->getMethod("matchJson");
-		$reflectionMethod->setAccessible(true);
 
 		$json = [
 			"id" => "421d7fdb-f552-4214-bda3-62e4fd64d7ef",
@@ -398,7 +382,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionMethod = $reflectionClass->getMethod("matchJson");
-		$reflectionMethod->setAccessible(true);
 
 		$json = [
 			"id" => "421d7fdb-f552-4214-bda3-62e4fd64d7ef",
@@ -427,7 +410,6 @@ class RouterTest extends TestCase
 
 		$reflectionClass = new ReflectionClass($router);
 		$reflectionMethod = $reflectionClass->getMethod("matchJson");
-		$reflectionMethod->setAccessible(true);
 
 		$json = [
 			"id" => "421d7fdb-f552-4214-bda3-62e4fd64d7ef",

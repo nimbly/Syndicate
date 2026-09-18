@@ -44,9 +44,9 @@ class RabbitMQ implements PublisherInterface, ConsumerInterface
 				msg: new AMQPMessage($message->getPayload(), $message->getAttributes()),
 				exchange: $options["exchange"] ?? $this->exchange,
 				routing_key: $message->getTopic(),
-				mandatory: $message->getAttributes()["mandatory"] ?? false,
-				immediate: $message->getAttributes()["immediate"] ?? false,
-				ticket: $message->getAttributes()["ticket"] ?? null,
+				mandatory: $message->getAttribute("mandatory") ?? false,
+				immediate: $message->getAttribute("immediate") ?? false,
+				ticket: $message->getAttribute("ticket") ?? null,
 			);
 		}
 		catch( AMQPConnectionClosedException|AMQPConnectionBlockedException $exception ){

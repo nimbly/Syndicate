@@ -59,6 +59,17 @@ class Message
 	}
 
 	/**
+	 * Get a specific attribute.
+	 *
+	 * @param string $attribute
+	 * @return mixed Returns null if attribute is not set.
+	 */
+	public function getAttribute(string $attribute): mixed
+	{
+		return $this->attributes[$attribute] ?? null;
+	}
+
+	/**
 	 * Message headers.
 	 *
 	 * @return array<string,mixed>
@@ -66,6 +77,17 @@ class Message
 	public function getHeaders(): array
 	{
 		return $this->headers;
+	}
+
+	/**
+	 * Get a specific header value.
+	 *
+	 * @param string $header
+	 * @return mixed Returns null if header not set.
+	 */
+	public function getHeader(string $header): mixed
+	{
+		return $this->headers[$header] ?? null;
 	}
 
 	/**

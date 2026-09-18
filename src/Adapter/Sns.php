@@ -71,8 +71,8 @@ class Sns implements PublisherInterface
 		$args = \array_filter([
 			"TopicArn" => $this->base_arn ?? "" . $message->getTopic(),
 			"Message" => $message->getPayload(),
-			"MessageGroupId" => $message->getAttributes()["MessageGroupId"] ?? null,
-			"MessageDeduplicationId" => $message->getAttributes()["MessageDeduplicationId"] ?? null,
+			"MessageGroupId" => $message->getAttribute("MessageGroupId") ?? null,
+			"MessageDeduplicationId" => $message->getAttribute("MessageDeduplicationId") ?? null,
 			"MessageAttributes" => $attributes,
 			...$options,
 		]);

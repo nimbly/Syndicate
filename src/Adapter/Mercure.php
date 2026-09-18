@@ -42,9 +42,9 @@ class Mercure implements PublisherInterface
 		$body = \array_filter([
 			"topic" => $message->getTopic(),
 			"data" => $message->getPayload(),
-			"id" => $message->getAttributes()["id"] ?? null,
-			"private" => (bool) ($message->getAttributes()["private"] ?? false),
-			"type" => $message->getAttributes()["type"] ?? null,
+			"id" => $message->getAttribute("id") ?? null,
+			"private" => (bool) ($message->getAttribute("private") ?? false),
+			"type" => $message->getAttribute("type") ?? null,
 			"retry" => $options["retry"] ?? null,
 		]);
 

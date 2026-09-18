@@ -207,7 +207,6 @@ class AzureTest extends TestCase
 
 		$reflectionObject = new ReflectionObject($publisher);
 		$reflectionMethod = $reflectionObject->getMethod("buildListMessageOptions");
-		$reflectionMethod->setAccessible(true);
 
 		/**
 		 * @var ListMessagesOptions $listMessageOptions

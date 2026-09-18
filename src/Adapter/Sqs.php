@@ -76,8 +76,8 @@ class Sqs implements PublisherInterface, ConsumerInterface
 		$args = \array_filter([
 			"QueueUrl" => $this->base_url ?? "" . $message->getTopic(),
 			"MessageBody" => $message->getPayload(),
-			"MessageGroupId" => $message->getAttributes()["MessageGroupId"] ?? null,
-			"MessageDeduplicationId" => $message->getAttributes()["MessageDeduplicationId"] ?? null,
+			"MessageGroupId" => $message->getAttribute("MessageGroupId") ?? null,
+			"MessageDeduplicationId" => $message->getAttribute("MessageDeduplicationId") ?? null,
 			"MessageAttributes" => $attributes,
 			...$options,
 		]);
